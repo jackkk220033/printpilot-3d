@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b1020">
+<title>PrintPilot 3D v3.3</title>
+<link rel="stylesheet" href="css/style.css">
+<!-- Handlebars est facultatif : si ce CDN est bloqué, les fonctions continuent de marcher. -->
+<script defer src="https://cdn.jsdelivr.net/npm/handlebars@4.7.8/dist/handlebars.min.js"></script>
+<!-- Données Excel volontairement absentes des fichiers publiables : elles viennent du stockage local ou de Firebase. -->
+<script defer src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script defer src="js/app.js"></script>
+<script defer src="js/firebase-config.js"></script>
+<script type="module" src="js/cloud.js"></script>
+</head>
+<body>
+<div class="shell">
+ <aside class="sidebar" id="sidebar">
+ <div class="brand"><span class="logo">P<span>3</span></span><div><strong>PrintPilot</strong><small>3D STUDIO</small></div></div>
+ <div class="section-label">ESPACE DE TRAVAIL</div>
+ <nav id="navigation" aria-label="Navigation principale">
+ <a href="#dashboard" data-page="dashboard" class="nav active"><span>▦</span> Tableau de bord</a>
+ <a href="#filaments" data-page="filaments" class="nav"><span>◉</span> Filaments</a>
+ <a href="#produits" data-page="produits" class="nav"><span>⬡</span> Produits</a>
+ <a href="#impressions" data-page="impressions" class="nav"><span>▤</span> Impressions</a>
+ <a href="#finances" data-page="finances" class="nav"><span>$</span> Finances</a>
+ <a href="#catalogue" data-page="catalogue" class="nav"><span>▧</span> Catalogue à partager</a>
+ <a href="#commandes" data-page="commandes" class="nav"><span>▣</span> Commandes</a>
+ <a href="#hardware" data-page="hardware" class="nav"><span>⚙</span> Hardware</a>
+ <a href="#imprimantes" data-page="imprimantes" class="nav"><span>▥</span> Imprimantes</a>
+ </nav>
+ <div class="sidebar-foot"><div class="local-label" id="sidebar-storage">● &nbsp;Stockage local actif</div><p>v3.0 • Connexion cloud en option</p></div>
+ </aside>
+ <div class="workarea">
+ <header class="topbar"><div><button type="button" id="menu-toggle" aria-label="Ouvrir le menu">☰</button><span>Atelier / <b id="page-name">Tableau de bord</b></span></div><div class="topright"><button type="button" class="secondary-btn cloud-open" id="open-cloud">☁ Synchronisation</button><span id="today"></span><span class="avatar">3D</span></div></header>
+ <main id="app" class="page"><p>Chargement de PrintPilot…</p></main>
+ </div>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<!-- Le formulaire est permanent et jamais remplacé par le rendu des pages. -->
+<dialog id="roll-dialog" class="dialog">
+ <form id="roll-form" novalidate>
+  <div class="dialog-head"><h2 id="dialog-title">Ajouter un rouleau</h2><button type="button" class="close" id="close-dialog" aria-label="Fermer">×</button></div>
+  <input type="hidden" name="id">
+  <div class="form-grid">
+   <label>Marque<input name="brand" placeholder="eSUN" required maxlength="80"></label>
+   <label>Couleur<input name="color" placeholder="Noir" required maxlength="80"></label>
+   <label>Matériau<select name="material"><option>PLA</option><option>PLA+</option><option>PETG</option><option>ABS</option><option>ASA</option><option>TPU</option><option>Autre</option></select></label>
+   <label>Code / référence<input name="code" placeholder="ESUN-PLA-BLK-01" maxlength="100"></label>
+   <label>Poids initial (g)<input type="number" name="initial" min="1" step="0.1" value="1000" required></label>
+   <label>Poids restant (g)<input type="number" name="remaining" min="0" step="0.1" value="1000" required></label>
+   <label>Prix d'achat (CAD)<input type="number" name="price" min="0" step="0.01" value="0" required></label>
+   <label>Couleur visuelle<input type="color" name="swatch" value="#8284a0"></label>
+  </div>
+  <p id="form-error" class="form-error" role="alert"></p>
+  <div class="dialog-actions"><button type="button" class="secondary-btn" id="cancel-dialog">Annuler</button><button type="submit" class="primary-btn" id="submit-roll">Enregistrer</button></div>
+ </form>
+</dialog>
+<!-- Formulaire permanent pour les impressions : pas supprimé lors des changements de page. -->
+<dialog id="print-dialog" class="dialog print-dialog">
+ <form id="print-form" novalidate>
+  <div class="dialog-head"><h2 id="print-dialog-title">Nouvelle impression</h2><button type="button" class="close" id="close-print" aria-label="Fermer">×</button></div>
+  <div class="form-grid">
+   <label>Date<input type="date" name="date" id="print-date" required></label>
+   <label>Produit existant<select id="print-product" name="productId"><option value="">Impression libre (sans produit)</option></select></label>
+   <label>Nom libre (si aucun produit choisi)<input type="text" name="customProduct" placeholder="Ex. Vase décoratif" maxlength="120"></label>
+   <label>Imprimante<input name="printer" list="printer-list" placeholder="Anycubic Kobra X" maxlength="100"><datalist id="printer-list"><option value="Anycubic Kobra X"><option value="Qidi X-Plus 3"><option value="Ender-3 V2 Neo"></datalist></label>
+   <div id="selected-product-info" class="selected-product-info" aria-live="polite" hidden></div>
+   <label>Quantité produite<input type="number" name="quantity" value="1" min="1" step="1" required></label>
+   <label>Durée totale (minutes)<input type="number" name="minutes" value="0" min="0" step="1" required></label>
+  </div>
+  <h3 class="usage-title">Consommation des bobines</h3>
+  <p class="small-hint">Entre les grammes <strong>totaux</strong> consommés pour cette impression, purge et supports compris. Tu peux utiliser plusieurs bobines.</p>
+  <div id="usage-lines"></div>
+  <p class="small-hint" id="usage-excel-hint" aria-live="polite"></p>
+  <button type="button" id="add-usage" class="secondary-btn add-usage">＋ Ajouter une bobine</button>
+  <div class="form-grid notes-wrap"><label>Notes<textarea name="notes" rows="2" maxlength="500" placeholder="Options, détails, observations…"></textarea></label></div>
+  <div class="photo-upload"><label for="print-photo">📷 Photo de l’impression (facultatif)</label><input id="print-photo" type="file" accept="image/png,image/jpeg,image/webp,image/*"><div id="photo-preview" class="photo-preview"></div><p class="small-hint">Photo conservée localement dans ce navigateur. Maximum 12 Mo, compressée automatiquement.</p></div>
+  <p id="print-form-error" class="form-error" role="alert"></p>
+  <div class="dialog-actions"><button type="button" class="secondary-btn" id="cancel-print-dialog">Fermer</button><button type="submit" class="primary-btn" id="print-submit">Enregistrer et déduire</button></div>
+ </form>
+</dialog>
+<dialog id="hardware-dialog" class="dialog">
+ <form id="hardware-form" novalidate>
+  <div class="dialog-head"><h2 id="hardware-dialog-title">Ajouter du hardware</h2><button type="button" id="close-hardware" class="close" aria-label="Fermer">×</button></div>
+  <input type="hidden" name="originalId">
+  <div class="form-grid">
+   <label>Nom du composant<input name="name" required maxlength="120" placeholder="Clicker hardware"></label>
+   <label>ID / référence unique<input name="id" required maxlength="100" placeholder="CLICKER-BLUE-02"></label>
+   <label>Catégorie<input name="category" maxlength="80" placeholder="Accessoires"></label>
+   <label>Fournisseur<input name="supplier" maxlength="100" placeholder="Amazon"></label>
+   <label>Quantité initiale<input type="number" name="initial" min="0" step="1" required></label>
+   <label>Quantité restante<input type="number" name="remaining" min="0" step="1" required></label>
+   <label>Seuil d'alerte<input type="number" name="threshold" min="0" step="1" required></label>
+   <label>Coût par pièce (CAD)<input type="number" name="unitCost" min="0" step="0.0001" required></label>
+   <label>Notes<input name="notes" maxlength="300"></label>
+  </div>
+  <p id="hardware-error" class="form-error" role="alert"></p>
+  <div class="dialog-actions"><button type="button" class="secondary-btn" id="cancel-hardware">Annuler</button><button type="submit" class="primary-btn">Enregistrer</button></div>
+ </form>
+</dialog>
+<dialog id="sale-dialog" class="dialog sale-dialog">
+ <form id="sale-form" novalidate>
+  <div class="dialog-head"><h2 id="sale-title">Enregistrer une vente</h2><button type="button" class="close" id="close-sale" aria-label="Fermer">×</button></div>
+  <input type="hidden" name="saleId">
+  <div class="form-grid">
+   <label>Date de la vente<input name="date" type="date" required></label>
+   <label>Produit / ID stock<select name="productId" required></select></label>
+   <p id="sale-product-summary" class="small-hint sale-span"></p>
+   <label>Quantité vendue<input name="quantity" type="number" min="1" step="1" value="1" required></label>
+   <label>Canal de vente<select name="channel"><option value="Boutique">Boutique (consignation)</option><option value="Direct">Vente directe</option><option value="Marketplace">Marketplace</option><option value="Etsy">Etsy</option><option value="Autre">Autre</option></select></label>
+   <label>Prix de vente par unité (CAD)<input name="unitPrice" type="number" min="0" step="0.01" value="0" required></label>
+   <label>Commission (%)<input name="commissionRate" type="number" min="0" max="100" step="0.01" value="30" required></label>
+   <label class="sale-span">Notes / client (facultatif)<input name="notes" maxlength="300" placeholder="Ex. vendu à la boutique"></label>
+  </div>
+  <div id="sale-preview" class="notice sale-preview" aria-live="polite"></div>
+  <p class="small-hint">Seul le stock de produits sera diminué. Le filament a déjà été consommé lors de la fabrication.</p>
+  <p id="sale-error" class="form-error" role="alert"></p>
+  <div class="dialog-actions"><button type="button" class="secondary-btn" id="cancel-sale-dialog">Fermer</button><button type="submit" class="primary-btn">Enregistrer la vente</button></div>
+ </form>
+</dialog>
+<input id="product-photo" type="file" accept="image/png,image/jpeg,image/webp,image/*" hidden>
+
+<input id="excel-upload-file" type="file" accept=".xlsm,.xlsx,.json,application/vnd.ms-excel.sheet.macroEnabled.12,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
+<!-- Cloud : panneau hors du contenu rendu; l'utilisateur active explicitement la migration. -->
+<dialog id="cloud-dialog" class="dialog cloud-dialog" aria-labelledby="cloud-title">
+ <div class="dialog-head"><h2 id="cloud-title">☁ Synchronisation PrintPilot</h2><button type="button" class="close" id="close-cloud" aria-label="Fermer">×</button></div>
+ <p class="cloud-summary" id="cloud-status" role="status" aria-live="polite">Connexion Firebase non configurée.</p>
+ <div id="cloud-auth-area">
+  <form id="cloud-auth-form" class="cloud-auth-form">
+   <label>Adresse courriel<input type="email" name="email" autocomplete="username" required placeholder="vous@exemple.ca"></label>
+   <label>Mot de passe<input type="password" name="password" autocomplete="current-password" minlength="6" required></label>
+   <div class="cloud-buttons"><button type="submit" class="primary-btn" id="cloud-login">Se connecter</button><button type="button" class="secondary-btn" id="cloud-signup">Créer un compte</button></div>
+  </form>
+ </div>
+ <div id="cloud-account-area" hidden>
+  <p class="small-hint" id="cloud-account-label"></p>
+  <div class="cloud-buttons"><button type="button" class="secondary-btn" id="cloud-logout">Se déconnecter</button></div>
+  <div class="cloud-divider"></div>
+  <p class="small-hint" id="cloud-remote-info">Vérification du contenu cloud…</p>
+  <div class="cloud-buttons"><button type="button" class="primary-btn" id="cloud-upload">↑ Activer / envoyer mes données locales</button><button type="button" class="secondary-btn" id="cloud-download">↓ Charger les données cloud</button></div>
+  <p class="small-hint">L'activation demande confirmation. Ensuite, les changements sont synchronisés automatiquement avec ce compte. Les photos restent locales pour l'instant. En cas de modification simultanée, la synchronisation s'arrête pour éviter un écrasement silencieux.</p>
+ </div>
+ <p class="form-error" id="cloud-error" role="alert"></p>
+</dialog>
+
+<!-- Template Handlebars facultatif pour les cartes (rendu JS de secours). -->
+<script id="stat-template" type="text/x-handlebars-template"><article class="stat"><div class="stat-symbol">{{icon}}</div><strong>{{value}}</strong><span>{{label}}</span></article></script>
+</body>
+</html>
