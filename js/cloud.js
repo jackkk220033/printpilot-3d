@@ -11,6 +11,12 @@ const remoteInfo = document.getElementById('cloud-remote-info');
 const openBtn = document.getElementById('open-cloud');
 const closeBtn = document.getElementById('close-cloud');
 const adapter = window.PrintPilotCloudAdapter;
+const photoStatus=document.getElementById('photo-cloud-status');
+const photoMigrateButton=document.getElementById('cloud-migrate-photos');
+let photoUnsub=null,photoReady=false;
+let photoCache=new Map();
+const photoId=key=>Array.from(new TextEncoder().encode(key),b=>b.toString(16).padStart(2,'0')).join('');
+const photoNotice=msg=>{if(photoStatus)photoStatus.textContent=msg;};
 const CFG = window.PRINTPILOT_FIREBASE_CONFIG;
 const LINK_UID = 'printpilot-cloud-linked-uid-v3';
 const DIGEST_KEY = 'printpilot-cloud-synced-snapshot-v3';
@@ -22,7 +28,7 @@ const stamp=()=>new Date().toLocaleString('fr-CA');
 const describe=doc=> doc ? `Version cloud ${doc.revision || 0} • ${doc.savedAt?.toDate?.()?.toLocaleString('fr-CA') || 'date indisponible'} • ${doc.data?.rolls?.length ?? 0} bobines, ${doc.data?.products?.length ?? 0} produits` : 'Aucune sauvegarde cloud pour ce compte.';
 function setStatus(message,isError=false){status.textContent=message;status.style.borderColor=isError?'#b45366':'#3b4e77';document.getElementById('sidebar-storage').textContent=active&&!conflict?'☁ Synchronisation active': '● Stockage local actif';}
 function showError(e){console.error('PrintPilot cloud:',e); const message=e?.code ==='auth/invalid-credential'?'Courriel ou mot de passe incorrect.': e?.code==='auth/email-already-in-use'?'Ce courriel possède déjà un compte.':e?.code==='auth/weak-password'?'Mot de passe trop faible.':e?.code==='permission-denied'?'Permission refusée : vérifie les règles Firestore et le projet Firebase.':String(e?.message||e);errorEl.textContent=message;setStatus('Synchronisation interrompue — données locales conservées.',true);}
-function resetCloud(){active=false;pending=false;conflict=false;busy=false;remote=null;baseRevision=null;observedOnce=false;clearTimeout(timer);if(unsubscribe){unsubscribe();unsubscribe=null;}setStatus('Connecte-toi pour retrouver tes données.');}
+function resetCloud(){if(photoUnsub){photoUnsub();photoUnsub=null;}photoCache.clear();photoReady=false;photoNotice('Connecte-toi pour synchroniser les photos.');window.dispatchEvent(new Event('printpilot:photos-changed'));active=false;pending=false;conflict=false;busy=false;remote=null;baseRevision=null;observedOnce=false;clearTimeout(timer);if(unsubscribe){unsubscribe();unsubscribe=null;}setStatus('Connecte-toi pour retrouver tes données.');}
 function setRemoteData(record){remote=record;remoteInfo.textContent=describe(record);document.getElementById('cloud-download').disabled=!record;}
 function rememberSynced(){localStorage.setItem(LINK_UID,currentUser.uid);localStorage.setItem(DIGEST_KEY,localJSON());}
 function safeSyncRemote(record){
@@ -100,13 +106,47 @@ if(!configOK){
 }else{
  try{
   const sdkVersion='13.1.0';
-  const [{initializeApp},{getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut},{getFirestore,doc,getDoc,onSnapshot,runTransaction,serverTimestamp}]=await Promise.all([
+  const [{initializeApp},{getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut},{getFirestore,doc,getDoc,onSnapshot,runTransaction,serverTimestamp,collection,setDoc}]=await Promise.all([
     import(`https://www.gstatic.com/firebasejs/${sdkVersion}/firebase-app.js`),
     import(`https://www.gstatic.com/firebasejs/${sdkVersion}/firebase-auth.js`),
     import(`https://www.gstatic.com/firebasejs/${sdkVersion}/firebase-firestore.js`)
   ]);
   const firebaseApp=initializeApp(CFG);auth=getAuth(firebaseApp);db=getFirestore(firebaseApp);
   firebase={doc,getDoc,onSnapshot,runTransaction,serverTimestamp};
+  window.PrintPilotPhotos={
+    isReady:()=>Boolean(currentUser&&photoReady),
+    getPhoto:async key=>photoCache.get(key)||null,
+    hasPhoto:async key=>photoCache.has(key),
+    savePhoto:async(key,image)=>{
+      if(!currentUser||!photoReady)throw Error('Photos cloud non prêtes : reconnecte-toi à Firebase.');
+      if(typeof image!=='string'||!image.startsWith('data:image/jpeg;base64,')||image.length>285000)throw Error('Photo non compatible ou trop grande.');
+      const ref=doc(db,'workspaces',currentUser.uid,'photos',photoId(key));
+      await setDoc(ref,{key,image,updatedAt:serverTimestamp()});
+      photoCache.set(key,image);
+      window.dispatchEvent(new Event('printpilot:photos-changed'));
+    }
+  };
+  function watchPhotos(){
+    if(photoUnsub)photoUnsub();photoReady=false;photoCache.clear();
+    photoNotice('Chargement des photos depuis Firebase…');
+    const ref=collection(db,'workspaces',currentUser.uid,'photos');
+    photoUnsub=onSnapshot(ref,snap=>{
+      photoCache=new Map(snap.docs.filter(d=>typeof d.data().key==='string'&&typeof d.data().image==='string').map(d=>[d.data().key,d.data().image]));
+      photoReady=true;
+      photoNotice(`${photoCache.size} photo(s) cloud disponibles. Les nouvelles photos sont synchronisées avec ton compte.`);
+      window.dispatchEvent(new Event('printpilot:photos-changed'));
+    },err=>{photoReady=false;photoNotice('Erreur photos cloud : '+(err.code||err.message)+'. Vérifie les règles Firestore.');console.error('Photos cloud:',err);});
+  }
+  photoMigrateButton?.addEventListener('click',async()=>{
+    if(!window.PrintPilotPhotos.isReady()){photoNotice('Attends le chargement des photos cloud et vérifie les règles Firestore.');return;}
+    if(!confirm('Envoyer les anciennes photos stockées SUR CET APPAREIL vers le cloud? Les photos existantes dans le cloud seront conservées.'))return;
+    photoMigrateButton.disabled=true;
+    try{
+      const result=await window.PrintPilotLocalPhotos.migrateLocalPhotos(({sent,skipped,failed,total})=>photoNotice(`Migration : ${sent} envoyées · ${skipped} déjà présentes · ${failed} erreurs / ${total}`));
+      photoNotice(`Terminé : ${result.sent} envoyées, ${result.skipped} ignorées, ${result.failed} échecs sur ${result.total}.`);
+    }catch(e){console.error(e);photoNotice('Migration impossible : '+e.message);}
+    finally{photoMigrateButton.disabled=false;}
+  });
   const f=document.getElementById('cloud-auth-form');
   f.addEventListener('submit',async e=>{e.preventDefault();errorEl.textContent='';try{await signInWithEmailAndPassword(auth,f.elements.email.value.trim(),f.elements.password.value);f.elements.password.value='';}catch(err){showError(err);}});
   document.getElementById('cloud-signup').addEventListener('click',async()=>{errorEl.textContent='';if(!confirm('Créer un nouveau compte privé PrintPilot avec ce courriel?'))return;try{await createUserWithEmailAndPassword(auth,f.elements.email.value.trim(),f.elements.password.value);f.elements.password.value='';}catch(e){showError(e);}});
@@ -144,7 +184,7 @@ if(!configOK){
    if(!user){setStatus('☁ Déconnecté. Connecte-toi pour synchroniser.');return;}
    accountLabel.textContent=`Compte privé : ${user.email || user.uid}`;
    setStatus('☁ Connecté : choisis une copie locale ou cloud.');
-   beginListener();
+   beginListener();watchPhotos();
   });
  }catch(e){showError(e);authArea.hidden=true;}
 }

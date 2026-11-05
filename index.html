@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b1020">
-<title>PrintPilot 3D v3.3</title>
+<title>PrintPilot 3D v3.5</title>
 <link rel="stylesheet" href="css/style.css">
 <!-- Handlebars est facultatif : si ce CDN est bloqué, les fonctions continuent de marcher. -->
 <script defer src="https://cdn.jsdelivr.net/npm/handlebars@4.7.8/dist/handlebars.min.js"></script>
@@ -74,7 +74,7 @@
   <p class="small-hint" id="usage-excel-hint" aria-live="polite"></p>
   <button type="button" id="add-usage" class="secondary-btn add-usage">＋ Ajouter une bobine</button>
   <div class="form-grid notes-wrap"><label>Notes<textarea name="notes" rows="2" maxlength="500" placeholder="Options, détails, observations…"></textarea></label></div>
-  <div class="photo-upload"><label for="print-photo">📷 Photo de l’impression (facultatif)</label><input id="print-photo" type="file" accept="image/png,image/jpeg,image/webp,image/*"><div id="photo-preview" class="photo-preview"></div><p class="small-hint">Photo conservée localement dans ce navigateur. Maximum 12 Mo, compressée automatiquement.</p></div>
+  <div class="photo-upload"><label for="print-photo">📷 Photo de l’impression (facultatif)</label><div class="photo-buttons"><button type="button" id="print-camera-button" class="secondary-btn">📸 Prendre une photo</button><label class="secondary-btn file-label" for="print-photo">🖼 Choisir une image</label></div><input id="print-photo" class="visually-hidden" type="file" accept="image/png,image/jpeg,image/webp,image/*"><input id="print-camera" type="file" accept="image/*" capture="environment" hidden><div id="photo-preview" class="photo-preview"></div><p class="small-hint">Photo compressée; sauvegardée sur ce navigateur puis dans Firestore si tu es connecté. La caméra directe dépend du téléphone et du navigateur.</p></div>
   <p id="print-form-error" class="form-error" role="alert"></p>
   <div class="dialog-actions"><button type="button" class="secondary-btn" id="cancel-print-dialog">Fermer</button><button type="submit" class="primary-btn" id="print-submit">Enregistrer et déduire</button></div>
  </form>
@@ -119,6 +119,7 @@
  </form>
 </dialog>
 <input id="product-photo" type="file" accept="image/png,image/jpeg,image/webp,image/*" hidden>
+<input id="product-camera" type="file" accept="image/*" capture="environment" hidden>
 
 <input id="excel-upload-file" type="file" accept=".xlsm,.xlsx,.json,application/vnd.ms-excel.sheet.macroEnabled.12,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
 <!-- Cloud : panneau hors du contenu rendu; l'utilisateur active explicitement la migration. -->
@@ -138,7 +139,7 @@
   <div class="cloud-divider"></div>
   <p class="small-hint" id="cloud-remote-info">Vérification du contenu cloud…</p>
   <div class="cloud-buttons"><button type="button" class="primary-btn" id="cloud-upload">↑ Activer / envoyer mes données locales</button><button type="button" class="secondary-btn" id="cloud-download">↓ Charger les données cloud</button></div>
-  <p class="small-hint">L'activation demande confirmation. Ensuite, les changements sont synchronisés automatiquement avec ce compte. Les photos restent locales pour l'instant. En cas de modification simultanée, la synchronisation s'arrête pour éviter un écrasement silencieux.</p>
+  <div class="cloud-divider"></div><h3>📷 Photos des produits et impressions</h3><p class="small-hint" id="photo-cloud-status">Vérification des photos cloud…</p><button type="button" class="secondary-btn" id="cloud-migrate-photos">↑ Envoyer mes anciennes photos locales vers le cloud</button><p class="small-hint">Lance cette opération depuis le téléphone où tes photos d’hier sont visibles. Tu peux aussi prendre une photo directement dans une fiche produit. Photos compressées : une par fiche, taille limitée.</p><p class="small-hint">L’activation des données demande confirmation. Ensuite, les changements sont synchronisés avec ce compte. En cas de modification simultanée, la synchronisation s’arrête pour éviter un écrasement silencieux.</p>
  </div>
  <p class="form-error" id="cloud-error" role="alert"></p>
 </dialog>
