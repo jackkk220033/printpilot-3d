@@ -179,3 +179,9 @@ html,body,.shell,.workarea,.page,.panel{max-width:100%;min-width:0}
 #product-dialog .photo-buttons{display:flex;gap:10px;flex-wrap:wrap}
 #product-dialog .photo-preview img{max-height:110px;object-fit:cover}
 @media(max-width:520px){.product-cost-preview{grid-template-columns:1fr 1fr}}
+
+/* v3.7 : nouveau produit intégré à une impression */
+.print-create-product{grid-column:1/-1;border:1px solid #6653ac;background:#1b2440;border-radius:14px;padding:18px;margin:8px 0;min-width:0}
+.print-create-product[hidden]{display:none!important}
+.print-create-product h3{margin:0 0 8px;font-size:17px;color:#e5dcff}
+.print-create-product .product-cost-preview{margin-top:14px}

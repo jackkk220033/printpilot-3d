@@ -1,30 +1,19 @@
-# PrintPilot 3D v3.6 — Produits, prix et coûts
+# PrintPilot 3D v3.7 — Une seule saisie
 
-Cette version conserve les fonctions de la v3.5 (cloud, photos, XLSM, inventaires, ventes, finances, catalogue) et ajoute :
+## Nouveau parcours
+- Impressions → Ajouter une impression terminée → « Nouveau produit » (choisi par défaut).
+- Nom, prix, commission, catégorie, temps heures/minutes, bobines et grammes, photo.
+- Enregistrer crée ENSEMBLE le produit et l’impression, déduit les bobines, augmente le stock des produits, associe la photo à l’impression et au catalogue.
+- Produit existant → l’impression augmente le stock du produit et déduit les bobines.
+- Une impression libre déjà enregistrée → bouton « Créer la fiche Produit » ; recopier les matériaux et la durée ; ajouter seulement le prix, sans seconde déduction.
+- Modification / annulation : les quantités du stock de produits sont ajustées avec le stock des bobines. Les annulations sont refusées si des unités ont déjà été vendues.
+- La section Produits permet toujours de modifier la fiche commerciale sans consommer du filament.
 
-- **Produits > Ajouter un produit** avec identifiant interne et ID stock numérique automatique.
-- Modification des produits existants, notamment du prix et de la durée.
-- Bobines et grammes **par unité** avec calcul du prix réel du filament selon `prix de la bobine / grammes initiaux × grammes utilisés`.
-- Autres coûts, prix de vente, commission et estimation du profit.
-- Durée saisie en heures et minutes, dans les fiches produits **et** les impressions.
-- Photo prise avec le téléphone ou sélectionnée dans le navigateur, enregistrée sous la référence du produit puis synchronisée si Firebase est connecté et les règles photo v3.5 sont publiées.
-- Les nouveaux produits s'affichent dans **Produits, Catalogue à partager, Finances et sélection des impressions**.
+## Installation
+1. Exporter une sauvegarde JSON depuis ton PrintPilot actuel et garder l’ancien dossier.
+2. Sur GitHub, remplacer index.html, js/app.js et css/style.css dans la branche main, à la racine. NE PAS téléverser un ZIP dans Releases pour actualiser GitHub Pages.
+3. Vérifier la coche verte de GitHub Pages Actions. Rafraîchir la page.
+4. Se reconnecter à ☁ Synchronisation si nécessaire, et vérifier le statut « Synchronisé ».
+5. Tester une impression fictive de 5 g puis annuler; vérifier les deux stocks et le catalogue.
 
-## Important : stock et prix
-
-**Créer une fiche produit ne déduit pas de filament.** La déduction réelle a lieu quand une nouvelle impression est enregistrée dans **Impressions**. Cela évite de déduire deux fois la matière. La quantité initiale en stock se renseigne manuellement à la création du produit; la gestion des impressions n'augmente pas encore automatiquement le nombre de produits finis.
-
-Les coûts sont une **estimation des matériaux** et autres frais saisis. Ils n'incluent pas l'électricité ou l'amortissement sauf si ajoutés aux « autres coûts ». La commission de 30 % est modifiable.
-
-## Publication GitHub Pages
-
-1. Faire une sauvegarde JSON complète dans l'ancienne version.
-2. Mettre les fichiers `index.html`, `css/style.css` et les fichiers `js/` du dossier de cette v3.6 à la **racine de la branche main** (ne pas créer uniquement une Release).
-3. Éviter de publier l'Excel, les photos privées ou les sauvegardes JSON.
-4. Conserver les règles Firestore v3.5 en place. Les photos v3.6 utilisent le même format et les mêmes règles.
-5. Après publication, actualiser le site, se connecter à Firebase, ouvrir **Produits > Ajouter un produit**, renseigner les coûts et sauvegarder.
-6. Vérifier la nouvelle fiche dans **Catalogue à partager**, puis confirmer sa présence depuis un autre appareil connecté.
-
-## Tests effectués
-
-Syntaxe JavaScript vérifiée et fichiers ZIP testés. Le navigateur automatisé de cet environnement bloque les pages locales; les interactions réelles (Firebase, photo, téléphone) doivent être testées depuis votre navigateur avant usage de production.
+Aucune modification des règles Firestore ni de firebase-config.js. Les données privées restent dans Firestore. Photos enregistrées séparément dans Firestore si connecté.

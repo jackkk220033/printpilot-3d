@@ -61,8 +61,21 @@
   <div class="dialog-head"><h2 id="print-dialog-title">Nouvelle impression</h2><button type="button" class="close" id="close-print" aria-label="Fermer">×</button></div>
   <div class="form-grid">
    <label>Date<input type="date" name="date" id="print-date" required></label>
-   <label>Produit existant<select id="print-product" name="productId"><option value="">Impression libre (sans produit)</option></select></label>
+   <label>Produit existant<select id="print-product" name="productId"><option value="__new__">＋ Nouveau produit (créé automatiquement)</option><option value="">Impression libre sans produit</option></select></label>
    <label>Nom libre (si aucun produit choisi)<input type="text" name="customProduct" placeholder="Ex. Vase décoratif" maxlength="120"></label>
+   <div id="new-from-print" class="print-create-product" hidden>
+    <h3>📦 Nouveau produit — créé avec cette impression</h3>
+    <p class="small-hint">Une seule saisie : ton impression sera enregistrée, les bobines déduites, le stock produit augmenté et la fiche ajoutée au catalogue. Prix par unité.</p>
+    <div class="form-grid">
+      <label>Prix de vente / unité ($)<input name="newPrice" type="number" min="0" step="0.01" value="0"></label>
+      <label>Autres coûts / unité ($)<input name="newOther" type="number" min="0" step="0.01" value="0"></label>
+      <label>Commission boutique (%)<input name="newRate" type="number" min="0" max="100" step="0.1" value="30"></label>
+      <label>Catégorie<input name="newCategory" maxlength="80" placeholder="Ex. Décoration"></label>
+      <label>Couleurs du produit<input name="newColors" maxlength="100" placeholder="Ex. Rose / Rouge"></label>
+    </div>
+    <div id="print-create-preview" class="product-cost-preview" aria-live="polite"></div>
+    <p class="small-hint">La photo prise dans ce formulaire sera aussi utilisée pour la fiche Produit.</p>
+   </div>
    <label>Imprimante<input name="printer" list="printer-list" placeholder="Anycubic Kobra X" maxlength="100"><datalist id="printer-list"><option value="Anycubic Kobra X"><option value="Qidi X-Plus 3"><option value="Ender-3 V2 Neo"></datalist></label>
    <div id="selected-product-info" class="selected-product-info" aria-live="polite" hidden></div>
    <label>Quantité produite<input type="number" name="quantity" value="1" min="1" step="1" required></label>
@@ -80,7 +93,7 @@
  </form>
 </dialog>
 
-<!-- v3.6 : Création et modification des produits, coût et prix intégrés. -->
+<!-- v3.7 : les nouvelles fabrications créent automatiquement leur fiche Produit. Cette fenêtre sert à créer/modifier des modèles sans impression. -->
 <dialog id="product-dialog" class="dialog print-dialog">
  <form id="product-form" novalidate>
   <div class="dialog-head"><h2 id="product-dialog-title">Ajouter un produit</h2><button type="button" class="close" id="close-product" aria-label="Fermer">×</button></div>
