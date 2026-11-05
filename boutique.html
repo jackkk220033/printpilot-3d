@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b1020"><title>PrintPilot Boutique v4.7</title>
+<link rel="stylesheet" href="css/boutique.css?v=4.7"><script defer src="js/firebase-config.js?v=4.7"></script><script type="module" src="js/boutique.js?v=4.7"></script></head>
+<body><header class="header"><div class="brand">◈ PrintPilot <span>BOUTIQUE</span></div><div class="account" id="who"></div></header>
+<main class="wrap"><section class="hero"><div><p class="eyebrow">ACCÈS BOUTIQUE · LECTURE SEULE</p><h1>Catalogue des produits</h1><p>Photos, prix, variantes et quantités disponibles.</p></div><button type="button" id="logout" hidden>Se déconnecter</button></section>
+<div id="message" role="status" aria-live="polite"></div>
+<section id="login-panel" class="panel"><h2>Connexion à la boutique</h2><p>Utilise le compte que l'administrateur a autorisé.</p><form id="login-form"><label>Courriel de la boutique<input required name="email" type="email" autocomplete="username"></label><label>Mot de passe<input required name="password" type="password" autocomplete="current-password"></label><button type="submit">Se connecter</button></form></section>
+<section id="catalogue-panel" hidden><div class="filters"><label>Rechercher<input id="search" placeholder="Nom, couleur ou ID" type="search"></label><label>Catégorie<select id="category"><option value="">Toutes les catégories</option></select></label><label>Disponibilité<select id="availability"><option value="all">Tous</option><option value="instock">En stock seulement</option></select></label><span id="result-count"></span></div><div class="cards" id="cards"></div><p id="empty" class="empty" hidden>Aucun produit correspondant.</p></section>
+<p class="footer">Catalogue en lecture seule. Les stocks sont ceux de la dernière publication par l'atelier.</p></main></body></html>

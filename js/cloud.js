@@ -106,7 +106,7 @@ if(!configOK){
 }else{
  try{
   const sdkVersion='13.1.0';
-  const [{initializeApp},{getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut},{getFirestore,doc,getDoc,onSnapshot,runTransaction,serverTimestamp,collection,setDoc}]=await Promise.all([
+  const [{initializeApp},{getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut},{getFirestore,doc,getDoc,onSnapshot,runTransaction,serverTimestamp,collection,setDoc,deleteDoc}]=await Promise.all([
     import(`https://www.gstatic.com/firebasejs/${sdkVersion}/firebase-app.js`),
     import(`https://www.gstatic.com/firebasejs/${sdkVersion}/firebase-auth.js`),
     import(`https://www.gstatic.com/firebasejs/${sdkVersion}/firebase-firestore.js`)
@@ -126,6 +126,85 @@ if(!configOK){
       window.dispatchEvent(new Event('printpilot:photos-changed'));
     }
   };
+  // Portail boutique : publication distincte (aucun accès au document /workspaces).
+  const bStatus=document.getElementById('boutique-admin-status');
+  const bUid=document.getElementById('boutique-member-uid');
+  const bLink=document.getElementById('boutique-link');
+  let boutiqueBusy=false;
+  function boutiqueNotice(msg,fail=false){if(bStatus){bStatus.textContent=msg;bStatus.style.color=fail?'#ffa1ac':'';}}
+  function boutiqueLink(){
+    if(!currentUser)return '';
+    const url=new URL('boutique.html',location.href);
+    url.search='';url.hash='';url.searchParams.set('atelier',currentUser.uid);
+    return url.toString();
+  }
+  function ownerRequired(){
+    if(!currentUser||!active||conflict)throw Error('Connecte-toi à ton compte ADMIN et active la synchronisation Firebase avant cette action.');
+  }
+  function memberUid(){
+    const v=bUid.value.trim();
+    if(!/^[a-zA-Z0-9_-]{10,128}$/.test(v))throw Error('Entre le UID Firebase exact du compte Boutique (pas son courriel).');
+    if(v===currentUser?.uid)throw Error('Ne donne pas un accès Boutique au compte administrateur.');
+    return v;
+  }
+  document.getElementById('boutique-approve').addEventListener('click',async()=>{
+    try{
+      ownerRequired();const uid=memberUid();
+      if(!confirm('Autoriser le compte UID '+uid+' à consulter ton catalogue publié (lecture seule)?'))return;
+      await setDoc(doc(db,'boutiques',currentUser.uid,'members',uid),{role:'viewer',addedAt:serverTimestamp()});
+      boutiqueNotice('✓ Compte Boutique autorisé. Publie maintenant le catalogue et envoie son lien privé.');
+    }catch(e){console.error(e);boutiqueNotice('Erreur : '+e.message,true);}
+  });
+  document.getElementById('boutique-revoke').addEventListener('click',async()=>{
+    try{
+      ownerRequired();const uid=memberUid();
+      if(!confirm('RÉVOQUER immédiatement l’accès au catalogue pour ce UID?'))return;
+      await deleteDoc(doc(db,'boutiques',currentUser.uid,'members',uid));
+      boutiqueNotice('✓ Accès révoqué. Le compte ne peut plus lire le catalogue dans Firebase.');
+    }catch(e){console.error(e);boutiqueNotice('Erreur : '+e.message,true);}
+  });
+  document.getElementById('boutique-copy-link').addEventListener('click',async()=>{
+    try{const link=boutiqueLink();if(!link)throw Error('Connecte-toi en admin.');await navigator.clipboard.writeText(link);boutiqueNotice('✓ Lien Boutique copié.');}
+    catch(e){boutiqueNotice('Copie manuellement le lien affiché dans le champ.',true);}
+  });
+  document.getElementById('boutique-publish').addEventListener('click',async()=>{
+    if(boutiqueBusy)return;
+    try{
+      ownerRequired();
+      if(pending||busy)throw Error('Attends la fin de la synchronisation avant de publier.');
+      if(!photoReady)throw Error('Attends le chargement des photos cloud avant de publier.');
+      if(!confirm('Publier les noms, photos, prix et stocks des produits commerciaux vers le portail Boutique?'))return;
+      boutiqueBusy=true;document.getElementById('boutique-publish').disabled=true;
+      const state=adapter.exportState();
+      const entries=state.products.filter(p=>Number(p.stock)>0 && p.hiddenOffProduction!==true && p.commercialHidden!==true && p.hiddenFromCatalog!==true);
+      // Liste blanche stricte : NE JAMAIS copier les objets Produit entiers.
+      const products=entries.map(p=>({
+        id:String(p.id||'').slice(0,160),shopId:String(p.shopId||'').slice(0,32),
+        name:String(p.name||'Sans nom').slice(0,160),category:String(p.category||'').slice(0,90),
+        colors:String(p.colors||'').slice(0,140),price:Math.max(0,Number(p.price)||0),
+        stock:Math.max(0,Math.floor(Number(p.stock)||0))
+      }));
+      if(products.length>450)throw Error('Catalogue trop grand : maximum 450 variantes dans cette version.');
+      boutiqueNotice('Publication de '+products.length+' fiches et de leurs photos…');
+      // L’index d’abord; photos en documents distincts pour respecter la taille Firestore.
+      await setDoc(doc(db,'boutiques',currentUser.uid,'catalogue','current'),{
+        version:1,products,publishedAt:serverTimestamp()
+      });
+      let uploaded=0,missing=0,failed=0;
+      for(let i=0;i<products.length;i++){
+        const p=products[i];const photo=photoCache.get('print:product:'+p.id);
+        if(!photo||!photo.startsWith('data:image/jpeg;base64,')){missing++;continue;}
+        if(photo.length>285000){failed++;continue;}
+        try{
+          await setDoc(doc(db,'boutiques',currentUser.uid,'photos',photoId('product:'+p.id)),{image:photo,updatedAt:serverTimestamp()});
+          uploaded++;
+        }catch(e){failed++;console.error('Boutique photo',p.id,e);}
+        if(i%10===0)boutiqueNotice(`Publication : ${i+1}/${products.length} fiches vérifiées…`);
+      }
+      boutiqueNotice(`✓ Catalogue publié : ${products.length} produits, ${uploaded} photos; ${missing} sans photo cloud, ${failed} erreurs. À republier après chaque modification de stock/prix/photo.`);
+    }catch(e){console.error('Publication boutique:',e);boutiqueNotice('Publication impossible : '+e.message,true);}
+    finally{boutiqueBusy=false;document.getElementById('boutique-publish').disabled=false;}
+  });
   function watchPhotos(){
     if(photoUnsub)photoUnsub();photoReady=false;photoCache.clear();
     photoNotice('Chargement des photos depuis Firebase…');
@@ -182,6 +261,7 @@ if(!configOK){
    resetCloud();currentUser=user;errorEl.textContent='';
    authArea.hidden=Boolean(user);accountArea.hidden=!user;
    if(!user){setStatus('☁ Déconnecté. Connecte-toi pour synchroniser.');return;}
+   bLink.value=boutiqueLink();
    accountLabel.textContent=`Compte privé : ${user.email || user.uid}`;
    setStatus('☁ Connecté : choisis une copie locale ou cloud.');
    beginListener();watchPhotos();

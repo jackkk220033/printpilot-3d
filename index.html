@@ -2,15 +2,15 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b1020">
-<title>PrintPilot 3D v4.6.3</title>
-<link rel="stylesheet" href="css/style.css?v=4.6.3">
+<title>PrintPilot 3D v4.7</title>
+<link rel="stylesheet" href="css/style.css?v=4.7">
 <!-- Handlebars est facultatif : si ce CDN est bloqué, les fonctions continuent de marcher. -->
 <script defer src="https://cdn.jsdelivr.net/npm/handlebars@4.7.8/dist/handlebars.min.js"></script>
 <!-- Données Excel volontairement absentes des fichiers publiables : elles viennent du stockage local ou de Firebase. -->
 <script defer src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-<script defer src="js/app.js?v=4.6.3"></script>
-<script defer src="js/firebase-config.js?v=4.6.3"></script>
-<script type="module" src="js/cloud.js?v=4.6.3"></script>
+<script defer src="js/app.js?v=4.7"></script>
+<script defer src="js/firebase-config.js?v=4.7"></script>
+<script type="module" src="js/cloud.js?v=4.7"></script>
 </head>
 <body>
 <div class="shell">
@@ -29,7 +29,7 @@
  <a href="#hardware" data-page="hardware" class="nav"><span>⚙</span> Hardware</a>
  <a href="#imprimantes" data-page="imprimantes" class="nav"><span>▥</span> Imprimantes</a>
  </nav>
- <div class="sidebar-foot"><div class="local-label" id="sidebar-storage">● &nbsp;Stockage local actif</div><p>v4.6.3 • Synchronisation Firebase</p></div>
+ <div class="sidebar-foot"><div class="local-label" id="sidebar-storage">● &nbsp;Stockage local actif</div><p>v4.7 • Synchronisation Firebase</p></div>
  </aside>
  <div class="workarea">
  <header class="topbar"><div><button type="button" id="menu-toggle" aria-label="Ouvrir le menu">☰</button><span>Atelier / <b id="page-name">Tableau de bord</b></span></div><div class="topright"><button type="button" class="secondary-btn cloud-open" id="open-cloud">☁ Synchronisation</button><span id="today"></span><span class="avatar">3D</span></div></header>
@@ -226,6 +226,18 @@
   <div class="cloud-divider"></div>
   <p class="small-hint" id="cloud-remote-info">Vérification du contenu cloud…</p>
   <div class="cloud-buttons"><button type="button" class="primary-btn" id="cloud-upload">↑ Activer / envoyer mes données locales</button><button type="button" class="secondary-btn" id="cloud-download">↓ Charger les données cloud</button></div>
+  <div class="cloud-divider"></div>
+  <section class="boutique-admin" id="boutique-admin">
+   <h3>🏬 Portail Boutique — accès lecture seule</h3>
+   <p class="small-hint">Une copie limitée du catalogue est publiée séparément. L'inventaire privé, les coûts, les profits, les ventes et les bobines ne sont jamais partagés.</p>
+   <label>UID Firebase du compte Boutique (dans Authentication → Users)
+    <input id="boutique-member-uid" type="text" autocomplete="off" placeholder="UID du compte de la boutique" maxlength="128"></label>
+   <div class="cloud-buttons"><button type="button" class="primary-btn" id="boutique-approve">Autoriser ce compte</button><button type="button" class="secondary-btn" id="boutique-revoke">Révoquer ce compte</button></div>
+   <div class="cloud-buttons"><button type="button" class="primary-btn" id="boutique-publish">Publier / actualiser le catalogue</button></div>
+   <label>Lien privé à envoyer à la boutique<input id="boutique-link" type="text" readonly></label>
+   <div class="cloud-buttons"><button type="button" class="secondary-btn" id="boutique-copy-link">Copier le lien Boutique</button></div>
+   <p class="small-hint" id="boutique-admin-status" aria-live="polite">Connecte-toi au compte administrateur, puis autorise le compte Boutique et publie le catalogue.</p>
+  </section>
   <div class="cloud-divider"></div><h3>📷 Photos des produits et impressions</h3><p class="small-hint" id="photo-cloud-status">Vérification des photos cloud…</p><button type="button" class="secondary-btn" id="cloud-migrate-photos">↑ Envoyer mes anciennes photos locales vers le cloud</button><p class="small-hint">Lance cette opération depuis le téléphone où tes photos d’hier sont visibles. Tu peux aussi prendre une photo directement dans une fiche produit. Photos compressées : une par fiche, taille limitée.</p><p class="small-hint">L’activation des données demande confirmation. Ensuite, les changements sont synchronisés avec ce compte. En cas de modification simultanée, la synchronisation s’arrête pour éviter un écrasement silencieux.</p>
  </div>
  <p class="form-error" id="cloud-error" role="alert"></p>

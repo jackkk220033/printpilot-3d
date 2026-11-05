@@ -17,6 +17,49 @@ service cloud.firestore {
         allow delete: if false;
       }
     }
+    // Portail Boutique v4.7 : seuls les comptes explicitement autorisés lisent la copie publique filtrée.
+    // Les /workspaces et les photos privées ne deviennent JAMAIS lisibles par les boutiques.
+    function isBoutiqueOwner(ownerUid) {
+      return request.auth != null && request.auth.uid == ownerUid;
+    }
+    function canViewBoutique(ownerUid) {
+      return request.auth != null && (
+        request.auth.uid == ownerUid ||
+        exists(/databases/$(database)/documents/boutiques/$(ownerUid)/members/$(request.auth.uid))
+      );
+    }
+    match /boutiques/{ownerUid} {
+      allow read, write: if false;
+      match /members/{memberUid} {
+        allow get: if isBoutiqueOwner(ownerUid) ||
+          (request.auth != null && request.auth.uid == memberUid);
+        allow list: if false;
+        allow create, update: if isBoutiqueOwner(ownerUid)
+          && request.resource.data.keys().hasOnly(['role','addedAt'])
+          && request.resource.data.role == 'viewer';
+        allow delete: if isBoutiqueOwner(ownerUid);
+      }
+      match /catalogue/{docId} {
+        allow get: if docId == 'current' && canViewBoutique(ownerUid);
+        allow list: if false;
+        allow create, update: if docId == 'current' && isBoutiqueOwner(ownerUid)
+          && request.resource.data.keys().hasOnly(['version','products','publishedAt'])
+          && request.resource.data.version == 1
+          && request.resource.data.products is list
+          && request.resource.data.products.size() <= 450;
+        allow delete: if isBoutiqueOwner(ownerUid);
+      }
+      match /photos/{photoId} {
+        allow get: if canViewBoutique(ownerUid);
+        allow list: if false;
+        allow create, update: if isBoutiqueOwner(ownerUid)
+          && request.resource.data.keys().hasOnly(['image','updatedAt'])
+          && request.resource.data.image is string
+          && request.resource.data.image.size() <= 285000
+          && request.resource.data.image.matches('^data:image/jpeg;base64,.*$');
+        allow delete: if isBoutiqueOwner(ownerUid);
+      }
+    }
     match /{document=**} { allow read, write: if false; }
   }
 }
