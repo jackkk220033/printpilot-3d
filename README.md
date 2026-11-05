@@ -1,34 +1,30 @@
-# PrintPilot 3D v3.5 — photos et caméra mobile
+# PrintPilot 3D v3.6 — Produits, prix et coûts
 
-Version construite depuis la v3.4 Firebase. Aucune installation Node.js requise.
+Cette version conserve les fonctions de la v3.5 (cloud, photos, XLSM, inventaires, ventes, finances, catalogue) et ajoute :
 
-## Avant de publier
+- **Produits > Ajouter un produit** avec identifiant interne et ID stock numérique automatique.
+- Modification des produits existants, notamment du prix et de la durée.
+- Bobines et grammes **par unité** avec calcul du prix réel du filament selon `prix de la bobine / grammes initiaux × grammes utilisés`.
+- Autres coûts, prix de vente, commission et estimation du profit.
+- Durée saisie en heures et minutes, dans les fiches produits **et** les impressions.
+- Photo prise avec le téléphone ou sélectionnée dans le navigateur, enregistrée sous la référence du produit puis synchronisée si Firebase est connecté et les règles photo v3.5 sont publiées.
+- Les nouveaux produits s'affichent dans **Produits, Catalogue à partager, Finances et sélection des impressions**.
 
-1. Sauvegarder PrintPilot (JSON) et garder les photos originales.
-2. Dans Firebase Console → Firestore → **Règles**, remplacer les règles par le contenu exact de `firestore.rules` puis cliquer **Publier**. Sans cette étape, le cloud refuse les photos; le reste de l’inventaire demeure utilisable.
-3. Sur GitHub, remplacer les fichiers du site avec ceux du dossier v3.5 (index.html, css, js et .nojekyll). Ne publier ni Excel, ni JSON privées. Les règles peuvent rester hors du dépôt public.
-4. Ouvrir le site HTTPS GitHub Pages, se connecter au compte Firebase existant via « Synchronisation ».
-5. **Sur le téléphone qui possède les photos anciennes** : ouvrir « Synchronisation » puis cliquer « ↑ Envoyer mes anciennes photos locales vers le cloud ». Le site conserve toutes les photos cloud déjà présentes; il ne les remplace pas.
-6. Sur ordinateur, ouvrir Produits ou Catalogue. Les photos cloud se chargent après la connexion.
+## Important : stock et prix
 
-## Utilisation
+**Créer une fiche produit ne déduit pas de filament.** La déduction réelle a lieu quand une nouvelle impression est enregistrée dans **Impressions**. Cela évite de déduire deux fois la matière. La quantité initiale en stock se renseigne manuellement à la création du produit; la gestion des impressions n'augmente pas encore automatiquement le nombre de produits finis.
 
-- **Produits** et **Catalogue** : « Prendre photo » pour proposer l’appareil photo du téléphone; « Choisir photo » pour importer une image depuis l’appareil.
-- **Impressions** : lors d’une nouvelle impression, « Prendre une photo » ou « Choisir une image ». La photo d’impression est enregistrée lorsque l’impression elle-même est enregistrée. Pour des impressions antérieures, ouvrir « Modifier ».
-- Les photos sont compressées en JPEG jusqu’à 720 px sur le côté le plus long et moins de 285 kB en chaîne Base64.
-- Sur certains navigateurs mobiles, le choix appareil photo / photothèque appartient au système; `capture=environment` est un indice, pas une garantie.
+Les coûts sont une **estimation des matériaux** et autres frais saisis. Ils n'incluent pas l'électricité ou l'amortissement sauf si ajoutés aux « autres coûts ». La commission de 30 % est modifiable.
 
-## Stockage et coûts
+## Publication GitHub Pages
 
-Cette version utilise les documents d’une sous-collection **Firestore** (`workspaces/{uid}/photos`), et NON Firebase Storage. Elle ne nécessite donc pas l’activation de Firebase Storage/Blaze pour cette fonctionnalité, mais consomme les quotas Firestore, les lectures et le stockage disponibles sur Spark. Elle convient aux petites photos de produits et non aux originaux haute résolution. Un document par photo; une photo par produit ou impression pour le moment. Si le projet grossit, migrer les fichiers image vers une solution de stockage dédiée.
+1. Faire une sauvegarde JSON complète dans l'ancienne version.
+2. Mettre les fichiers `index.html`, `css/style.css` et les fichiers `js/` du dossier de cette v3.6 à la **racine de la branche main** (ne pas créer uniquement une Release).
+3. Éviter de publier l'Excel, les photos privées ou les sauvegardes JSON.
+4. Conserver les règles Firestore v3.5 en place. Les photos v3.6 utilisent le même format et les mêmes règles.
+5. Après publication, actualiser le site, se connecter à Firebase, ouvrir **Produits > Ajouter un produit**, renseigner les coûts et sauvegarder.
+6. Vérifier la nouvelle fiche dans **Catalogue à partager**, puis confirmer sa présence depuis un autre appareil connecté.
 
-## Sécurité / partage
+## Tests effectués
 
-Les règles limitent la lecture et l’écriture des photos au compte propriétaire (comme pour les inventaires). Les utilisateurs connectés à des comptes séparés n'accèdent pas encore au même inventaire. Ne donne pas l’accès à ta belle-mère avant le développement d’un accès Boutique limité.
-
-## Notes importantes
-
-- Ne pas réimporter l’Excel si le stock est déjà dans le cloud.
-- Ne pas effacer les données du téléphone ni le cache tant que le transfert photo n’est pas confirmé sur l’ordinateur.
-- La version utilise le même Firestore et les mêmes clés de données que la v3.4. Photos conservées localement même en cas d’échec réseau; le panneau Synchronisation permet leur migration ensuite.
-- Les tests de syntaxe des fichiers sont faits localement, mais la connexion au projet Firebase et les permissions doivent être testées sur le vrai site après la publication des nouvelles règles.
+Syntaxe JavaScript vérifiée et fichiers ZIP testés. Le navigateur automatisé de cet environnement bloque les pages locales; les interactions réelles (Firebase, photo, téléphone) doivent être testées depuis votre navigateur avant usage de production.

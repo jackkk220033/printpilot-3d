@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b1020">
-<title>PrintPilot 3D v3.5</title>
+<title>PrintPilot 3D v3.6</title>
 <link rel="stylesheet" href="css/style.css">
 <!-- Handlebars est facultatif : si ce CDN est bloqué, les fonctions continuent de marcher. -->
 <script defer src="https://cdn.jsdelivr.net/npm/handlebars@4.7.8/dist/handlebars.min.js"></script>
@@ -66,7 +66,7 @@
    <label>Imprimante<input name="printer" list="printer-list" placeholder="Anycubic Kobra X" maxlength="100"><datalist id="printer-list"><option value="Anycubic Kobra X"><option value="Qidi X-Plus 3"><option value="Ender-3 V2 Neo"></datalist></label>
    <div id="selected-product-info" class="selected-product-info" aria-live="polite" hidden></div>
    <label>Quantité produite<input type="number" name="quantity" value="1" min="1" step="1" required></label>
-   <label>Durée totale (minutes)<input type="number" name="minutes" value="0" min="0" step="1" required></label>
+   <label>Durée — heures<input type="number" name="hours" value="0" min="0" step="1" required></label><label>Durée — minutes<input type="number" name="minutePart" value="0" min="0" max="59" step="1" required></label><input type="hidden" name="minutes" value="0">
   </div>
   <h3 class="usage-title">Consommation des bobines</h3>
   <p class="small-hint">Entre les grammes <strong>totaux</strong> consommés pour cette impression, purge et supports compris. Tu peux utiliser plusieurs bobines.</p>
@@ -79,6 +79,42 @@
   <div class="dialog-actions"><button type="button" class="secondary-btn" id="cancel-print-dialog">Fermer</button><button type="submit" class="primary-btn" id="print-submit">Enregistrer et déduire</button></div>
  </form>
 </dialog>
+
+<!-- v3.6 : Création et modification des produits, coût et prix intégrés. -->
+<dialog id="product-dialog" class="dialog print-dialog">
+ <form id="product-form" novalidate>
+  <div class="dialog-head"><h2 id="product-dialog-title">Ajouter un produit</h2><button type="button" class="close" id="close-product" aria-label="Fermer">×</button></div>
+  <input type="hidden" name="originalId">
+  <div class="form-grid">
+   <label>Nom du produit<input name="name" required maxlength="120" placeholder="Ex. Clicker Keychain Rose"></label>
+   <label>ID interne / Excel<input name="id" maxlength="120" placeholder="Généré automatiquement si vide"></label>
+   <label>Catégorie<input name="category" maxlength="80" placeholder="Ex. Porte-clés"></label>
+   <label>Couleurs<input name="colors" maxlength="100" placeholder="Ex. Rose / Rouge"></label>
+   <label>Imprimante<input name="printer" maxlength="100" placeholder="Anycubic Kobra X"></label>
+   <label>Quantité déjà en stock<input name="stock" type="number" min="0" step="1" value="0" required></label>
+   <label>Heures par impression / lot<input name="hours" type="number" min="0" step="1" value="0"></label>
+   <label>Minutes (0 à 59)<input name="mins" type="number" min="0" max="59" step="1" value="0"></label>
+   <label>Autres coûts / unité ($)<input name="otherCost" type="number" min="0" step="0.01" value="0"></label>
+   <label>Prix de vente / unité ($)<input name="price" type="number" min="0" step="0.01" value="0" required></label>
+   <label>Commission boutique (%)<input name="commissionRate" type="number" min="0" max="100" step="0.1" value="30"></label>
+   <label>Notes<input name="notes" maxlength="400" placeholder="Détails facultatifs"></label>
+  </div>
+  <h3 class="usage-title">Filaments utilisés par unité</h3>
+  <p class="small-hint">Sélectionne la bobine et les grammes pour calculer le coût réel. Créer une fiche produit ne déduit pas encore les bobines : seule une impression enregistrée le fait.</p>
+  <div id="product-material-lines"></div>
+  <button class="secondary-btn" type="button" id="add-product-material">＋ Ajouter une bobine</button>
+  <div id="product-cost-preview" class="product-cost-preview" aria-live="polite"></div>
+  <div class="photo-upload"><b>Photo du produit (facultatif)</b>
+   <div class="photo-buttons"><button type="button" class="secondary-btn" id="product-camera-button">📸 Prendre une photo</button><label for="product-new-photo" class="secondary-btn file-label">🖼 Choisir une photo</label></div>
+   <input type="file" id="product-new-camera" accept="image/*" capture="environment" hidden>
+   <input type="file" id="product-new-photo" accept="image/*" hidden>
+   <div id="product-new-photo-preview" class="photo-preview"></div>
+  </div>
+  <p class="form-error" id="product-form-error" role="alert"></p>
+  <div class="dialog-actions"><button type="button" class="secondary-btn" id="cancel-product">Annuler</button><button type="submit" class="primary-btn">Enregistrer le produit</button></div>
+ </form>
+</dialog>
+
 <dialog id="hardware-dialog" class="dialog">
  <form id="hardware-form" novalidate>
   <div class="dialog-head"><h2 id="hardware-dialog-title">Ajouter du hardware</h2><button type="button" id="close-hardware" class="close" aria-label="Fermer">×</button></div>

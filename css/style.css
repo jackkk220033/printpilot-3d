@@ -172,3 +172,10 @@ html,body,.shell,.workarea,.page,.panel{max-width:100%;min-width:0}
 .photo-actions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
 .photo-actions button{flex:1 1 160px}
 @media(max-width:600px){.photo-actions button{flex-basis:100%}}
+
+/* v3.6 — créateur de produits et calcul des coûts */
+.product-cost-preview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0 0;padding:16px;border-radius:12px;background:#1c2946;border:1px solid #42537f}
+.product-cost-preview>div{display:grid;gap:6px;min-width:0}.product-cost-preview small{color:#a4b7dc}.product-cost-preview strong{font-size:17px;overflow-wrap:anywhere}
+#product-dialog .photo-buttons{display:flex;gap:10px;flex-wrap:wrap}
+#product-dialog .photo-preview img{max-height:110px;object-fit:cover}
+@media(max-width:520px){.product-cost-preview{grid-template-columns:1fr 1fr}}
