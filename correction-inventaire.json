@@ -1,0 +1,3945 @@
+{
+  "format": "PrintPilotReconciliationV1",
+  "basedOnExportedAt": "2026-11-05T17:24:41.979Z",
+  "baseline": [
+    {
+      "shopId": "1",
+      "id": "Clicker-Rose-Toy-Rose/Rouge",
+      "colors": "Rouge / Rose",
+      "printed": 9,
+      "stock": 9,
+      "price": 6,
+      "timeDays": 0.02847222222222222
+    },
+    {
+      "shopId": "2",
+      "id": "Clicker-Rose-Toy-Blanc/blue/mauvre",
+      "colors": "Bleu / Mauve",
+      "printed": 9,
+      "stock": 9,
+      "price": 6,
+      "timeDays": 0.02847222222222222
+    },
+    {
+      "shopId": "3",
+      "id": "Clicker-Raccoon",
+      "colors": "Noir / Gris / Blanc",
+      "printed": 7,
+      "stock": 7,
+      "price": 6,
+      "timeDays": 0.19722222222222222
+    },
+    {
+      "shopId": "4",
+      "id": "KEYCHAIN-CLICKER-PENGUIN",
+      "colors": "Noir / Blanc / Orange",
+      "printed": 14,
+      "stock": 14,
+      "price": 6,
+      "timeDays": 0.029861111111111113
+    },
+    {
+      "shopId": "5",
+      "id": "Moose-Deces-PLA",
+      "colors": "Noir",
+      "printed": 1,
+      "stock": 1,
+      "price": 10,
+      "timeDays": 0.043055555555555555
+    },
+    {
+      "shopId": "6",
+      "id": "DECES-Hairdresser-PLA",
+      "colors": "Noir",
+      "printed": 1,
+      "stock": 1,
+      "price": 10,
+      "timeDays": 0.03819444444444445
+    },
+    {
+      "shopId": "7",
+      "id": "DECES-Music-Piano-Note-PLA",
+      "colors": "Noir",
+      "printed": 1,
+      "stock": 1,
+      "price": 10,
+      "timeDays": 0.05555555555555555
+    },
+    {
+      "shopId": "8",
+      "id": "Deces-Note-De-Musique-Guitar",
+      "colors": "Noir",
+      "printed": 1,
+      "stock": 1,
+      "price": 10,
+      "timeDays": 0.16666666666666666
+    },
+    {
+      "shopId": "9",
+      "id": "Deces-Drum",
+      "colors": "Noir",
+      "printed": 2,
+      "stock": 2,
+      "price": 10,
+      "timeDays": 0.08125
+    },
+    {
+      "shopId": "10",
+      "id": "Deces-Motoneige",
+      "colors": "Noir",
+      "printed": 3,
+      "stock": 3,
+      "price": 10,
+      "timeDays": 0.05555555555555555
+    },
+    {
+      "shopId": "11",
+      "id": "Deces-Dirt-Bike",
+      "colors": "Noir",
+      "printed": 1,
+      "stock": 1,
+      "price": 10,
+      "timeDays": 0.08402777777777778
+    },
+    {
+      "shopId": "12",
+      "id": "Deces-Camping",
+      "colors": "Noir",
+      "printed": 1,
+      "stock": 1,
+      "price": 10,
+      "timeDays": 0.09305555555555556
+    },
+    {
+      "shopId": "13",
+      "id": "Deces-Fishing",
+      "colors": "Noir",
+      "printed": 1,
+      "stock": 1,
+      "price": 10,
+      "timeDays": 0.09652777777777778
+    },
+    {
+      "shopId": "14",
+      "id": "Moose-Circle-Loop-Deces",
+      "colors": "Noir",
+      "printed": 1,
+      "stock": 1,
+      "price": 10,
+      "timeDays": 0.10347222222222222
+    },
+    {
+      "shopId": "15",
+      "id": "Logo-Garage-Deces",
+      "colors": "Noir",
+      "printed": 1,
+      "stock": 1,
+      "price": 10,
+      "timeDays": 0.09652777777777778
+    },
+    {
+      "shopId": "16",
+      "id": "XMAS-Cookie-PLA-RED",
+      "colors": "Rouge",
+      "printed": 1,
+      "stock": 1,
+      "price": 10,
+      "timeDays": 0.14166666666666666
+    },
+    {
+      "shopId": "17",
+      "id": "XMAS-Cookie-PLA-Blue",
+      "colors": "Bleu",
+      "printed": 1,
+      "stock": 1,
+      "price": 10,
+      "timeDays": 0.14166666666666666
+    },
+    {
+      "shopId": "18",
+      "id": "XMAS-RED-WHITE-TREE",
+      "colors": "Blanc / Rouge",
+      "printed": 3,
+      "stock": 3,
+      "price": 25,
+      "timeDays": 0.21458333333333332
+    },
+    {
+      "shopId": "19",
+      "id": "Cle-De-Sol-PLA-01",
+      "colors": "Noir",
+      "printed": 1,
+      "stock": 0,
+      "price": 15,
+      "timeDays": 0.08333333333333333
+    },
+    {
+      "shopId": "20",
+      "id": "XMAS-FLAT-SET-01",
+      "colors": "Or / Mauve",
+      "printed": 1,
+      "stock": 1,
+      "price": 10,
+      "timeDays": 0.04583333333333333
+    },
+    {
+      "shopId": "21",
+      "id": "XMAS-FLAT-SET-01",
+      "colors": "Bleu",
+      "printed": 2,
+      "stock": 2,
+      "price": 10,
+      "timeDays": 0.04583333333333333
+    },
+    {
+      "shopId": "22",
+      "id": "XMAS-FLAT-SET-01",
+      "colors": "Blanc",
+      "printed": 1,
+      "stock": 1,
+      "price": 10,
+      "timeDays": 0.04583333333333333
+    },
+    {
+      "shopId": "23",
+      "id": "XMAS-FLAT-SET-02",
+      "colors": "Blanc",
+      "printed": 1,
+      "stock": 1,
+      "price": 10,
+      "timeDays": 0.07013888888888889
+    },
+    {
+      "shopId": "24",
+      "id": "I-Love-Horse",
+      "colors": "Noir",
+      "printed": 1,
+      "stock": 1,
+      "price": 10,
+      "timeDays": 0.04097222222222222
+    },
+    {
+      "shopId": "25",
+      "id": "XMAS-Card_set-01",
+      "colors": "Blanc",
+      "printed": 5,
+      "stock": 5,
+      "price": 5,
+      "timeDays": 0.03125
+    },
+    {
+      "shopId": "26",
+      "id": "Sapin-De-Noel",
+      "colors": "Vert",
+      "printed": 2,
+      "stock": 2,
+      "price": 8.5,
+      "timeDays": 0.4618055555555556
+    },
+    {
+      "shopId": "27",
+      "id": "Sapin-De-Noel-avec-Etoile",
+      "colors": "Vert",
+      "printed": 4,
+      "stock": 4,
+      "price": 10,
+      "timeDays": 0.5854166666666667
+    },
+    {
+      "shopId": "28",
+      "id": "XMAS-Ziz-Zag-Tree-PLA-set-01",
+      "colors": "Blanc",
+      "printed": 4,
+      "stock": 4,
+      "price": 10,
+      "timeDays": 0.020833333333333332
+    },
+    {
+      "shopId": "29",
+      "id": "XMAS-Ziz-Zag-Tree-PLA-set-01",
+      "colors": "Noir",
+      "printed": 4,
+      "stock": 4,
+      "price": 10,
+      "timeDays": 0.020833333333333332
+    },
+    {
+      "shopId": "30",
+      "id": "XMAS-Ziz-Zag-Tree-PLA-set-01",
+      "colors": "Rouge",
+      "printed": 4,
+      "stock": 4,
+      "price": 10,
+      "timeDays": 0.08333333333333333
+    },
+    {
+      "shopId": "31",
+      "id": "Sapin-Merry-Chrismas-Bleu",
+      "colors": "Bleu",
+      "printed": 1,
+      "stock": 1,
+      "price": 15,
+      "timeDays": 0.08472222222222223
+    },
+    {
+      "shopId": "32",
+      "id": "Sapin-Merry-Chrismas-Rouge",
+      "colors": "Rouge",
+      "printed": 2,
+      "stock": 2,
+      "price": 15,
+      "timeDays": 0.08472222222222223
+    },
+    {
+      "shopId": "33",
+      "id": "CANDAL-HOLDER-XMAS-PLA",
+      "colors": "Noir / Or / Bleu",
+      "printed": 1,
+      "stock": 1,
+      "price": 20,
+      "timeDays": 0.2048611111111111
+    },
+    {
+      "shopId": "34",
+      "id": "CANDAL-ANGE",
+      "colors": "Blanc",
+      "printed": 4,
+      "stock": 4,
+      "price": 7,
+      "timeDays": 0.10138888888888889
+    },
+    {
+      "shopId": "35",
+      "id": "CANDAL-SAPIN",
+      "colors": "Blanc",
+      "printed": 4,
+      "stock": 4,
+      "price": 9,
+      "timeDays": 0.125
+    },
+    {
+      "shopId": "36",
+      "id": "XMAS_BEAR",
+      "colors": "Rouge",
+      "printed": 4,
+      "stock": 8,
+      "price": 15,
+      "timeDays": 0.12916666666666668
+    },
+    {
+      "shopId": "37",
+      "id": "Holder-Batterie-Noir",
+      "colors": "Noir",
+      "printed": 1,
+      "stock": 1,
+      "price": 10,
+      "timeDays": 0.3076388888888889
+    },
+    {
+      "shopId": "38",
+      "id": "Fidget-Dinosaure-Mauvre",
+      "colors": "Mauve",
+      "printed": 1,
+      "stock": 1,
+      "price": 8,
+      "timeDays": 0.04027777777777778
+    },
+    {
+      "shopId": "39",
+      "id": "DRAGON-ART-01 FAIL",
+      "colors": "Or / Mauve",
+      "printed": 1,
+      "stock": 1,
+      "price": 0,
+      "timeDays": 0.20833333333333334
+    },
+    {
+      "shopId": "40",
+      "id": "Fidget-Boule-Rouge",
+      "colors": "Rouge",
+      "printed": 1,
+      "stock": 1,
+      "price": 8,
+      "timeDays": 0.7083333333333334
+    },
+    {
+      "shopId": "41",
+      "id": "Fidget-Dinosaure-Red/Gold",
+      "colors": "Rouge / Or",
+      "printed": 1,
+      "stock": 1,
+      "price": 8,
+      "timeDays": 0.04027777777777778
+    },
+    {
+      "shopId": "42",
+      "id": "Fidget-Roquin-Noir",
+      "colors": "Noir",
+      "printed": 1,
+      "stock": 1,
+      "price": 8,
+      "timeDays": 0.03680555555555556
+    },
+    {
+      "shopId": "43",
+      "id": "Fidget-Roquin-Red/Gold",
+      "colors": "Rouge / Or",
+      "printed": 1,
+      "stock": 1,
+      "price": 8,
+      "timeDays": 0.03680555555555556
+    },
+    {
+      "shopId": "44",
+      "id": "INFINITY-CUBE",
+      "colors": "Gris",
+      "printed": 2,
+      "stock": 2,
+      "price": 8,
+      "timeDays": 0.07013888888888889
+    },
+    {
+      "shopId": "45",
+      "id": "Fidget-Dinosaure-Vert/Blue",
+      "colors": "Vert / Bleu",
+      "printed": 1,
+      "stock": 1,
+      "price": 8,
+      "timeDays": 0.04027777777777778
+    },
+    {
+      "shopId": "46",
+      "id": "Fidget-Dinosaure-Rouge/Bleu",
+      "colors": "Rouge / Bleu",
+      "printed": 1,
+      "stock": 1,
+      "price": 8,
+      "timeDays": 0.04027777777777778
+    },
+    {
+      "shopId": "47",
+      "id": "Fidget-Roquin-Rouge/Bleu",
+      "colors": "Rouge / Bleu",
+      "printed": 1,
+      "stock": 1,
+      "price": 8,
+      "timeDays": 0.03680555555555556
+    },
+    {
+      "shopId": "48",
+      "id": "SPIRAL-FIDGET-PLA-NOIR",
+      "colors": "Noir",
+      "printed": 1,
+      "stock": 1,
+      "price": 8,
+      "timeDays": 0.13819444444444445
+    },
+    {
+      "shopId": "49",
+      "id": "SPIRAL-FIDGET-PLA-BLEU-GREEN",
+      "colors": "Bleu / Vert",
+      "printed": 1,
+      "stock": 1,
+      "price": 8,
+      "timeDays": 0.13819444444444445
+    },
+    {
+      "shopId": "50",
+      "id": "VORTEX-BALL-FIDGET-NOIR",
+      "colors": "Noir",
+      "printed": 1,
+      "stock": 1,
+      "price": 8,
+      "timeDays": 0.21041666666666667
+    },
+    {
+      "shopId": "51",
+      "id": "VORTEX-BALL-FIDGET-BLEU-GREEN",
+      "colors": "Bleu / Vert",
+      "printed": 1,
+      "stock": 1,
+      "price": 8,
+      "timeDays": 0.21041666666666667
+    },
+    {
+      "shopId": "52",
+      "id": "VORTEX-BALL-FIDGET-NOIR-WHITE",
+      "colors": "Noir",
+      "printed": 1,
+      "stock": 1,
+      "price": 8,
+      "timeDays": 0.21041666666666667
+    },
+    {
+      "shopId": "53",
+      "id": "FLEXIBALE-DRAGON-PLA-LIGHT-GOLD",
+      "colors": "Or Pale",
+      "printed": 1,
+      "stock": 1,
+      "price": 8,
+      "timeDays": 0.1451388888888889
+    },
+    {
+      "shopId": "54",
+      "id": "FLEXIBALE-DRAGON-PLA-SEA-GREEN",
+      "colors": "Vert D'Eau",
+      "printed": 1,
+      "stock": 1,
+      "price": 8,
+      "timeDays": 0.1451388888888889
+    },
+    {
+      "shopId": "55",
+      "id": "FLEXIBALE-DRAGON-PLA-PURPLE",
+      "colors": "Mauve",
+      "printed": 1,
+      "stock": 1,
+      "price": 8,
+      "timeDays": 0.1451388888888889
+    },
+    {
+      "shopId": "56",
+      "id": "Fidget-Dinosaure-Light-Gold",
+      "colors": "Or Pale",
+      "printed": 1,
+      "stock": 1,
+      "price": 8,
+      "timeDays": 0.15208333333333332
+    },
+    {
+      "shopId": "57",
+      "id": "INFINITY-CUBE-LIGHt-GOLD",
+      "colors": "Or Pale",
+      "printed": 1,
+      "stock": 1,
+      "price": 8,
+      "timeDays": 0.07083333333333333
+    },
+    {
+      "shopId": "58",
+      "id": "FLEXIBLE-SERPENT",
+      "colors": "Rose / Bleu",
+      "printed": 1,
+      "stock": 1,
+      "price": 8,
+      "timeDays": 0.26319444444444445
+    },
+    {
+      "shopId": "59",
+      "id": "Fidget-Dinosaure-Rose-Bleu",
+      "colors": "Rose / Bleu",
+      "printed": 1,
+      "stock": 1,
+      "price": 6,
+      "timeDays": 0.15208333333333332
+    },
+    {
+      "shopId": "60",
+      "id": "TRACK-FIDGET-BIG",
+      "colors": "Noir",
+      "printed": 2,
+      "stock": 2,
+      "price": 6,
+      "timeDays": 0.10277777777777777
+    },
+    {
+      "shopId": "61",
+      "id": "TRACK-FIDGET-SMALL",
+      "colors": "Noir",
+      "printed": 1,
+      "stock": 1,
+      "price": 8,
+      "timeDays": 0.019444444444444445
+    },
+    {
+      "shopId": "62",
+      "id": "CLICKER-KEYCHAIN-ECUREUIL-PLA",
+      "colors": "Beige",
+      "printed": 7,
+      "stock": 7,
+      "price": 6,
+      "timeDays": 0.029166666666666667
+    },
+    {
+      "shopId": "63",
+      "id": "Fidget-Dinosaure-Beige",
+      "colors": "Beige",
+      "printed": 1,
+      "stock": 1,
+      "price": 6,
+      "timeDays": 0.15208333333333332
+    },
+    {
+      "shopId": "64",
+      "id": "ANIMALS-PETG-01",
+      "colors": "Bleu",
+      "printed": 1,
+      "stock": 1,
+      "price": 2,
+      "timeDays": 0.16666666666666666
+    },
+    {
+      "shopId": "65",
+      "id": "BUNNY-KC-01",
+      "colors": "Bleu",
+      "printed": 1,
+      "stock": 1,
+      "price": 2,
+      "timeDays": 0.08333333333333333
+    },
+    {
+      "shopId": "66",
+      "id": "ELEPHANT-KC-01",
+      "colors": "Bleu",
+      "printed": 1,
+      "stock": 1,
+      "price": 2,
+      "timeDays": 0.08333333333333333
+    },
+    {
+      "shopId": "67",
+      "id": "Big-Dog-PLA-GOLD/PURPLE",
+      "colors": "Or / Mauve",
+      "printed": 1,
+      "stock": 1,
+      "price": 5,
+      "timeDays": 0.2916666666666667
+    },
+    {
+      "shopId": "68",
+      "id": "Big-Dog-PLA-BLUE",
+      "colors": "Bleu",
+      "printed": 2,
+      "stock": 2,
+      "price": 5,
+      "timeDays": 0.2916666666666667
+    },
+    {
+      "shopId": "69",
+      "id": "PACK-4-Animal-Key-Tag-Individuelle",
+      "colors": "Rose",
+      "printed": 8,
+      "stock": 8,
+      "price": 4,
+      "timeDays": 0.30486111111111114
+    },
+    {
+      "shopId": "70",
+      "id": "PACK-4-Animal-Key-Tag-01",
+      "colors": "Rouge",
+      "printed": 3,
+      "stock": 3,
+      "price": 5,
+      "timeDays": 0.30486111111111114
+    },
+    {
+      "shopId": "71",
+      "id": "PACK-4-Animal-Key-Tag-01",
+      "colors": "Rose",
+      "printed": 3,
+      "stock": 3,
+      "price": 10,
+      "timeDays": 0.30486111111111114
+    },
+    {
+      "shopId": "72",
+      "id": "Single-Animal-Key-Tag-01",
+      "colors": "Rouge",
+      "printed": 7,
+      "stock": 7,
+      "price": 2,
+      "timeDays": 0.30486111111111114
+    },
+    {
+      "shopId": "73",
+      "id": "SNAIL-KC-01",
+      "colors": "Bleu",
+      "printed": 1,
+      "stock": 1,
+      "price": 2,
+      "timeDays": 0.20833333333333334
+    },
+    {
+      "shopId": "74",
+      "id": "Small-Vase",
+      "colors": "Or",
+      "printed": 1,
+      "stock": 1,
+      "price": 25,
+      "timeDays": 0.625
+    },
+    {
+      "shopId": "75",
+      "id": "Vase-Carre-With-Leg",
+      "colors": "Or / Mauve",
+      "printed": 1,
+      "stock": 1,
+      "price": 10,
+      "timeDays": 0.3333333333333333
+    },
+    {
+      "shopId": "76",
+      "id": "Vase-Carre-With-Leg",
+      "colors": "Or",
+      "printed": 1,
+      "stock": 1,
+      "price": 10,
+      "timeDays": 0.3333333333333333
+    },
+    {
+      "shopId": "77",
+      "id": "Vase-zig-zag-Noir",
+      "colors": "Noir",
+      "printed": 1,
+      "stock": 1,
+      "price": 25,
+      "timeDays": 0.1736111111111111
+    },
+    {
+      "shopId": "78",
+      "id": "Vase-zig-zag-Bleu/Mauvre",
+      "colors": "Bleu / Mauve",
+      "printed": 1,
+      "stock": 1,
+      "price": 25,
+      "timeDays": 0.4326388888888889
+    },
+    {
+      "shopId": "79",
+      "id": "Mordern-Vase",
+      "colors": "Or / Mauve",
+      "printed": 1,
+      "stock": 1,
+      "price": 30,
+      "timeDays": 1.0833333333333333
+    },
+    {
+      "shopId": "80",
+      "id": "Mordern-Wave-Vase",
+      "colors": "Noir",
+      "printed": 1,
+      "stock": 1,
+      "price": 30,
+      "timeDays": 1.0833333333333333
+    },
+    {
+      "shopId": "81",
+      "id": "Vase-zig-zag-Orange/Rouge",
+      "colors": "Orange / Rouge",
+      "printed": 1,
+      "stock": 1,
+      "price": 25,
+      "timeDays": 0.4326388888888889
+    },
+    {
+      "shopId": "82",
+      "id": "Vase-zig-zag-Vert/Rouge",
+      "colors": "Vert / Rouge",
+      "printed": 1,
+      "stock": 1,
+      "price": 25,
+      "timeDays": 0.4326388888888889
+    },
+    {
+      "shopId": "83",
+      "id": "Boucle-Vase-Rose",
+      "colors": "Rose",
+      "printed": 1,
+      "stock": 1,
+      "price": 25,
+      "timeDays": 0.2604166666666667
+    },
+    {
+      "shopId": "84",
+      "id": "Pere-Noel-Vase",
+      "colors": "Blanc",
+      "printed": 4,
+      "stock": 4,
+      "price": 10,
+      "timeDays": 0.3875
+    },
+    {
+      "shopId": "85",
+      "id": "Deer-Vase",
+      "colors": "Blanc",
+      "printed": 4,
+      "stock": 4,
+      "price": 10,
+      "timeDays": 0.19791666666666666
+    },
+    {
+      "shopId": "86",
+      "id": "Dripping-Vase-PLA-Vert",
+      "colors": "Vert",
+      "printed": 1,
+      "stock": 1,
+      "price": 25,
+      "timeDays": 0.4284722222222222
+    },
+    {
+      "shopId": "87",
+      "id": "Boucle-Vase-Noir-HAFT",
+      "colors": "Noir",
+      "printed": 1,
+      "stock": 1,
+      "price": 20,
+      "timeDays": 0.16666666666666666
+    },
+    {
+      "shopId": "88",
+      "id": "Dripping-Vase-PLA-Sea-Green",
+      "colors": "Vert d'eau",
+      "printed": 1,
+      "stock": 1,
+      "price": 25,
+      "timeDays": 0.4284722222222222
+    },
+    {
+      "shopId": "89",
+      "id": "DRIPPING-VASE-PLA-PRUPLE",
+      "colors": "Mauve",
+      "printed": 1,
+      "stock": 1,
+      "price": 25,
+      "timeDays": 0.4388888888888889
+    },
+    {
+      "shopId": "90",
+      "id": "DRIPPING-VASE-PLA-RED-Bleu",
+      "colors": "Rose / Bleu",
+      "printed": 1,
+      "stock": 1,
+      "price": 25,
+      "timeDays": 0.4388888888888889
+    },
+    {
+      "shopId": "91",
+      "id": "VASE-AVEC-STAND-PLA-1",
+      "colors": "Beige",
+      "printed": 2,
+      "stock": 2,
+      "price": 20,
+      "timeDays": 0.19583333333333333
+    },
+    {
+      "shopId": "92",
+      "id": "VASE-AVEC-STAND-PLA-2",
+      "colors": "Rose",
+      "printed": 2,
+      "stock": 2,
+      "price": 20,
+      "timeDays": 0.19583333333333333
+    },
+    {
+      "shopId": "93",
+      "id": "VASE-AVEC-STAND-PLA-3",
+      "colors": "Vert d'eau",
+      "printed": 2,
+      "stock": 2,
+      "price": 20,
+      "timeDays": 0.19583333333333333
+    },
+    {
+      "shopId": "94",
+      "id": "VASE-AVEC-STAND-PLA-4",
+      "colors": "Rouge",
+      "printed": 2,
+      "stock": 2,
+      "price": 20,
+      "timeDays": 0.19583333333333333
+    },
+    {
+      "shopId": "95",
+      "id": "Vase_GG_PLATE",
+      "colors": "Rouge",
+      "printed": 1,
+      "stock": 1,
+      "price": 20,
+      "timeDays": 0.1284722222222222
+    },
+    {
+      "shopId": "96",
+      "id": "PROD-MW3PBPM7",
+      "colors": "Blanc",
+      "printed": 0,
+      "stock": 1,
+      "price": 45,
+      "timeDays": 0.34791666666666665
+    },
+    {
+      "shopId": "97",
+      "id": "PROD-MW3PEOKG",
+      "colors": "Noir",
+      "printed": 0,
+      "stock": 20,
+      "price": 4,
+      "timeDays": 0.017361111111111112
+    }
+  ],
+  "products": [
+    {
+      "grams": 8,
+      "shopId": "1",
+      "colors": "Rouge / Rose",
+      "printer": "Anycubic Kobra X",
+      "source": "Excel",
+      "notes": "",
+      "otherCost": 0.1,
+      "sold": 0,
+      "materials": [
+        {
+          "grams": 4,
+          "id": "FIL-PINK-JAMGHE-01"
+        },
+        {
+          "grams": 4,
+          "id": "JAYO-PLA+-Rouge"
+        }
+      ],
+      "printed": 9,
+      "filamentCost": 0.15196,
+      "unitProfit": 3.215373333,
+      "commissionRate": 0.3,
+      "inShop": true,
+      "unitCost": 0.9846266667,
+      "components": [
+        {
+          "quantity": 1,
+          "id": "CLICKER-HARDWARE-BLEU"
+        },
+        {
+          "id": "CLICKER-HARDWARE-RED",
+          "quantity": 1
+        }
+      ],
+      "stock": 9,
+      "category": "Cliker",
+      "price": 6,
+      "name": "Clicker KeyChain Toy Rose",
+      "id": "Clicker-Rose-Toy-Rose/Rouge",
+      "timeDays": 0.02847222222222222
+    },
+    {
+      "components": [
+        {
+          "id": "CLICKER-HARDWARE-BLEU",
+          "quantity": 1
+        },
+        {
+          "id": "CLICKER-HARDWARE-RED",
+          "quantity": 1
+        }
+      ],
+      "source": "Excel",
+      "colors": "Bleu / Mauve",
+      "stock": 9,
+      "unitProfit": 3.102664139,
+      "price": 6,
+      "shopId": "2",
+      "sold": 0,
+      "printer": "Anycubic Kobra X",
+      "id": "Clicker-Rose-Toy-Blanc/blue/mauvre",
+      "materials": [
+        {
+          "id": "AMOLEN-PLA-Silk-Dual-Red/Blue-01",
+          "grams": 4
+        },
+        {
+          "id": "PANCHROMA-PLA-WHITE-01",
+          "grams": 4
+        }
+      ],
+      "unitCost": 1.097335861,
+      "commissionRate": 0.3,
+      "name": "Clicker KeyChain Toy Rose",
+      "inShop": true,
+      "printed": 9,
+      "notes": "",
+      "category": "Cliker",
+      "filamentCost": 0.2646691943,
+      "grams": 8,
+      "otherCost": 0.1,
+      "timeDays": 0.02847222222222222
+    },
+    {
+      "timeDays": 0.19722222222222222,
+      "price": 6,
+      "stock": 7,
+      "commissionRate": 0.3,
+      "category": "Cliker",
+      "filamentCost": 0.18975,
+      "source": "Excel",
+      "name": "Clicker Keychain Raccoon",
+      "id": "Clicker-Raccoon",
+      "shopId": "3",
+      "unitCost": 1.022416667,
+      "colors": "Noir / Gris / Blanc",
+      "sold": 0,
+      "materials": [
+        {
+          "id": "ESUN-PLA-BLACK-01",
+          "grams": 15
+        }
+      ],
+      "printed": 7,
+      "components": [
+        {
+          "id": "CLICKER-HARDWARE-BLEU",
+          "quantity": 1
+        },
+        {
+          "id": "CLICKER-HARDWARE-RED",
+          "quantity": 1
+        }
+      ],
+      "grams": 15,
+      "otherCost": 0.1,
+      "inShop": true,
+      "printer": "Anycubic Kobra X",
+      "unitProfit": 3.177583333,
+      "notes": ""
+    },
+    {
+      "printed": 14,
+      "otherCost": 0,
+      "source": "Excel",
+      "name": "Clicker Keycahin  Penguin",
+      "price": 6,
+      "filamentCost": 0.2275975,
+      "colors": "Noir / Blanc / Orange",
+      "shopId": "4",
+      "commissionRate": 0.3,
+      "stock": 14,
+      "printer": "Anycubic Kobra X",
+      "materials": [
+        {
+          "id": "KINGROON-PLA-ORANGE",
+          "grams": 0.9
+        },
+        {
+          "id": "ESUN-PLA-BLACK-03",
+          "grams": 2
+        },
+        {
+          "id": "ELEGOO-PLA-WHITE-02",
+          "grams": 13.77
+        }
+      ],
+      "timeDays": 0.029861111111111113,
+      "category": "Cliker",
+      "inShop": true,
+      "id": "KEYCHAIN-CLICKER-PENGUIN",
+      "sold": 0,
+      "unitProfit": 3.239735833,
+      "notes": "7 rouge et 7 bleu ",
+      "components": [
+        {
+          "quantity": 1,
+          "id": "CLICKER-HARDWARE-RED"
+        },
+        {
+          "id": "CLICKER-HARDWARE-BLEU",
+          "quantity": 1
+        }
+      ],
+      "unitCost": 0.9602641667,
+      "grams": 16.67
+    },
+    {
+      "grams": 15,
+      "unitProfit": 6.76,
+      "sold": 0,
+      "notes": "",
+      "materials": [
+        {
+          "id": "JAYO-PLA+-Noir",
+          "grams": 15
+        }
+      ],
+      "components": [],
+      "filamentCost": 0.24,
+      "inShop": true,
+      "otherCost": 0,
+      "commissionRate": 0.3,
+      "timeDays": 0.043055555555555555,
+      "id": "Moose-Deces-PLA",
+      "category": "Deces",
+      "printed": 1,
+      "shopId": "5",
+      "stock": 1,
+      "colors": "Noir",
+      "price": 10,
+      "unitCost": 0.24,
+      "source": "Excel",
+      "printer": "Qidi X-Plus 3",
+      "name": "Deces Moose"
+    },
+    {
+      "source": "Excel",
+      "otherCost": 0,
+      "shopId": "6",
+      "colors": "Noir",
+      "name": "Hairdresser Tool ",
+      "grams": 22,
+      "filamentCost": 0.352,
+      "materials": [
+        {
+          "id": "JAYO-PLA+-Noir",
+          "grams": 22
+        }
+      ],
+      "notes": "",
+      "price": 10,
+      "printed": 1,
+      "sold": 0,
+      "stock": 1,
+      "timeDays": 0.03819444444444445,
+      "inShop": true,
+      "category": "Deces",
+      "printer": "Qidi X-Plus 3",
+      "components": [],
+      "commissionRate": 0.3,
+      "unitProfit": 6.648,
+      "id": "DECES-Hairdresser-PLA",
+      "unitCost": 0.352
+    },
+    {
+      "components": [],
+      "category": "Deces",
+      "inShop": true,
+      "timeDays": 0.05555555555555555,
+      "unitProfit": 6.504,
+      "name": "Music PianoNotes",
+      "grams": 31,
+      "unitCost": 0.496,
+      "filamentCost": 0.496,
+      "notes": "",
+      "source": "Excel",
+      "materials": [
+        {
+          "grams": 31,
+          "id": "JAYO-PLA+-Noir"
+        }
+      ],
+      "price": 10,
+      "printer": "Qidi X-Plus 3",
+      "stock": 1,
+      "sold": 0,
+      "shopId": "7",
+      "colors": "Noir",
+      "printed": 1,
+      "commissionRate": 0.3,
+      "otherCost": 0,
+      "id": "DECES-Music-Piano-Note-PLA"
+    },
+    {
+      "unitCost": 0.49456,
+      "name": "Note de musique guitar",
+      "otherCost": 0,
+      "filamentCost": 0.49456,
+      "id": "Deces-Note-De-Musique-Guitar",
+      "category": "Deces",
+      "inShop": true,
+      "components": [],
+      "unitProfit": 6.50544,
+      "timeDays": 0.16666666666666666,
+      "price": 10,
+      "stock": 1,
+      "materials": [
+        {
+          "grams": 22,
+          "id": "ELE-RAPID-PETG-Noir-01"
+        }
+      ],
+      "notes": "",
+      "commissionRate": 0.3,
+      "printer": "Ender-3 V2 Neo",
+      "grams": 22,
+      "colors": "Noir",
+      "shopId": "8",
+      "sold": 0,
+      "printed": 1,
+      "source": "Excel"
+    },
+    {
+      "unitCost": 0.39215,
+      "notes": "",
+      "unitProfit": 6.60785,
+      "id": "Deces-Drum",
+      "commissionRate": 0.3,
+      "filamentCost": 0.39215,
+      "otherCost": 0,
+      "grams": 31,
+      "components": [],
+      "name": "Deces Drum",
+      "colors": "Noir",
+      "category": "Deces",
+      "materials": [
+        {
+          "id": "ESUN-PLA-BLACK-02",
+          "grams": 31
+        }
+      ],
+      "shopId": "9",
+      "timeDays": 0.08125,
+      "source": "Excel",
+      "printer": "Qidi X-Plus 3",
+      "inShop": true,
+      "stock": 2,
+      "sold": 0,
+      "price": 10,
+      "printed": 2
+    },
+    {
+      "materials": [
+        {
+          "id": "ESUN-PLA-BLACK-02",
+          "grams": 12
+        }
+      ],
+      "unitCost": 0.1518,
+      "inShop": true,
+      "commissionRate": 0.3,
+      "notes": "",
+      "otherCost": 0,
+      "timeDays": 0.05555555555555555,
+      "grams": 12,
+      "category": "Deces",
+      "sold": 0,
+      "printed": 3,
+      "unitProfit": 6.8482,
+      "filamentCost": 0.1518,
+      "source": "Excel",
+      "name": "Montoneige",
+      "stock": 3,
+      "colors": "Noir",
+      "components": [],
+      "shopId": "10",
+      "price": 10,
+      "printer": "Qidi X-Plus 3",
+      "id": "Deces-Motoneige"
+    },
+    {
+      "printer": "Qidi X-Plus 3",
+      "id": "Deces-Dirt-Bike",
+      "category": "Deces",
+      "source": "Excel",
+      "colors": "Noir",
+      "stock": 1,
+      "price": 10,
+      "timeDays": 0.08402777777777778,
+      "shopId": "11",
+      "printed": 1,
+      "unitCost": 0.6072,
+      "sold": 0,
+      "name": "Dirt Bike ",
+      "commissionRate": 0.3,
+      "materials": [
+        {
+          "grams": 48,
+          "id": "ESUN-PLA-BLACK-02"
+        }
+      ],
+      "inShop": true,
+      "notes": "",
+      "otherCost": 0,
+      "filamentCost": 0.6072,
+      "unitProfit": 6.3928,
+      "components": [],
+      "grams": 48
+    },
+    {
+      "inShop": true,
+      "grams": 62,
+      "sold": 0,
+      "notes": "",
+      "unitProfit": 6.2157,
+      "commissionRate": 0.3,
+      "components": [],
+      "category": "Deces",
+      "shopId": "12",
+      "printer": "Qidi X-Plus 3",
+      "materials": [
+        {
+          "grams": 62,
+          "id": "ESUN-PLA-BLACK-02"
+        }
+      ],
+      "colors": "Noir",
+      "source": "Excel",
+      "timeDays": 0.09305555555555556,
+      "name": "Camping",
+      "price": 10,
+      "filamentCost": 0.7843,
+      "unitCost": 0.7843,
+      "stock": 1,
+      "printed": 1,
+      "otherCost": 0,
+      "id": "Deces-Camping"
+    },
+    {
+      "colors": "Noir",
+      "printed": 1,
+      "components": [],
+      "shopId": "13",
+      "notes": "",
+      "filamentCost": 0.5566,
+      "unitProfit": 6.4434,
+      "source": "Excel",
+      "grams": 44,
+      "commissionRate": 0.3,
+      "printer": "Qidi X-Plus 3",
+      "sold": 0,
+      "id": "Deces-Fishing",
+      "name": "Fishing",
+      "inShop": true,
+      "timeDays": 0.09652777777777778,
+      "category": "Deces",
+      "materials": [
+        {
+          "id": "ESUN-PLA-BLACK-02",
+          "grams": 44
+        }
+      ],
+      "otherCost": 0,
+      "price": 10,
+      "stock": 1,
+      "unitCost": 0.5566
+    },
+    {
+      "timeDays": 0.10347222222222222,
+      "notes": "",
+      "name": "Moose Circle",
+      "otherCost": 0,
+      "printed": 1,
+      "category": "Deces",
+      "grams": 60,
+      "colors": "Noir",
+      "shopId": "14",
+      "commissionRate": 0.3,
+      "materials": [
+        {
+          "grams": 60,
+          "id": "ESUN-PLA-BLACK-02"
+        }
+      ],
+      "unitCost": 0.759,
+      "source": "Excel",
+      "printer": "Qidi X-Plus 3",
+      "unitProfit": 6.241,
+      "id": "Moose-Circle-Loop-Deces",
+      "components": [],
+      "sold": 0,
+      "inShop": true,
+      "price": 10,
+      "filamentCost": 0.759,
+      "stock": 1
+    },
+    {
+      "notes": "",
+      "grams": 40,
+      "commissionRate": 0.3,
+      "id": "Logo-Garage-Deces",
+      "filamentCost": 0.506,
+      "printer": "Qidi X-Plus 3",
+      "materials": [
+        {
+          "id": "ESUN-PLA-BLACK-02",
+          "grams": 40
+        }
+      ],
+      "colors": "Noir",
+      "otherCost": 0,
+      "unitProfit": 6.494,
+      "shopId": "15",
+      "sold": 0,
+      "components": [],
+      "printed": 1,
+      "source": "Excel",
+      "category": "Deces",
+      "timeDays": 0.09652777777777778,
+      "name": "Logo Garage",
+      "unitCost": 0.506,
+      "inShop": true,
+      "stock": 1,
+      "price": 10
+    },
+    {
+      "unitProfit": 5.896,
+      "id": "XMAS-Cookie-PLA-RED",
+      "unitCost": 1.104,
+      "price": 10,
+      "components": [],
+      "inShop": true,
+      "stock": 1,
+      "sold": 0,
+      "category": "Décoration",
+      "timeDays": 0.14166666666666666,
+      "printer": "Qidi X-Plus 3",
+      "name": "14 Moule A Biscuite",
+      "source": "Excel",
+      "materials": [
+        {
+          "grams": 69,
+          "id": "JAYO-PLA+-Rouge"
+        }
+      ],
+      "colors": "Rouge",
+      "shopId": "16",
+      "printed": 1,
+      "notes": "",
+      "commissionRate": 0.3,
+      "otherCost": 0,
+      "filamentCost": 1.104,
+      "grams": 69
+    },
+    {
+      "printed": 1,
+      "timeDays": 0.14166666666666666,
+      "stock": 1,
+      "category": "Décoration",
+      "price": 10,
+      "name": "14 Moule A Biscuite",
+      "inShop": true,
+      "printer": "Qidi X-Plus 3",
+      "commissionRate": 0.3,
+      "unitCost": 1.104,
+      "unitProfit": 5.896,
+      "source": "Excel",
+      "colors": "Bleu",
+      "materials": [
+        {
+          "id": "JAYO-PLA+-Bleu",
+          "grams": 69
+        }
+      ],
+      "id": "XMAS-Cookie-PLA-Blue",
+      "components": [],
+      "filamentCost": 1.104,
+      "shopId": "17",
+      "notes": "",
+      "otherCost": 0,
+      "sold": 0,
+      "grams": 69
+    },
+    {
+      "components": [
+        {
+          "id": "XMAS-FAKE-CANDLE-01",
+          "quantity": 4
+        }
+      ],
+      "stock": 3,
+      "id": "XMAS-RED-WHITE-TREE",
+      "price": 25,
+      "unitCost": 5.272,
+      "name": "Arbre de Noel en griage",
+      "inShop": true,
+      "unitProfit": 12.228,
+      "timeDays": 0.21458333333333332,
+      "commissionRate": 0.3,
+      "category": "Décoration",
+      "printed": 3,
+      "materials": [
+        {
+          "id": "JAYO-PLA+-Blanc",
+          "grams": 108
+        },
+        {
+          "grams": 24,
+          "id": "JAYO-PLA+-Rouge"
+        }
+      ],
+      "source": "Excel",
+      "colors": "Blanc / Rouge",
+      "shopId": "18",
+      "printer": "Qidi X-Plus 3",
+      "notes": "",
+      "filamentCost": 2.112,
+      "sold": 0,
+      "grams": 132,
+      "otherCost": 0
+    },
+    {
+      "unitCost": 4,
+      "filamentCost": 4,
+      "printer": "Ender-3 V2 Neo",
+      "inShop": true,
+      "name": "Cle de sol",
+      "price": 15,
+      "stock": 0,
+      "category": "Décoration",
+      "commissionRate": 0.3,
+      "timeDays": 0.08333333333333333,
+      "printed": 1,
+      "grams": 250,
+      "otherCost": 0,
+      "sold": 1,
+      "notes": "",
+      "shopId": "19",
+      "unitProfit": 6.5,
+      "id": "Cle-De-Sol-PLA-01",
+      "colors": "Noir",
+      "source": "Excel",
+      "materials": [
+        {
+          "id": "JAYO-PLA+-Noir",
+          "grams": 250
+        }
+      ],
+      "components": []
+    },
+    {
+      "colors": "Or / Mauve",
+      "shopId": "20",
+      "notes": "Impression de plusieurs animaux séparés en PETG le 28 sept. 2026. Stringing important; buse testée à 245 °C puis 240 °C. Quantité/durée/grammes à compléter.",
+      "materials": [
+        {
+          "id": "PLA-SILK-ORMAUVE-01",
+          "grams": 22
+        }
+      ],
+      "source": "Excel",
+      "grams": 22,
+      "commissionRate": 0.3,
+      "otherCost": 0,
+      "sold": 0,
+      "id": "XMAS-FLAT-SET-01",
+      "unitProfit": 6.56022,
+      "name": "Décorations de Noël plates — 6 modèles",
+      "printed": 1,
+      "inShop": true,
+      "unitCost": 0.43978,
+      "components": [],
+      "filamentCost": 0.43978,
+      "printer": "Ender-3 V2 Neo",
+      "timeDays": 0.04583333333333333,
+      "category": "Décoration",
+      "price": 10,
+      "stock": 1
+    },
+    {
+      "filamentCost": 0.352,
+      "materials": [
+        {
+          "grams": 22,
+          "id": "JAYO-PLA+-Bleu"
+        }
+      ],
+      "colors": "Bleu",
+      "unitProfit": 6.648,
+      "commissionRate": 0.3,
+      "otherCost": 0,
+      "shopId": "21",
+      "stock": 2,
+      "sold": 0,
+      "price": 10,
+      "source": "Excel",
+      "components": [],
+      "unitCost": 0.352,
+      "notes": "",
+      "grams": 22,
+      "name": "Décorations de Noël plates — 6 modèles",
+      "printer": "Ender-3 V2 Neo",
+      "category": "Décoration",
+      "inShop": true,
+      "timeDays": 0.04583333333333333,
+      "printed": 2,
+      "id": "XMAS-FLAT-SET-01"
+    },
+    {
+      "commissionRate": 0.3,
+      "otherCost": 0,
+      "stock": 1,
+      "printed": 1,
+      "price": 10,
+      "id": "XMAS-FLAT-SET-01",
+      "materials": [
+        {
+          "id": "JAYO-PLA+-Blanc",
+          "grams": 22
+        }
+      ],
+      "printer": "Qidi X-Plus 3",
+      "filamentCost": 0.352,
+      "inShop": true,
+      "sold": 0,
+      "timeDays": 0.04583333333333333,
+      "components": [],
+      "name": "Décorations de Noël plates — 6 modèles",
+      "unitProfit": 6.648,
+      "category": "Décoration",
+      "notes": "",
+      "source": "Excel",
+      "grams": 22,
+      "colors": "Blanc",
+      "unitCost": 0.352,
+      "shopId": "22"
+    },
+    {
+      "components": [],
+      "otherCost": 0,
+      "notes": "",
+      "name": "Décorations de Noël plates — 7 modèles",
+      "printed": 1,
+      "unitProfit": 6.584,
+      "grams": 26,
+      "colors": "Blanc",
+      "shopId": "23",
+      "commissionRate": 0.3,
+      "materials": [
+        {
+          "grams": 26,
+          "id": "JAYO-PLA+-Blanc"
+        }
+      ],
+      "printer": "Qidi X-Plus 3",
+      "source": "Excel",
+      "filamentCost": 0.416,
+      "timeDays": 0.07013888888888889,
+      "id": "XMAS-FLAT-SET-02",
+      "category": "Décoration",
+      "sold": 0,
+      "inShop": true,
+      "unitCost": 0.416,
+      "price": 10,
+      "stock": 1
+    },
+    {
+      "stock": 1,
+      "printed": 1,
+      "price": 10,
+      "printer": "Qidi X-Plus 3",
+      "sold": 0,
+      "inShop": true,
+      "unitProfit": 6.616,
+      "timeDays": 0.04097222222222222,
+      "commissionRate": 0.3,
+      "filamentCost": 0.384,
+      "otherCost": 0,
+      "name": "I love Horse",
+      "components": [],
+      "category": "Décoration",
+      "id": "I-Love-Horse",
+      "notes": "",
+      "source": "Excel",
+      "colors": "Noir",
+      "grams": 24,
+      "materials": [
+        {
+          "id": "JAYO-PLA+-Noir",
+          "grams": 24
+        }
+      ],
+      "unitCost": 0.384,
+      "shopId": "24"
+    },
+    {
+      "filamentCost": 0.224,
+      "materials": [
+        {
+          "grams": 14,
+          "id": "JAYO-PLA+-Blanc"
+        }
+      ],
+      "commissionRate": 0.3,
+      "shopId": "25",
+      "name": "Kit Card Noel set de 3",
+      "price": 5,
+      "id": "XMAS-Card_set-01",
+      "stock": 5,
+      "otherCost": 0,
+      "colors": "Blanc",
+      "source": "Excel",
+      "components": [],
+      "timeDays": 0.03125,
+      "grams": 14,
+      "sold": 0,
+      "unitProfit": 3.276,
+      "category": "Décoration",
+      "printed": 5,
+      "notes": "",
+      "inShop": true,
+      "unitCost": 0.224,
+      "printer": "Qidi X-Plus 3"
+    },
+    {
+      "unitCost": 0.43505,
+      "materials": [
+        {
+          "grams": 35,
+          "id": "ESUN-PLA-GREEN-01"
+        }
+      ],
+      "id": "Sapin-De-Noel",
+      "printer": "Anycubic Kobra X",
+      "sold": 0,
+      "source": "Excel",
+      "grams": 35,
+      "category": "Décoration",
+      "timeDays": 0.4618055555555556,
+      "commissionRate": 0.3,
+      "notes": "",
+      "otherCost": 0,
+      "printed": 2,
+      "shopId": "26",
+      "colors": "Vert",
+      "stock": 2,
+      "components": [],
+      "price": 8.5,
+      "unitProfit": 5.51495,
+      "filamentCost": 0.43505,
+      "inShop": true,
+      "name": "Sapin de Noel"
+    },
+    {
+      "notes": "",
+      "components": [],
+      "otherCost": 0,
+      "grams": 70,
+      "unitProfit": 6.1299,
+      "name": "Sapin de Noel avec etoile",
+      "printed": 4,
+      "inShop": true,
+      "printer": "Anycubic Kobra X",
+      "materials": [
+        {
+          "id": "ESUN-PLA-GREEN-01",
+          "grams": 70
+        }
+      ],
+      "timeDays": 0.5854166666666667,
+      "id": "Sapin-De-Noel-avec-Etoile",
+      "commissionRate": 0.3,
+      "category": "Décoration",
+      "colors": "Vert",
+      "filamentCost": 0.8701,
+      "shopId": "27",
+      "unitCost": 0.8701,
+      "stock": 4,
+      "sold": 0,
+      "price": 10,
+      "source": "Excel"
+    },
+    {
+      "source": "Excel",
+      "name": "Sapin de Noel en zig zag",
+      "price": 10,
+      "id": "XMAS-Ziz-Zag-Tree-PLA-set-01",
+      "colors": "Blanc",
+      "shopId": "28",
+      "stock": 4,
+      "unitCost": 0.24,
+      "timeDays": 0.020833333333333332,
+      "filamentCost": 0.24,
+      "category": "Décoration",
+      "printed": 4,
+      "commissionRate": 0.3,
+      "materials": [
+        {
+          "id": "JAYO-PLA+-Blanc",
+          "grams": 15
+        }
+      ],
+      "inShop": true,
+      "printer": "Qidi X-Plus 3",
+      "sold": 0,
+      "unitProfit": 6.76,
+      "otherCost": 0,
+      "notes": "A prendre une decision si on le vend en pack de 2 ou 4 ou seul...",
+      "components": [],
+      "grams": 15
+    },
+    {
+      "unitProfit": 6.81025,
+      "inShop": true,
+      "id": "XMAS-Ziz-Zag-Tree-PLA-set-01",
+      "unitCost": 0.18975,
+      "components": [],
+      "timeDays": 0.020833333333333332,
+      "category": "Décoration",
+      "sold": 0,
+      "stock": 4,
+      "price": 10,
+      "filamentCost": 0.18975,
+      "colors": "Noir",
+      "notes": "A prendre une decision si on le vend en pack de 2 ou 4 ou seul...",
+      "printed": 4,
+      "shopId": "29",
+      "materials": [
+        {
+          "id": "ESUN-PLA-BLACK-03",
+          "grams": 15
+        }
+      ],
+      "commissionRate": 0.3,
+      "grams": 15,
+      "source": "Excel",
+      "name": "Sapin de Noel en zig zag",
+      "printer": "Qidi X-Plus 3",
+      "otherCost": 0
+    },
+    {
+      "otherCost": 0,
+      "printer": "Qidi X-Plus 3",
+      "source": "Excel",
+      "colors": "Rouge",
+      "stock": 4,
+      "price": 10,
+      "name": "Sapin de Noel en zig zag",
+      "id": "XMAS-Ziz-Zag-Tree-PLA-set-01",
+      "shopId": "30",
+      "printed": 4,
+      "materials": [
+        {
+          "grams": 15,
+          "id": "JAYO-PLA+-Rouge"
+        }
+      ],
+      "category": "Décoration",
+      "commissionRate": 0.3,
+      "timeDays": 0.08333333333333333,
+      "inShop": true,
+      "notes": "",
+      "filamentCost": 0.24,
+      "components": [],
+      "unitCost": 0.24,
+      "unitProfit": 6.76,
+      "sold": 0,
+      "grams": 15
+    },
+    {
+      "price": 15,
+      "source": "Excel",
+      "unitProfit": 9.796,
+      "sold": 0,
+      "timeDays": 0.08472222222222223,
+      "id": "Sapin-Merry-Chrismas-Bleu",
+      "stock": 1,
+      "shopId": "31",
+      "category": "Décoration",
+      "components": [],
+      "colors": "Bleu",
+      "unitCost": 0.704,
+      "filamentCost": 0.704,
+      "printed": 1,
+      "inShop": true,
+      "materials": [
+        {
+          "grams": 44,
+          "id": "JAYO-PLA+-Bleu"
+        }
+      ],
+      "printer": "Qidi X-Plus 3",
+      "otherCost": 0,
+      "name": "Sapin Merry Chrismas",
+      "grams": 44,
+      "commissionRate": 0.3,
+      "notes": ""
+    },
+    {
+      "sold": 0,
+      "shopId": "32",
+      "price": 15,
+      "stock": 2,
+      "colors": "Rouge",
+      "source": "Excel",
+      "unitProfit": 9.796,
+      "timeDays": 0.08472222222222223,
+      "grams": 44,
+      "materials": [
+        {
+          "grams": 44,
+          "id": "JAYO-PLA+-Rouge"
+        }
+      ],
+      "commissionRate": 0.3,
+      "category": "Décoration",
+      "components": [],
+      "printed": 2,
+      "notes": "",
+      "inShop": true,
+      "name": "Sapin Merry Chrismas",
+      "otherCost": 0,
+      "filamentCost": 0.704,
+      "unitCost": 0.704,
+      "id": "Sapin-Merry-Chrismas-Rouge",
+      "printer": "Qidi X-Plus 3"
+    },
+    {
+      "shopId": "33",
+      "filamentCost": 1.36826,
+      "id": "CANDAL-HOLDER-XMAS-PLA",
+      "colors": "Noir / Or / Bleu",
+      "source": "Excel",
+      "materials": [
+        {
+          "id": "ESUN-PLA-BLACK-01",
+          "grams": 79
+        },
+        {
+          "grams": 9,
+          "id": "JAYO-PLA+-Bleu"
+        },
+        {
+          "id": "CC3D-PLA-GOLD-01",
+          "grams": 9
+        }
+      ],
+      "price": 20,
+      "otherCost": 0,
+      "components": [
+        {
+          "id": "XMAS-FAKE-CANDLE-01",
+          "quantity": 4
+        }
+      ],
+      "name": "Candal Holder Xmas",
+      "stock": 1,
+      "unitProfit": 9.47174,
+      "commissionRate": 0.3,
+      "inShop": true,
+      "sold": 0,
+      "grams": 97,
+      "printed": 1,
+      "timeDays": 0.2048611111111111,
+      "category": "Décoration",
+      "notes": "",
+      "printer": "Qidi X-Plus 3",
+      "unitCost": 4.52826
+    },
+    {
+      "source": "Excel",
+      "materials": [
+        {
+          "grams": 19,
+          "id": "ELEGOO-PLA-WHITE-01"
+        }
+      ],
+      "price": 7,
+      "colors": "Blanc",
+      "filamentCost": 0.26125,
+      "commissionRate": 0.3,
+      "shopId": "34",
+      "stock": 4,
+      "sold": 0,
+      "otherCost": 0,
+      "printed": 4,
+      "id": "CANDAL-ANGE",
+      "name": "Candal Ange",
+      "inShop": true,
+      "unitCost": 1.05125,
+      "printer": "Anycubic Kobra X",
+      "unitProfit": 3.84875,
+      "notes": "",
+      "timeDays": 0.10138888888888889,
+      "category": "Décoration",
+      "grams": 19,
+      "components": [
+        {
+          "id": "XMAS-FAKE-CANDLE-01",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "grams": 79,
+      "inShop": true,
+      "notes": "",
+      "materials": [
+        {
+          "id": "ELEGOO-PLA-WHITE-01",
+          "grams": 79
+        }
+      ],
+      "otherCost": 0,
+      "name": "Candal Sapin",
+      "commissionRate": 0.3,
+      "filamentCost": 1.08625,
+      "shopId": "35",
+      "colors": "Blanc",
+      "printed": 4,
+      "timeDays": 0.125,
+      "category": "Décoration",
+      "source": "Excel",
+      "sold": 0,
+      "stock": 4,
+      "unitProfit": 4.42375,
+      "id": "CANDAL-SAPIN",
+      "printer": "Anycubic Kobra X",
+      "price": 9,
+      "unitCost": 1.87625,
+      "components": [
+        {
+          "quantity": 1,
+          "id": "XMAS-FAKE-CANDLE-01"
+        }
+      ]
+    },
+    {
+      "grams": 36.47,
+      "shopId": "36",
+      "unitProfit": 10.0069155,
+      "colors": "Rouge",
+      "printer": "Anycubic Kobra X",
+      "components": [],
+      "notes": "",
+      "source": "Excel",
+      "commissionRate": 0.3,
+      "printed": 8,
+      "name": "Petit ours de Noel",
+      "inShop": true,
+      "unitCost": 0.4930845,
+      "materials": [
+        {
+          "grams": 4.1,
+          "id": "ESUN-PLA-RED-01"
+        },
+        {
+          "grams": 0.87,
+          "id": "ESUN-PLA-BLACK-03"
+        },
+        {
+          "id": "ELEGOO-PLA-WHITE-01",
+          "grams": 31.5
+        }
+      ],
+      "sold": 0,
+      "category": "Décoration",
+      "stock": 8,
+      "id": "XMAS_BEAR",
+      "price": 15,
+      "filamentCost": 0.4930845,
+      "otherCost": 0,
+      "timeDays": 0.12916666666666668
+    },
+    {
+      "stock": 1,
+      "printer": "Anycubic Kobra X",
+      "source": "Excel",
+      "price": 10,
+      "unitCost": 1.50535,
+      "materials": [
+        {
+          "id": "ESUN-PLA-BLACK-01",
+          "grams": 119
+        }
+      ],
+      "shopId": "37",
+      "colors": "Noir",
+      "id": "Holder-Batterie-Noir",
+      "printed": 1,
+      "category": "Fonctionnel",
+      "components": [],
+      "otherCost": 0,
+      "unitProfit": 5.49465,
+      "timeDays": 0.3076388888888889,
+      "name": "Batterie Holder ",
+      "sold": 0,
+      "inShop": true,
+      "commissionRate": 0.3,
+      "grams": 119,
+      "notes": "",
+      "filamentCost": 1.50535
+    },
+    {
+      "sold": 0,
+      "inShop": true,
+      "id": "Fidget-Dinosaure-Mauvre",
+      "components": [],
+      "grams": 15,
+      "unitProfit": 5.6,
+      "notes": "",
+      "source": "Excel",
+      "printer": "Anycubic Kobra X",
+      "price": 8,
+      "category": "Jouet / Fidget",
+      "stock": 1,
+      "otherCost": 0,
+      "shopId": "38",
+      "timeDays": 0.04027777777777778,
+      "commissionRate": 0.3,
+      "colors": "Mauve",
+      "name": "Dinosaure Mauvre",
+      "printed": 1,
+      "materials": [
+        {
+          "id": "Kobra-PLA",
+          "grams": 15
+        }
+      ],
+      "unitCost": 0,
+      "filamentCost": 0
+    },
+    {
+      "grams": 25,
+      "inShop": true,
+      "notes": "Print-in-place. Plusieurs essais/échecs documentés; aucune impression complète confirmée. À retester.",
+      "materials": [
+        {
+          "id": "PLA-SILK-ORMAUVE-01",
+          "grams": 25
+        }
+      ],
+      "sold": 0,
+      "otherCost": 0,
+      "shopId": "39",
+      "colors": "Or / Mauve",
+      "timeDays": 0.20833333333333334,
+      "printed": 1,
+      "category": "Jouet / Fidget",
+      "commissionRate": 0.3,
+      "source": "Excel",
+      "stock": 1,
+      "unitProfit": -0.49975,
+      "price": 0,
+      "printer": "Ender-3 V2 Neo",
+      "filamentCost": 0.49975,
+      "name": "FAIL! Dragon articulé ",
+      "unitCost": 0.49975,
+      "components": [],
+      "id": "DRAGON-ART-01 FAIL"
+    },
+    {
+      "name": "Fidget-Boule Rouge",
+      "inShop": true,
+      "notes": "",
+      "grams": 145,
+      "unitProfit": 3.28,
+      "id": "Fidget-Boule-Rouge",
+      "components": [],
+      "colors": "Rouge",
+      "printer": "Qidi X-Plus 3",
+      "unitCost": 2.32,
+      "shopId": "40",
+      "commissionRate": 0.3,
+      "source": "Excel",
+      "materials": [
+        {
+          "grams": 145,
+          "id": "JAYO-PLA+-Rouge"
+        }
+      ],
+      "otherCost": 0,
+      "category": "Jouet / Fidget",
+      "printed": 1,
+      "sold": 0,
+      "price": 8,
+      "stock": 1,
+      "filamentCost": 2.32,
+      "timeDays": 0.7083333333333334
+    },
+    {
+      "otherCost": 0,
+      "printer": "Anycubic Kobra X",
+      "components": [],
+      "unitProfit": 4.8272,
+      "inShop": true,
+      "name": "Fidget-Dinosaure Red/Gold",
+      "printed": 1,
+      "grams": 16,
+      "commissionRate": 0.3,
+      "notes": "",
+      "materials": [
+        {
+          "id": "AMOLEN-PLA-Silk-Dual-Red/Gold-02",
+          "grams": 16
+        }
+      ],
+      "source": "Excel",
+      "price": 8,
+      "stock": 1,
+      "sold": 0,
+      "unitCost": 0.7728,
+      "shopId": "41",
+      "colors": "Rouge / Or",
+      "category": "Jouet / Fidget",
+      "filamentCost": 0.7728,
+      "id": "Fidget-Dinosaure-Red/Gold",
+      "timeDays": 0.04027777777777778
+    },
+    {
+      "notes": "",
+      "otherCost": 0,
+      "category": "Jouet / Fidget",
+      "timeDays": 0.03680555555555556,
+      "grams": 18,
+      "id": "Fidget-Roquin-Noir",
+      "printer": "Anycubic Kobra X",
+      "filamentCost": 0.288,
+      "unitCost": 0.288,
+      "colors": "Noir",
+      "shopId": "42",
+      "sold": 0,
+      "printed": 1,
+      "materials": [
+        {
+          "id": "JAYO-PLA+-Noir",
+          "grams": 18
+        }
+      ],
+      "source": "Excel",
+      "name": "Fidget-Roquin Noir",
+      "components": [],
+      "inShop": true,
+      "stock": 1,
+      "unitProfit": 5.312,
+      "price": 8,
+      "commissionRate": 0.3
+    },
+    {
+      "name": "Fidget-Roquin Red/Gold",
+      "category": "Jouet / Fidget",
+      "timeDays": 0.03680555555555556,
+      "printer": "Anycubic Kobra X",
+      "filamentCost": 0.9177,
+      "unitCost": 0.9177,
+      "notes": "",
+      "printed": 1,
+      "inShop": true,
+      "grams": 19,
+      "price": 8,
+      "id": "Fidget-Roquin-Red/Gold",
+      "materials": [
+        {
+          "id": "AMOLEN-PLA-Silk-Dual-Red/Gold-02",
+          "grams": 19
+        }
+      ],
+      "stock": 1,
+      "sold": 0,
+      "unitProfit": 4.6823,
+      "otherCost": 0,
+      "source": "Excel",
+      "commissionRate": 0.3,
+      "colors": "Rouge / Or",
+      "shopId": "43",
+      "components": []
+    },
+    {
+      "timeDays": 0.07013888888888889,
+      "inShop": true,
+      "category": "Jouet / Fidget",
+      "sold": 0,
+      "grams": 22,
+      "id": "INFINITY-CUBE",
+      "notes": "",
+      "unitCost": 0.35904,
+      "stock": 2,
+      "source": "Excel",
+      "printed": 2,
+      "materials": [
+        {
+          "grams": 22,
+          "id": "SOLEYIN-PLA-GRAY-01"
+        }
+      ],
+      "filamentCost": 0.35904,
+      "price": 8,
+      "shopId": "44",
+      "colors": "Gris",
+      "printer": "Anycubic Kobra X",
+      "unitProfit": 5.24096,
+      "name": "Infinity Cube",
+      "components": [],
+      "commissionRate": 0.3,
+      "otherCost": 0
+    },
+    {
+      "price": 8,
+      "stock": 1,
+      "sold": 0,
+      "id": "Fidget-Dinosaure-Vert/Blue",
+      "source": "Excel",
+      "components": [],
+      "shopId": "45",
+      "unitProfit": 4.8755,
+      "colors": "Vert / Bleu",
+      "timeDays": 0.04027777777777778,
+      "otherCost": 0,
+      "commissionRate": 0.3,
+      "printed": 1,
+      "filamentCost": 0.7245,
+      "category": "Jouet / Fidget",
+      "name": "Fidget Dinoseaure Vert/Blue",
+      "grams": 15,
+      "materials": [
+        {
+          "id": "AMOLEN-PLA-Skil-Dual-Blue/Green-04",
+          "grams": 15
+        }
+      ],
+      "inShop": true,
+      "unitCost": 0.7245,
+      "printer": "Anycubic Kobra X",
+      "notes": ""
+    },
+    {
+      "unitProfit": 4.8755,
+      "sold": 0,
+      "printer": "Anycubic Kobra X",
+      "components": [],
+      "commissionRate": 0.3,
+      "inShop": true,
+      "price": 8,
+      "stock": 1,
+      "id": "Fidget-Dinosaure-Rouge/Bleu",
+      "filamentCost": 0.7245,
+      "printed": 1,
+      "unitCost": 0.7245,
+      "materials": [
+        {
+          "id": "AMOLEN-PLA-Silk-Dual-Red/Blue-01",
+          "grams": 15
+        }
+      ],
+      "grams": 15,
+      "notes": "",
+      "shopId": "46",
+      "name": "Fidget-Dinosaure Rouge/ Bleu",
+      "category": "Jouet / Fidget",
+      "colors": "Rouge / Bleu",
+      "source": "Excel",
+      "otherCost": 0,
+      "timeDays": 0.04027777777777778
+    },
+    {
+      "timeDays": 0.03680555555555556,
+      "materials": [
+        {
+          "grams": 18,
+          "id": "AMOLEN-PLA-Silk-Dual-Red/Blue-01"
+        }
+      ],
+      "inShop": true,
+      "category": "Jouet / Fidget",
+      "sold": 0,
+      "commissionRate": 0.3,
+      "grams": 18,
+      "otherCost": 0,
+      "notes": "",
+      "unitCost": 0.8694,
+      "stock": 1,
+      "printed": 1,
+      "source": "Excel",
+      "price": 8,
+      "shopId": "47",
+      "colors": "Rouge / Bleu",
+      "filamentCost": 0.8694,
+      "id": "Fidget-Roquin-Rouge/Bleu",
+      "printer": "Anycubic Kobra X",
+      "components": [],
+      "name": "Fidget-Roquin Rouge/Bleu",
+      "unitProfit": 4.7306
+    },
+    {
+      "source": "Excel",
+      "shopId": "48",
+      "colors": "Noir",
+      "materials": [
+        {
+          "grams": 55,
+          "id": "ESUN-PLA-BLACK-01"
+        }
+      ],
+      "otherCost": 0,
+      "name": "Spiral Fidget",
+      "grams": 55,
+      "filamentCost": 0.69575,
+      "commissionRate": 0.3,
+      "notes": "",
+      "components": [],
+      "printed": 1,
+      "price": 8,
+      "timeDays": 0.13819444444444445,
+      "stock": 1,
+      "sold": 0,
+      "inShop": true,
+      "category": "Jouet / Fidget",
+      "unitProfit": 4.90425,
+      "printer": "Anycubic Kobra X",
+      "unitCost": 0.69575,
+      "id": "SPIRAL-FIDGET-PLA-NOIR"
+    },
+    {
+      "price": 8,
+      "source": "Excel",
+      "sold": 0,
+      "printed": 1,
+      "stock": 1,
+      "shopId": "49",
+      "colors": "Bleu / Vert",
+      "commissionRate": 0.3,
+      "printer": "Anycubic Kobra X",
+      "id": "SPIRAL-FIDGET-PLA-BLEU-GREEN",
+      "otherCost": 0,
+      "inShop": true,
+      "unitCost": 2.6565,
+      "components": [],
+      "name": "Spiral Fidget",
+      "timeDays": 0.13819444444444445,
+      "grams": 55,
+      "unitProfit": 2.9435,
+      "materials": [
+        {
+          "id": "AMOLEN-PLA-Skil-Dual-Blue/Green-04",
+          "grams": 55
+        }
+      ],
+      "category": "Jouet / Fidget",
+      "notes": "",
+      "filamentCost": 2.6565
+    },
+    {
+      "commissionRate": 0.3,
+      "unitCost": 0.89815,
+      "price": 8,
+      "materials": [
+        {
+          "grams": 71,
+          "id": "ESUN-PLA-BLACK-01"
+        }
+      ],
+      "stock": 1,
+      "sold": 0,
+      "printer": "Anycubic Kobra X",
+      "id": "VORTEX-BALL-FIDGET-NOIR",
+      "unitProfit": 4.70185,
+      "filamentCost": 0.89815,
+      "category": "Jouet / Fidget",
+      "inShop": true,
+      "timeDays": 0.21041666666666667,
+      "otherCost": 0,
+      "printed": 1,
+      "components": [],
+      "name": "Vortex Ball Fidget",
+      "source": "Excel",
+      "grams": 71,
+      "shopId": "50",
+      "notes": "",
+      "colors": "Noir"
+    },
+    {
+      "unitCost": 3.4293,
+      "components": [],
+      "unitProfit": 2.1707,
+      "name": "Vortex Ball Fidget",
+      "filamentCost": 3.4293,
+      "colors": "Bleu / Vert",
+      "category": "Jouet / Fidget",
+      "id": "VORTEX-BALL-FIDGET-BLEU-GREEN",
+      "shopId": "51",
+      "stock": 1,
+      "timeDays": 0.21041666666666667,
+      "price": 8,
+      "source": "Excel",
+      "notes": "",
+      "commissionRate": 0.3,
+      "grams": 71,
+      "otherCost": 0,
+      "printer": "Anycubic Kobra X",
+      "materials": [
+        {
+          "id": "AMOLEN-PLA-Skil-Dual-Blue/Green-04",
+          "grams": 71
+        }
+      ],
+      "inShop": true,
+      "printed": 1,
+      "sold": 0
+    },
+    {
+      "colors": "Noir",
+      "unitProfit": 4.70185,
+      "printer": "Anycubic Kobra X",
+      "shopId": "52",
+      "source": "Excel",
+      "components": [],
+      "printed": 1,
+      "filamentCost": 0.89815,
+      "sold": 0,
+      "stock": 1,
+      "price": 8,
+      "notes": "",
+      "category": "Jouet / Fidget",
+      "inShop": true,
+      "id": "VORTEX-BALL-FIDGET-NOIR-WHITE",
+      "grams": 71,
+      "commissionRate": 0.3,
+      "name": "Vortex Ball Fidget",
+      "timeDays": 0.21041666666666667,
+      "materials": [
+        {
+          "id": "ESUN-PLA-BLACK-01",
+          "grams": 71
+        }
+      ],
+      "otherCost": 0,
+      "unitCost": 0.89815
+    },
+    {
+      "printed": 1,
+      "otherCost": 0,
+      "materials": [
+        {
+          "grams": 45,
+          "id": "JAYO-SILK-PLA-LIGHT-GOLD"
+        }
+      ],
+      "source": "Excel",
+      "grams": 45,
+      "name": "Flexible Dragron",
+      "shopId": "53",
+      "printer": "Anycubic Kobra X",
+      "commissionRate": 0.3,
+      "notes": "",
+      "colors": "Or Pale",
+      "price": 8,
+      "sold": 0,
+      "filamentCost": 0.846,
+      "unitProfit": 4.754,
+      "stock": 1,
+      "components": [],
+      "unitCost": 0.846,
+      "id": "FLEXIBALE-DRAGON-PLA-LIGHT-GOLD",
+      "timeDays": 0.1451388888888889,
+      "inShop": true,
+      "category": "Jouet / Fidget"
+    },
+    {
+      "materials": [
+        {
+          "grams": 45,
+          "id": "ELEGOO-PLA-Sea-Green"
+        }
+      ],
+      "unitProfit": 4.88,
+      "components": [],
+      "printer": "Anycubic Kobra X",
+      "inShop": true,
+      "name": "Flexible Dragron",
+      "price": 8,
+      "stock": 1,
+      "otherCost": 0,
+      "printed": 1,
+      "unitCost": 0.72,
+      "filamentCost": 0.72,
+      "commissionRate": 0.3,
+      "grams": 45,
+      "sold": 0,
+      "notes": "",
+      "shopId": "54",
+      "category": "Jouet / Fidget",
+      "colors": "Vert D'Eau",
+      "id": "FLEXIBALE-DRAGON-PLA-SEA-GREEN",
+      "source": "Excel",
+      "timeDays": 0.1451388888888889
+    },
+    {
+      "printer": "Anycubic Kobra X",
+      "filamentCost": 0.72,
+      "category": "Jouet / Fidget",
+      "timeDays": 0.1451388888888889,
+      "inShop": true,
+      "printed": 1,
+      "sold": 0,
+      "unitCost": 0.72,
+      "notes": "",
+      "grams": 45,
+      "components": [],
+      "materials": [
+        {
+          "id": "ELEGOO-PLA-PURPLE",
+          "grams": 45
+        }
+      ],
+      "name": "Flexible Dragron",
+      "commissionRate": 0.3,
+      "source": "Excel",
+      "colors": "Mauve",
+      "price": 8,
+      "shopId": "55",
+      "stock": 1,
+      "unitProfit": 4.88,
+      "id": "FLEXIBALE-DRAGON-PLA-PURPLE",
+      "otherCost": 0
+    },
+    {
+      "source": "Excel",
+      "category": "Jouet / Fidget",
+      "shopId": "56",
+      "timeDays": 0.15208333333333332,
+      "colors": "Or Pale",
+      "sold": 0,
+      "grams": 14,
+      "id": "Fidget-Dinosaure-Light-Gold",
+      "unitCost": 0.2632,
+      "notes": "",
+      "filamentCost": 0.2632,
+      "stock": 1,
+      "unitProfit": 5.3368,
+      "printer": "Anycubic Kobra X",
+      "price": 8,
+      "commissionRate": 0.3,
+      "inShop": true,
+      "materials": [
+        {
+          "id": "JAYO-SILK-PLA-LIGHT-GOLD",
+          "grams": 14
+        }
+      ],
+      "components": [],
+      "otherCost": 0,
+      "printed": 1,
+      "name": "Fidget Dinosaure"
+    },
+    {
+      "grams": 29,
+      "shopId": "57",
+      "colors": "Or Pale",
+      "printer": "Anycubic Kobra X",
+      "notes": "",
+      "source": "Excel",
+      "commissionRate": 0.3,
+      "sold": 0,
+      "printed": 1,
+      "filamentCost": 0.5452,
+      "id": "INFINITY-CUBE-LIGHt-GOLD",
+      "inShop": true,
+      "unitCost": 0.5452,
+      "materials": [
+        {
+          "id": "JAYO-SILK-PLA-LIGHT-GOLD",
+          "grams": 29
+        }
+      ],
+      "category": "Jouet / Fidget",
+      "stock": 1,
+      "unitProfit": 5.0548,
+      "price": 8,
+      "otherCost": 0,
+      "name": "Infinity Cube",
+      "timeDays": 0.07083333333333333,
+      "components": []
+    },
+    {
+      "components": [],
+      "name": "Serpent Flexible",
+      "unitCost": 1.77911,
+      "inShop": true,
+      "unitProfit": 3.82089,
+      "category": "Jouet / Fidget",
+      "notes": "",
+      "filamentCost": 1.77911,
+      "timeDays": 0.26319444444444445,
+      "grams": 89,
+      "printer": "Anycubic Kobra X",
+      "source": "Excel",
+      "commissionRate": 0.3,
+      "materials": [
+        {
+          "id": "CC3D-PLA-ROSE-BLUE-SILK",
+          "grams": 89
+        }
+      ],
+      "price": 8,
+      "colors": "Rose / Bleu",
+      "stock": 1,
+      "shopId": "58",
+      "printed": 1,
+      "sold": 0,
+      "otherCost": 0,
+      "id": "FLEXIBLE-SERPENT"
+    },
+    {
+      "printed": 1,
+      "stock": 1,
+      "price": 6,
+      "commissionRate": 0.3,
+      "otherCost": 0,
+      "inShop": true,
+      "id": "Fidget-Dinosaure-Rose-Bleu",
+      "unitCost": 0.87956,
+      "printer": "Anycubic Kobra X",
+      "timeDays": 0.15208333333333332,
+      "materials": [
+        {
+          "id": "CC3D-PLA-ROSE-BLUE-SILK",
+          "grams": 44
+        }
+      ],
+      "category": "Jouet / Fidget",
+      "name": "Fidget Dinosaure",
+      "source": "Excel",
+      "filamentCost": 0.87956,
+      "sold": 0,
+      "shopId": "59",
+      "colors": "Rose / Bleu",
+      "grams": 44,
+      "components": [],
+      "notes": "",
+      "unitProfit": 3.32044
+    },
+    {
+      "inShop": true,
+      "category": "Jouet / Fidget",
+      "commissionRate": 0.3,
+      "filamentCost": 0.3542,
+      "grams": 28,
+      "timeDays": 0.10277777777777777,
+      "notes": "",
+      "name": "Track Fidget",
+      "components": [],
+      "id": "TRACK-FIDGET-BIG",
+      "unitCost": 0.3542,
+      "unitProfit": 3.8458,
+      "shopId": "60",
+      "sold": 0,
+      "printer": "Qidi X-Plus 3",
+      "colors": "Noir",
+      "otherCost": 0,
+      "source": "Excel",
+      "price": 6,
+      "stock": 2,
+      "printed": 2,
+      "materials": [
+        {
+          "grams": 28,
+          "id": "ESUN-PLA-BLACK-03"
+        }
+      ]
+    },
+    {
+      "otherCost": 0,
+      "commissionRate": 0.3,
+      "inShop": true,
+      "grams": 14,
+      "notes": "",
+      "materials": [
+        {
+          "grams": 14,
+          "id": "ESUN-PLA-BLACK-03"
+        }
+      ],
+      "name": "Track Fidget",
+      "stock": 1,
+      "filamentCost": 0.1771,
+      "printed": 1,
+      "source": "Excel",
+      "timeDays": 0.019444444444444445,
+      "price": 8,
+      "shopId": "61",
+      "category": "Jouet / Fidget",
+      "colors": "Noir",
+      "sold": 0,
+      "printer": "Qidi X-Plus 3",
+      "components": [],
+      "unitProfit": 5.4229,
+      "id": "TRACK-FIDGET-SMALL",
+      "unitCost": 0.1771
+    },
+    {
+      "name": "Clicker Keycahin Ecureuil",
+      "price": 6,
+      "stock": 7,
+      "components": [
+        {
+          "id": "CLICKER-HARDWARE-BLEU",
+          "quantity": 1
+        },
+        {
+          "quantity": 1,
+          "id": "CLICKER-HARDWARE-RED"
+        }
+      ],
+      "source": "Excel",
+      "colors": "Beige",
+      "shopId": "62",
+      "unitProfit": 3.280133333,
+      "commissionRate": 0.3,
+      "printed": 7,
+      "unitCost": 0.9198666667,
+      "otherCost": 0,
+      "timeDays": 0.029166666666666667,
+      "materials": [
+        {
+          "grams": 13,
+          "id": "KINGROON-PLA-SKIN"
+        }
+      ],
+      "sold": 0,
+      "notes": "",
+      "printer": "Anycubic Kobra X",
+      "id": "CLICKER-KEYCHAIN-ECUREUIL-PLA",
+      "grams": 13,
+      "filamentCost": 0.1872,
+      "inShop": true,
+      "category": "Jouet / Fidget"
+    },
+    {
+      "unitCost": 0.6336,
+      "commissionRate": 0.3,
+      "otherCost": 0,
+      "colors": "Beige",
+      "category": "Jouet / Fidget",
+      "shopId": "63",
+      "stock": 1,
+      "timeDays": 0.15208333333333332,
+      "materials": [
+        {
+          "grams": 44,
+          "id": "KINGROON-PLA-SKIN"
+        }
+      ],
+      "sold": 0,
+      "id": "Fidget-Dinosaure-Beige",
+      "price": 6,
+      "source": "Excel",
+      "filamentCost": 0.6336,
+      "unitProfit": 3.5664,
+      "notes": "",
+      "grams": 44,
+      "name": "Fidget Dinosaure",
+      "components": [],
+      "printer": "Anycubic Kobra X",
+      "inShop": true,
+      "printed": 1
+    },
+    {
+      "unitCost": 0,
+      "materials": [
+        {
+          "grams": 0,
+          "id": "JAYO-PLA+-Bleu"
+        }
+      ],
+      "commissionRate": 0.3,
+      "printer": "Ender-3 V2 Neo",
+      "inShop": true,
+      "name": "Animaux multiples — essai PETG",
+      "price": 4.0,
+      "id": "ANIMALS-PETG-01",
+      "stock": 1,
+      "category": "Porte-clés / Key tag",
+      "timeDays": 0.16666666666666666,
+      "printed": 1,
+      "otherCost": 0,
+      "unitProfit": 1.4,
+      "grams": 0,
+      "sold": 0,
+      "components": [],
+      "notes": "Impression de plusieurs animaux séparés en PETG le 28 sept. 2026. Stringing important; buse testée à 245 °C puis 240 °C. Quantité/durée/grammes à compléter.",
+      "shopId": "64",
+      "colors": "Bleu",
+      "source": "Excel",
+      "filamentCost": 0
+    },
+    {
+      "filamentCost": 0.08,
+      "category": "Porte-clés / Key tag",
+      "grams": 5,
+      "timeDays": 0.08333333333333333,
+      "notes": "Batch planifié le 2 oct. 2026 : 7 lapins, en PLA bleu. Quantité réellement terminée à compléter.",
+      "inShop": true,
+      "unitCost": 0.08,
+      "name": "Bunny keychain",
+      "sold": 0,
+      "id": "BUNNY-KC-01",
+      "otherCost": 0,
+      "printer": "Ender-3 V2 Neo",
+      "price": 4.0,
+      "shopId": "65",
+      "components": [],
+      "stock": 1,
+      "colors": "Bleu",
+      "unitProfit": 1.32,
+      "source": "Excel",
+      "commissionRate": 0.3,
+      "materials": [
+        {
+          "id": "JAYO-PLA+-Bleu",
+          "grams": 5
+        }
+      ],
+      "printed": 1
+    },
+    {
+      "category": "Porte-clés / Key tag",
+      "colors": "Bleu",
+      "filamentCost": 0.08,
+      "notes": "Batch planifié le 2 oct. 2026 : 7 éléphants, en PLA bleu. Un essai précédent en PETG avait échoué aux oreilles; quantité finale à compléter.",
+      "printer": "Ender-3 V2 Neo",
+      "shopId": "66",
+      "grams": 5,
+      "timeDays": 0.08333333333333333,
+      "source": "Excel",
+      "components": [],
+      "commissionRate": 0.3,
+      "unitCost": 0.08,
+      "printed": 1,
+      "unitProfit": 1.32,
+      "sold": 0,
+      "inShop": true,
+      "otherCost": 0,
+      "name": "Elephant keychain",
+      "materials": [
+        {
+          "id": "JAYO-PLA+-Bleu",
+          "grams": 5
+        }
+      ],
+      "stock": 1,
+      "id": "ELEPHANT-KC-01",
+      "price": 4.0
+    },
+    {
+      "unitCost": 0.27986,
+      "filamentCost": 0.27986,
+      "sold": 0,
+      "printer": "Ender-3 V2 Neo",
+      "stock": 1,
+      "shopId": "67",
+      "colors": "Or / Mauve",
+      "category": "Porte-clés / Key tag",
+      "price": 7.0,
+      "timeDays": 0.2916666666666667,
+      "source": "Excel",
+      "printed": 1,
+      "id": "Big-Dog-PLA-GOLD/PURPLE",
+      "grams": 14,
+      "otherCost": 0,
+      "notes": "",
+      "inShop": true,
+      "unitProfit": 3.22014,
+      "materials": [
+        {
+          "id": "PLA-SILK-ORMAUVE-01",
+          "grams": 14
+        }
+      ],
+      "components": [],
+      "name": "Grand Chien key tag",
+      "commissionRate": 0.3
+    },
+    {
+      "components": [],
+      "price": 7.0,
+      "stock": 2,
+      "unitProfit": 3.276,
+      "commissionRate": 0.3,
+      "sold": 0,
+      "inShop": true,
+      "name": "Grand Chien key tag",
+      "unitCost": 0.224,
+      "filamentCost": 0.224,
+      "printer": "Ender-3 V2 Neo",
+      "otherCost": 0,
+      "id": "Big-Dog-PLA-BLUE",
+      "materials": [
+        {
+          "id": "JAYO-PLA+-Bleu",
+          "grams": 14
+        }
+      ],
+      "source": "Excel",
+      "category": "Porte-clés / Key tag",
+      "notes": "",
+      "timeDays": 0.2916666666666667,
+      "printed": 2,
+      "colors": "Bleu",
+      "grams": 14,
+      "shopId": "68"
+    },
+    {
+      "materials": [
+        {
+          "grams": 8,
+          "id": "FIL-PINK-JAMGHE-01"
+        }
+      ],
+      "sold": 0,
+      "grams": 8,
+      "filamentCost": 0.17592,
+      "notes": "",
+      "printed": 8,
+      "shopId": "69",
+      "unitProfit": 2.62408,
+      "colors": "Rose",
+      "source": "Excel",
+      "components": [],
+      "otherCost": 0,
+      "printer": "Anycubic Kobra X",
+      "unitCost": 0.17592,
+      "id": "PACK-4-Animal-Key-Tag-Individuelle",
+      "price": 4,
+      "inShop": true,
+      "timeDays": 0.30486111111111114,
+      "name": "Pack de 4 animeau vend individuelle",
+      "stock": 8,
+      "commissionRate": 0.3,
+      "category": "Porte-clés / Key tag"
+    },
+    {
+      "unitCost": 0.368,
+      "sold": 0,
+      "printed": 3,
+      "stock": 3,
+      "timeDays": 0.30486111111111114,
+      "inShop": true,
+      "price": 5,
+      "category": "Porte-clés / Key tag",
+      "printer": "Qidi X-Plus 3",
+      "id": "PACK-4-Animal-Key-Tag-01",
+      "grams": 23,
+      "notes": "",
+      "commissionRate": 0.3,
+      "filamentCost": 0.368,
+      "otherCost": 0,
+      "components": [],
+      "materials": [
+        {
+          "grams": 23,
+          "id": "JAYO-PLA+-Rouge"
+        }
+      ],
+      "shopId": "70",
+      "colors": "Rouge",
+      "source": "Excel",
+      "name": "Pack of 4 animal key ctag",
+      "unitProfit": 3.132
+    },
+    {
+      "timeDays": 0.30486111111111114,
+      "name": "Pack of 4 animal key ctag",
+      "unitProfit": 6.40627,
+      "printed": 3,
+      "materials": [
+        {
+          "grams": 27,
+          "id": "FIL-PINK-JAMGHE-01"
+        }
+      ],
+      "price": 10,
+      "components": [],
+      "stock": 3,
+      "category": "Porte-clés / Key tag",
+      "commissionRate": 0.3,
+      "source": "Excel",
+      "otherCost": 0,
+      "id": "PACK-4-Animal-Key-Tag-01",
+      "printer": "Qidi X-Plus 3",
+      "colors": "Rose",
+      "unitCost": 0.59373,
+      "shopId": "71",
+      "filamentCost": 0.59373,
+      "sold": 0,
+      "notes": "",
+      "grams": 27,
+      "inShop": true
+    },
+    {
+      "printer": "Qidi X-Plus 3",
+      "source": "Excel",
+      "colors": "Rouge",
+      "otherCost": 0,
+      "id": "Single-Animal-Key-Tag-01",
+      "stock": 7,
+      "price": 2,
+      "shopId": "72",
+      "name": "Single Animals Key Tag",
+      "commissionRate": 0.3,
+      "printed": 7,
+      "materials": [
+        {
+          "grams": 5,
+          "id": "JAYO-PLA+-Rouge"
+        },
+        {
+          "grams": 4,
+          "id": "JAYO-PLA+-Rouge"
+        },
+        {
+          "id": "JAYO-PLA+-Bleu",
+          "grams": 7
+        },
+        {
+          "grams": 4,
+          "id": "JAYO-PLA+-Rouge"
+        }
+      ],
+      "category": "Porte-clés / Key tag",
+      "components": [],
+      "unitProfit": 1.08,
+      "timeDays": 0.30486111111111114,
+      "inShop": true,
+      "notes": "",
+      "unitCost": 0.32,
+      "sold": 0,
+      "filamentCost": 0.32,
+      "grams": 20
+    },
+    {
+      "sold": 0,
+      "shopId": "73",
+      "printed": 1,
+      "colors": "Bleu",
+      "id": "SNAIL-KC-01",
+      "source": "Excel",
+      "unitCost": 0.064,
+      "price": 4.0,
+      "components": [],
+      "printer": "Ender-3 V2 Neo",
+      "stock": 1,
+      "timeDays": 0.20833333333333334,
+      "category": "Porte-clés / Key tag",
+      "unitProfit": 1.336,
+      "inShop": true,
+      "grams": 4,
+      "notes": "Batch planifié le 2 oct. 2026 : 7 escargots, en PLA bleu. Quantité réellement terminée à compléter.",
+      "otherCost": 0,
+      "commissionRate": 0.3,
+      "materials": [
+        {
+          "grams": 4,
+          "id": "JAYO-PLA+-Bleu"
+        }
+      ],
+      "filamentCost": 0.064,
+      "name": "Snail keychain (Lumaca_Keychain)"
+    },
+    {
+      "printed": 1,
+      "materials": [
+        {
+          "grams": 40,
+          "id": "CC3D-PLA-GOLD-01"
+        }
+      ],
+      "source": "Excel",
+      "timeDays": 0.625,
+      "unitProfit": 16.5004,
+      "components": [],
+      "category": "Vase",
+      "colors": "Or",
+      "shopId": "74",
+      "printer": "Ender-3 V2 Neo",
+      "sold": 0,
+      "notes": "",
+      "otherCost": 0,
+      "grams": 40,
+      "unitCost": 0.9996,
+      "name": "Small Vase",
+      "price": 25,
+      "stock": 1,
+      "inShop": true,
+      "filamentCost": 0.9996,
+      "id": "Small-Vase",
+      "commissionRate": 0.3
+    },
+    {
+      "colors": "Or / Mauve",
+      "notes": "",
+      "unitCost": 0.47976,
+      "shopId": "75",
+      "grams": 24,
+      "otherCost": 0,
+      "source": "Excel",
+      "category": "Vase",
+      "materials": [
+        {
+          "id": "PLA-SILK-ORMAUVE-01",
+          "grams": 24
+        }
+      ],
+      "sold": 0,
+      "timeDays": 0.3333333333333333,
+      "id": "Vase-Carre-With-Leg",
+      "printer": "Ender-3 V2 Neo",
+      "inShop": true,
+      "filamentCost": 0.47976,
+      "name": "Vase Carre avec patte",
+      "unitProfit": 6.52024,
+      "printed": 1,
+      "stock": 1,
+      "commissionRate": 0.3,
+      "components": [],
+      "price": 10
+    },
+    {
+      "unitProfit": 6.37525,
+      "printer": "Ender-3 V2 Neo",
+      "source": "Excel",
+      "colors": "Or",
+      "stock": 1,
+      "price": 10,
+      "shopId": "76",
+      "components": [],
+      "name": "Vase Carre avec patte",
+      "printed": 1,
+      "filamentCost": 0.62475,
+      "otherCost": 0,
+      "category": "Vase",
+      "id": "Vase-Carre-With-Leg",
+      "timeDays": 0.3333333333333333,
+      "commissionRate": 0.3,
+      "inShop": true,
+      "notes": "",
+      "unitCost": 0.62475,
+      "sold": 0,
+      "grams": 25,
+      "materials": [
+        {
+          "grams": 25,
+          "id": "CC3D-PLA-GOLD-01"
+        }
+      ]
+    },
+    {
+      "source": "Excel",
+      "price": 25,
+      "printed": 1,
+      "stock": 1,
+      "shopId": "77",
+      "id": "Vase-zig-zag-Noir",
+      "filamentCost": 0.61985,
+      "colors": "Noir",
+      "printer": "Anycubic Kobra X",
+      "name": "Vase en Zig zag",
+      "commissionRate": 0.3,
+      "sold": 0,
+      "otherCost": 0,
+      "inShop": true,
+      "unitCost": 0.61985,
+      "components": [],
+      "timeDays": 0.1736111111111111,
+      "grams": 49,
+      "materials": [
+        {
+          "grams": 49,
+          "id": "ESUN-PLA-BLACK-01"
+        }
+      ],
+      "unitProfit": 16.88015,
+      "category": "Vase",
+      "notes": ""
+    },
+    {
+      "price": 25,
+      "id": "Vase-zig-zag-Bleu/Mauvre",
+      "sold": 0,
+      "components": [],
+      "printer": "Anycubic Kobra X",
+      "unitCost": 7.0518,
+      "stock": 1,
+      "materials": [
+        {
+          "id": "AMOLEN-PLA-Silk-Dual-Red/Blue-01",
+          "grams": 146
+        }
+      ],
+      "inShop": true,
+      "unitProfit": 10.4482,
+      "category": "Vase",
+      "printed": 1,
+      "otherCost": 0,
+      "timeDays": 0.4326388888888889,
+      "source": "Excel",
+      "filamentCost": 7.0518,
+      "shopId": "78",
+      "commissionRate": 0.3,
+      "colors": "Bleu / Mauve",
+      "name": "Vase en Zig zag",
+      "grams": 146,
+      "notes": ""
+    },
+    {
+      "source": "Excel",
+      "unitCost": 1.45927,
+      "materials": [
+        {
+          "id": "PLA-SILK-ORMAUVE-01",
+          "grams": 73
+        }
+      ],
+      "colors": "Or / Mauve",
+      "shopId": "79",
+      "filamentCost": 1.45927,
+      "notes": "",
+      "category": "Vase",
+      "unitProfit": 19.54073,
+      "id": "Mordern-Vase",
+      "otherCost": 0,
+      "grams": 73,
+      "components": [],
+      "timeDays": 1.0833333333333333,
+      "commissionRate": 0.3,
+      "sold": 0,
+      "printer": "Ender-3 V2 Neo",
+      "stock": 1,
+      "name": "Vase Mordern",
+      "price": 30,
+      "inShop": true,
+      "printed": 1
+    },
+    {
+      "grams": 131,
+      "unitCost": 2.096,
+      "notes": "",
+      "printed": 1,
+      "components": [],
+      "inShop": true,
+      "timeDays": 1.0833333333333333,
+      "category": "Vase",
+      "name": "Vase Mordern en vague",
+      "unitProfit": 18.904,
+      "printer": "Ender-3 V2 Neo",
+      "id": "Mordern-Wave-Vase",
+      "sold": 0,
+      "filamentCost": 2.096,
+      "otherCost": 0,
+      "materials": [
+        {
+          "id": "JAYO-PLA+-Noir",
+          "grams": 131
+        }
+      ],
+      "stock": 1,
+      "shopId": "80",
+      "price": 30,
+      "colors": "Noir",
+      "source": "Excel",
+      "commissionRate": 0.3
+    },
+    {
+      "shopId": "81",
+      "colors": "Orange / Rouge",
+      "sold": 0,
+      "source": "Excel",
+      "id": "Vase-zig-zag-Orange/Rouge",
+      "commissionRate": 0.3,
+      "stock": 1,
+      "price": 25,
+      "components": [],
+      "category": "Vase",
+      "grams": 149,
+      "inShop": true,
+      "otherCost": 0,
+      "printer": "Anycubic Kobra X",
+      "notes": "",
+      "unitProfit": 10.3033,
+      "timeDays": 0.4326388888888889,
+      "filamentCost": 7.1967,
+      "unitCost": 7.1967,
+      "printed": 1,
+      "materials": [
+        {
+          "id": "AMOLEN-PLA-Silk-Dual-Red/Gold-02",
+          "grams": 149
+        }
+      ],
+      "name": "Vase en Zig zag"
+    },
+    {
+      "printed": 1,
+      "name": "Vase en Zig zag",
+      "filamentCost": 7.0518,
+      "timeDays": 0.4326388888888889,
+      "source": "Excel",
+      "materials": [
+        {
+          "id": "AMOLEN-PLA-Silk-Dual-Red/Green-03",
+          "grams": 146
+        }
+      ],
+      "category": "Vase",
+      "colors": "Vert / Rouge",
+      "shopId": "82",
+      "printer": "Anycubic Kobra X",
+      "otherCost": 0,
+      "notes": "",
+      "grams": 146,
+      "unitCost": 7.0518,
+      "price": 25,
+      "stock": 1,
+      "inShop": true,
+      "components": [],
+      "sold": 0,
+      "unitProfit": 10.4482,
+      "commissionRate": 0.3,
+      "id": "Vase-zig-zag-Vert/Rouge"
+    },
+    {
+      "price": 25,
+      "stock": 1,
+      "filamentCost": 3.27651,
+      "printed": 1,
+      "source": "Excel",
+      "components": [],
+      "name": "Boucle Vase Rose",
+      "commissionRate": 0.3,
+      "shopId": "83",
+      "printer": "Anycubic Kobra X",
+      "colors": "Rose",
+      "unitProfit": 14.22349,
+      "materials": [
+        {
+          "id": "FIL-PINK-JAMGHE-01",
+          "grams": 149
+        }
+      ],
+      "sold": 0,
+      "unitCost": 3.27651,
+      "timeDays": 0.2604166666666667,
+      "grams": 149,
+      "inShop": true,
+      "id": "Boucle-Vase-Rose",
+      "otherCost": 0,
+      "category": "Vase",
+      "notes": ""
+    },
+    {
+      "commissionRate": 0.3,
+      "timeDays": 0.3875,
+      "stock": 4,
+      "price": 10,
+      "filamentCost": 1.893933649,
+      "sold": 0,
+      "category": "Vase",
+      "components": [],
+      "id": "Pere-Noel-Vase",
+      "inShop": true,
+      "unitCost": 1.893933649,
+      "unitProfit": 5.106066351,
+      "materials": [
+        {
+          "id": "PANCHROMA-PLA-WHITE-01",
+          "grams": 106
+        }
+      ],
+      "printed": 4,
+      "grams": 106,
+      "source": "Excel",
+      "otherCost": 0,
+      "name": "Pere Noel Vase",
+      "notes": "10$ si cest pour atelier sinon 15$",
+      "printer": "Anycubic Kobra X",
+      "shopId": "84",
+      "colors": "Blanc"
+    },
+    {
+      "materials": [
+        {
+          "id": "PANCHROMA-PLA-WHITE-01",
+          "grams": 80
+        }
+      ],
+      "commissionRate": 0.3,
+      "name": "Deer Vase",
+      "inShop": true,
+      "unitCost": 1.429383886,
+      "filamentCost": 1.429383886,
+      "notes": "10$ si cest pour atelier sinon 15$",
+      "timeDays": 0.19791666666666666,
+      "grams": 80,
+      "category": "Vase",
+      "otherCost": 0,
+      "id": "Deer-Vase",
+      "printed": 4,
+      "source": "Excel",
+      "stock": 4,
+      "colors": "Blanc",
+      "price": 10,
+      "shopId": "85",
+      "printer": "Anycubic Kobra X",
+      "components": [],
+      "unitProfit": 5.570616114,
+      "sold": 0
+    },
+    {
+      "colors": "Vert",
+      "shopId": "86",
+      "notes": "",
+      "source": "Excel",
+      "grams": 238,
+      "sold": 0,
+      "id": "Dripping-Vase-PLA-Vert",
+      "name": "Dripping Vase",
+      "materials": [
+        {
+          "grams": 238,
+          "id": "ESUN-PLA-GREEN-01"
+        }
+      ],
+      "inShop": true,
+      "printed": 1,
+      "unitProfit": 14.54166,
+      "components": [],
+      "filamentCost": 2.95834,
+      "unitCost": 2.95834,
+      "commissionRate": 0.3,
+      "printer": "Anycubic Kobra X",
+      "timeDays": 0.4284722222222222,
+      "category": "Vase",
+      "price": 25,
+      "stock": 1,
+      "otherCost": 0
+    },
+    {
+      "unitProfit": 12.8109,
+      "commissionRate": 0.3,
+      "category": "Vase",
+      "timeDays": 0.16666666666666666,
+      "components": [],
+      "unitCost": 1.1891,
+      "name": "Boucle Vase Noir Haft",
+      "grams": 94,
+      "filamentCost": 1.1891,
+      "inShop": true,
+      "notes": "",
+      "price": 20,
+      "sold": 0,
+      "materials": [
+        {
+          "id": "ESUN-PLA-BLACK-02",
+          "grams": 94
+        }
+      ],
+      "stock": 1,
+      "printer": "Qidi X-Plus 3",
+      "id": "Boucle-Vase-Noir-HAFT",
+      "source": "Excel",
+      "shopId": "87",
+      "printed": 1,
+      "otherCost": 0,
+      "colors": "Noir"
+    },
+    {
+      "components": [],
+      "colors": "Vert d'eau",
+      "printed": 1,
+      "shopId": "88",
+      "timeDays": 0.4284722222222222,
+      "notes": "",
+      "category": "Vase",
+      "otherCost": 0,
+      "source": "Excel",
+      "grams": 238,
+      "filamentCost": 3.808,
+      "unitProfit": 13.692,
+      "commissionRate": 0.3,
+      "materials": [
+        {
+          "id": "ELEGOO-PLA-Sea-Green",
+          "grams": 238
+        }
+      ],
+      "printer": "Anycubic Kobra X",
+      "sold": 0,
+      "unitCost": 3.808,
+      "name": "Dripping Vase",
+      "inShop": true,
+      "price": 25,
+      "stock": 1,
+      "id": "Dripping-Vase-PLA-Sea-Green"
+    },
+    {
+      "name": "Dripping Vase",
+      "printed": 1,
+      "unitProfit": 13.692,
+      "inShop": true,
+      "stock": 1,
+      "components": [],
+      "printer": "Anycubic Kobra X",
+      "price": 25,
+      "timeDays": 0.4388888888888889,
+      "notes": "",
+      "materials": [
+        {
+          "grams": 238,
+          "id": "ELEGOO-PLA-PURPLE"
+        }
+      ],
+      "grams": 238,
+      "category": "Vase",
+      "colors": "Mauve",
+      "id": "DRIPPING-VASE-PLA-PRUPLE",
+      "otherCost": 0,
+      "commissionRate": 0.3,
+      "shopId": "89",
+      "unitCost": 3.808,
+      "filamentCost": 3.808,
+      "sold": 0,
+      "source": "Excel"
+    },
+    {
+      "printed": 1,
+      "name": "Dripping Vase",
+      "otherCost": 0,
+      "source": "Excel",
+      "colors": "Rose / Bleu",
+      "shopId": "90",
+      "commissionRate": 0.3,
+      "printer": "Anycubic Kobra X",
+      "components": [],
+      "notes": "",
+      "materials": [
+        {
+          "grams": 239,
+          "id": "CC3D-PLA-ROSE-BLUE-SILK"
+        }
+      ],
+      "unitProfit": 12.72239,
+      "grams": 239,
+      "timeDays": 0.4388888888888889,
+      "price": 25,
+      "category": "Vase",
+      "inShop": true,
+      "stock": 1,
+      "filamentCost": 4.77761,
+      "sold": 0,
+      "id": "DRIPPING-VASE-PLA-RED-Bleu",
+      "unitCost": 4.77761
+    },
+    {
+      "category": "Vase",
+      "name": "Vase avec stand",
+      "inShop": true,
+      "printer": "Anycubic Kobra X",
+      "notes": "",
+      "grams": 106,
+      "timeDays": 0.19583333333333333,
+      "id": "VASE-AVEC-STAND-PLA-1",
+      "filamentCost": 1.4914,
+      "components": [],
+      "unitCost": 1.4914,
+      "printed": 2,
+      "unitProfit": 12.5086,
+      "commissionRate": 0.3,
+      "colors": "Beige",
+      "shopId": "91",
+      "otherCost": 0,
+      "source": "Excel",
+      "materials": [
+        {
+          "grams": 86,
+          "id": "KINGROON-PLA-SKIN"
+        },
+        {
+          "id": "ESUN-PLA-BLACK-03",
+          "grams": 20
+        }
+      ],
+      "sold": 0,
+      "price": 20,
+      "stock": 2
+    },
+    {
+      "stock": 2,
+      "printer": "Anycubic Kobra X",
+      "otherCost": 0,
+      "price": 20,
+      "components": [],
+      "materials": [
+        {
+          "grams": 84,
+          "id": "ELEGOO-PLA-Pink"
+        },
+        {
+          "grams": 20,
+          "id": "ESUN-PLA-BLACK-03"
+        }
+      ],
+      "source": "Excel",
+      "printed": 2,
+      "colors": "Rose",
+      "unitProfit": 12.403,
+      "sold": 0,
+      "shopId": "92",
+      "filamentCost": 1.597,
+      "category": "Vase",
+      "name": "Vase avec stand",
+      "timeDays": 0.19583333333333333,
+      "id": "VASE-AVEC-STAND-PLA-2",
+      "unitCost": 1.597,
+      "notes": "",
+      "grams": 104,
+      "inShop": true,
+      "commissionRate": 0.3
+    },
+    {
+      "unitCost": 1.597,
+      "name": "Vase avec stand",
+      "unitProfit": 12.403,
+      "timeDays": 0.19583333333333333,
+      "inShop": true,
+      "stock": 2,
+      "category": "Vase",
+      "components": [],
+      "price": 20,
+      "commissionRate": 0.3,
+      "notes": "",
+      "materials": [
+        {
+          "grams": 84,
+          "id": "ELEGOO-PLA-Sea-Green"
+        },
+        {
+          "grams": 20,
+          "id": "ESUN-PLA-BLACK-03"
+        }
+      ],
+      "grams": 104,
+      "filamentCost": 1.597,
+      "printed": 2,
+      "colors": "Vert d'eau",
+      "id": "VASE-AVEC-STAND-PLA-3",
+      "shopId": "93",
+      "otherCost": 0,
+      "printer": "Anycubic Kobra X",
+      "source": "Excel",
+      "sold": 0
+    },
+    {
+      "name": "Vase avec stand",
+      "printer": "Anycubic Kobra X",
+      "filamentCost": 1.25596,
+      "price": 20,
+      "stock": 2,
+      "unitProfit": 12.74404,
+      "printed": 2,
+      "inShop": true,
+      "components": [],
+      "otherCost": 0,
+      "category": "Vase",
+      "timeDays": 0.19583333333333333,
+      "unitCost": 1.25596,
+      "source": "Excel",
+      "sold": 0,
+      "notes": "",
+      "commissionRate": 0.3,
+      "colors": "Rouge",
+      "grams": 104,
+      "shopId": "94",
+      "materials": [
+        {
+          "id": "ESUN-PLA-RED-01",
+          "grams": 84
+        },
+        {
+          "id": "ESUN-PLA-BLACK-04",
+          "grams": 20
+        }
+      ],
+      "id": "VASE-AVEC-STAND-PLA-4"
+    },
+    {
+      "timeDays": 0.1284722222222222,
+      "name": "Vase GG",
+      "materials": [
+        {
+          "id": "ESUN-PLA-RED-01",
+          "grams": 93
+        }
+      ],
+      "printed": 1,
+      "id": "Vase_GG_PLATE",
+      "category": "Vase",
+      "notes": "",
+      "source": "Excel",
+      "otherCost": 0,
+      "commissionRate": 0.3,
+      "printer": "Anycubic Kobra X",
+      "colors": "Rouge",
+      "unitCost": 1.11042,
+      "shopId": "95",
+      "grams": 93,
+      "price": 20,
+      "stock": 1,
+      "sold": 0,
+      "unitProfit": 12.88958,
+      "components": [],
+      "filamentCost": 1.11042,
+      "inShop": true
+    },
+    {
+      "timeDays": 0.34791666666666665,
+      "printed": 1,
+      "price": 45,
+      "stock": 1,
+      "category": "Décoration",
+      "source": "PrintPilot",
+      "sold": 0,
+      "printer": "",
+      "unitCost": 2.0999,
+      "colors": "Blanc",
+      "shopId": "96",
+      "name": "Knitted Christmas Gnome",
+      "materials": [
+        {
+          "id": "ESUN-PLA-BLACK-04",
+          "grams": 166
+        }
+      ],
+      "unitProfit": 29.400100000000002,
+      "id": "PROD-MW3PBPM7",
+      "commissionRate": 0.3,
+      "notes": "",
+      "filamentCost": 2.0999,
+      "grams": 166,
+      "otherCost": 0
+    },
+    {
+      "stock": 20,
+      "printer": "Anycubic Kobra X",
+      "filamentCost": 0.0032637,
+      "source": "PrintPilot",
+      "price": 4,
+      "sold": 0,
+      "shopId": "97",
+      "colors": "Noir",
+      "printed": 20,
+      "unitProfit": 2.7967363,
+      "hardware": [],
+      "id": "PROD-MW3PEOKG",
+      "unitCost": 0.0032637,
+      "otherCost": 0,
+      "commissionRate": 0.3,
+      "category": "Porte-clés / Key tag",
+      "grams": 0.258,
+      "materials": [
+        {
+          "grams": 0.258,
+          "id": "ESUN-PLA-BLACK-04"
+        }
+      ],
+      "notes": "",
+      "timeDays": 0.017361111111111112,
+      "name": "Keychain western"
+    },
+    {
+      "id": "PACK-21-ANIMAL-KEYCHAIN",
+      "name": "Pack de 21 Keychain d'annimal",
+      "category": "Porte-clés / Key tag",
+      "printer": "Anycubic Kobra X",
+      "colors": "Bleu",
+      "materials": [
+        {
+          "id": "JAYO-PLA+-Bleu",
+          "grams": 6.6
+        }
+      ],
+      "grams": 6.6,
+      "timeDays": 0.019444444444444445,
+      "filamentCost": 0.1056,
+      "otherCost": 0.0,
+      "unitCost": 0.1056,
+      "printed": 21,
+      "sold": 0,
+      "stock": 21,
+      "price": 4.0,
+      "inShop": true,
+      "commissionRate": 0.3,
+      "unitProfit": 2.6944,
+      "notes": "",
+      "components": [],
+      "source": "Excel",
+      "shopId": "98"
+    },
+    {
+      "id": "DRIPPING-VASE-2-PLA",
+      "name": "Dripping Vase 2",
+      "category": "Vase",
+      "printer": "Anycubic Kobra X",
+      "colors": "Noir",
+      "materials": [
+        {
+          "id": "ESUN-PLA-BLACK-04",
+          "grams": 41.0
+        },
+        {
+          "id": "ESUN-PLA-RED-01",
+          "grams": 77.0
+        }
+      ],
+      "grams": 118.0,
+      "timeDays": 0.31666666666666665,
+      "filamentCost": 1.43803,
+      "otherCost": 0.0,
+      "unitCost": 1.43803,
+      "printed": 1,
+      "sold": 0,
+      "stock": 1,
+      "price": 25.0,
+      "inShop": true,
+      "commissionRate": 0.3,
+      "unitProfit": 16.06197,
+      "notes": "",
+      "components": [],
+      "source": "Excel",
+      "shopId": "99"
+    },
+    {
+      "id": "TWISTED-VASE-PLA-BLUE",
+      "name": "Twisted Vase",
+      "category": "Vase",
+      "printer": "Anycubic Kobra X",
+      "colors": "Bleu",
+      "materials": [
+        {
+          "id": "JAYO-PLA+-Bleu",
+          "grams": 49.0
+        }
+      ],
+      "grams": 49.0,
+      "timeDays": 0.1326388888888889,
+      "filamentCost": 0.784,
+      "otherCost": 0.0,
+      "unitCost": 0.784,
+      "printed": 1,
+      "sold": 0,
+      "stock": 1,
+      "price": 25.0,
+      "inShop": true,
+      "commissionRate": 0.3,
+      "unitProfit": 16.716,
+      "notes": "",
+      "components": [],
+      "source": "Excel",
+      "shopId": "100"
+    },
+    {
+      "id": "TWISTED-VASE-PLA-ROUGE",
+      "name": "Twisted Vase",
+      "category": "Vase",
+      "printer": "Anycubic Kobra X",
+      "colors": "Rouge",
+      "materials": [
+        {
+          "id": "ESUN-PLA-RED-01",
+          "grams": 49.0
+        }
+      ],
+      "grams": 49.0,
+      "timeDays": 0.1326388888888889,
+      "filamentCost": 0.58506,
+      "otherCost": 0.0,
+      "unitCost": 0.58506,
+      "printed": 1,
+      "sold": 0,
+      "stock": 1,
+      "price": 25.0,
+      "inShop": true,
+      "commissionRate": 0.3,
+      "unitProfit": 16.91494,
+      "notes": "",
+      "components": [],
+      "source": "Excel",
+      "shopId": "101"
+    }
+  ],
+  "expectedCounts": {
+    "products": 97,
+    "prints": 4,
+    "sales": 1
+  }
+}
