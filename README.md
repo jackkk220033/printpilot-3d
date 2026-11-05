@@ -1,23 +1,21 @@
-# PrintPilot 3D v4.8 — Boutique : fiches agrandies et messages automatiques
+# PrintPilot 3D v4.8.1 — Notifications et suppression de messages
 
-Cette version reprend v4.7 et ne modifie aucune donnée d’inventaire.
+Version basée sur la v4.8 (portail boutique + messages fonctionnels).
+
+## Changements
+- Badge rouge en direct dans le menu « Messages Boutique » (bureau et menu Plus sur mobile) : nombre de messages **non lus**.
+- Le badge se met à jour dès qu’un commentaire est reçu, marqué lu/non lu ou supprimé via Firestore onSnapshot. Pas besoin de rafraîchir ou d’ouvrir la boîte de réception.
+- Bouton « Supprimer » par commentaire dans `messages.html`, avec confirmation avant suppression définitive.
+- Titre `v4.8.1` dans les onglets.
+- Règles Firestore complètes avec suppression des **messages seulement par le propriétaire**; création également autorisée au propriétaire (en accord avec la correction v4.8 déjà effectuée manuellement).
 
 ## Installation
+1. Exporter une sauvegarde JSON du site administrateur.
+2. Mettre à jour les fichiers du site GitHub (index.html, messages.html, boutique.html, css/style.css, css/boutique.css, js/cloud.js, js/messages.js). Garder les autres fichiers du ZIP à l'identique ou remplacer le dossier complet.
+3. Dans Firebase Console → Firestore Database → Rules, remplacer **tout** par le `firestore.rules` joint puis publier. Ces règles préservent les collections privées et la sécurité du portail.
+4. Après déploiement GitHub Pages, recharger le site (Ctrl+Shift+R sur PC) et vérifier `v4.8.1`.
+5. Envoyer un message test via le compte boutique ; confirmer le badge `1`, puis marquer lu ou supprimer et confirmer le retour à zéro.
 
-1. Sauvegarde JSON de l’app principale.
-2. Remplace sur GitHub TOUS les fichiers correspondants à la même version. En plus des fichiers existants, ajoute `messages.html` et `js/messages.js`. Préserve `js/firebase-config.js` (configuration actuelle du projet).
-3. Dans Firebase Console > Firestore Database > Rules, remplace les anciennes règles par le contenu COMPLET de `firestore.rules`, puis Publier. Sans cette étape, l’envoi des notes sera refusé.
-4. Sur ton site admin ouvre « Messages Boutique » dans le menu. Si le navigateur demande une connexion, utilise le compte admin. Les messages arrivent automatiquement avec un abonnement temps réel Firestore.
-5. Sur `boutique.html?atelier=TON_UID`, le compte Boutique déjà autorisé ouvre une fiche en cliquant une carte, peut écrire une note sur cette fiche ou envoyer un commentaire général, puis cliquer « Enregistrer et envoyer ». Le navigateur envoie directement le message à Firestore sans passer par Synchronisation ni publier de nouveau le catalogue.
+Le badge apparaît tant que PrintPilot est ouvert, la connexion Firebase est active et le propriétaire est connecté. Il ne s'agit pas d'une notification système ou d'un email. Les messages supprimés sont définitivement effacés de Firestore.
 
-## Sécurité
-
-- Le compte Boutique peut uniquement créer de nouveaux messages; il ne peut pas lire les messages existants ou ceux des autres.
-- Seul le propriétaire lit les messages et change leur statut lu/non lu.
-- L’inventaire, les revenus, les achats et les coûts restent dans `/workspaces/{ownerUid}`, privés au compte propriétaire.
-- Le lien Boutique et son identifiant `atelier` restent identiques.
-- L’envoi d’email automatique n’est **pas** inclus : un email déclenché par Firebase nécessite une fonction serveur / extension ou un fournisseur tiers. Les nouveaux messages arrivent immédiatement dans « Messages Boutique ».
-
-## Test suggéré
-
-Envoie une note test depuis le compte Boutique; attends « Message envoyé »; ouvre Messages Boutique en admin; elle doit y apparaître. Marque comme lu pour confirmer le droit de mise à jour. Laisse une sauvegarde JSON avant installation.
+**Attention :** le ZIP contient une copie statique de `js/firebase-config.js` depuis la v4.8 source. Vérifier que ce fichier correspond au projet Firebase actuel (ne pas changer de projet).

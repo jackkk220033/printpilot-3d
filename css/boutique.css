@@ -5,3 +5,8 @@ textarea{background:#0f192b;color:#f3f5ff;border:1px solid #456087;border-radius
 
 /* Admin inbox */
 .inbox-list{display:grid;gap:14px}.inbox-message{padding:18px;background:#17213a;border:1px solid #344568;border-radius:13px}.inbox-message.is-unread{border-color:#a98aff}.inbox-top{display:flex;justify-content:space-between;gap:10px}.inbox-top span{font-size:12px;color:#a98aff}.inbox-meta{font-size:12px;color:#a3badc}.inbox-body{white-space:pre-wrap;line-height:1.5;overflow-wrap:anywhere}.inbox-message button{background:#263855}.inbox-message button:hover{background:#42567c}
+
+/* v4.8.1 — actions dans la boîte de réception */
+.inbox-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.inbox-message .delete-message{background:#592535;color:#ffd4dc;border:1px solid #a3455a}
+.inbox-message .delete-message:hover{background:#78354a}

@@ -14,6 +14,15 @@ const adapter = window.PrintPilotCloudAdapter;
 const photoStatus=document.getElementById('photo-cloud-status');
 const photoMigrateButton=document.getElementById('cloud-migrate-photos');
 let photoUnsub=null,photoReady=false;
+let unreadUnsub=null;
+function setUnreadBadge(count){
+ document.querySelectorAll('[data-boutique-unread]').forEach(el=>{
+  el.hidden=!count; el.textContent=count>99?'99+':String(count);
+  el.setAttribute('aria-label', count+' message(s) non lu(s)');
+ });
+}
+function stopUnreadBadge(){if(unreadUnsub){unreadUnsub();unreadUnsub=null;}setUnreadBadge(0);}
+
 let photoCache=new Map();
 const photoId=key=>Array.from(new TextEncoder().encode(key),b=>b.toString(16).padStart(2,'0')).join('');
 const photoNotice=msg=>{if(photoStatus)photoStatus.textContent=msg;};
@@ -28,7 +37,7 @@ const stamp=()=>new Date().toLocaleString('fr-CA');
 const describe=doc=> doc ? `Version cloud ${doc.revision || 0} • ${doc.savedAt?.toDate?.()?.toLocaleString('fr-CA') || 'date indisponible'} • ${doc.data?.rolls?.length ?? 0} bobines, ${doc.data?.products?.length ?? 0} produits` : 'Aucune sauvegarde cloud pour ce compte.';
 function setStatus(message,isError=false){status.textContent=message;status.style.borderColor=isError?'#b45366':'#3b4e77';document.getElementById('sidebar-storage').textContent=active&&!conflict?'☁ Synchronisation active': '● Stockage local actif';}
 function showError(e){console.error('PrintPilot cloud:',e); const message=e?.code ==='auth/invalid-credential'?'Courriel ou mot de passe incorrect.': e?.code==='auth/email-already-in-use'?'Ce courriel possède déjà un compte.':e?.code==='auth/weak-password'?'Mot de passe trop faible.':e?.code==='permission-denied'?'Permission refusée : vérifie les règles Firestore et le projet Firebase.':String(e?.message||e);errorEl.textContent=message;setStatus('Synchronisation interrompue — données locales conservées.',true);}
-function resetCloud(){if(photoUnsub){photoUnsub();photoUnsub=null;}photoCache.clear();photoReady=false;photoNotice('Connecte-toi pour synchroniser les photos.');window.dispatchEvent(new Event('printpilot:photos-changed'));active=false;pending=false;conflict=false;busy=false;remote=null;baseRevision=null;observedOnce=false;clearTimeout(timer);if(unsubscribe){unsubscribe();unsubscribe=null;}setStatus('Connecte-toi pour retrouver tes données.');}
+function resetCloud(){stopUnreadBadge();if(photoUnsub){photoUnsub();photoUnsub=null;}photoCache.clear();photoReady=false;photoNotice('Connecte-toi pour synchroniser les photos.');window.dispatchEvent(new Event('printpilot:photos-changed'));active=false;pending=false;conflict=false;busy=false;remote=null;baseRevision=null;observedOnce=false;clearTimeout(timer);if(unsubscribe){unsubscribe();unsubscribe=null;}setStatus('Connecte-toi pour retrouver tes données.');}
 function setRemoteData(record){remote=record;remoteInfo.textContent=describe(record);document.getElementById('cloud-download').disabled=!record;}
 function rememberSynced(){localStorage.setItem(LINK_UID,currentUser.uid);localStorage.setItem(DIGEST_KEY,localJSON());}
 function safeSyncRemote(record){
@@ -106,7 +115,7 @@ if(!configOK){
 }else{
  try{
   const sdkVersion='13.1.0';
-  const [{initializeApp},{getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut},{getFirestore,doc,getDoc,onSnapshot,runTransaction,serverTimestamp,collection,setDoc,deleteDoc}]=await Promise.all([
+  const [{initializeApp},{getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut},{getFirestore,doc,getDoc,onSnapshot,runTransaction,serverTimestamp,collection,setDoc,deleteDoc,query,where}]=await Promise.all([
     import(`https://www.gstatic.com/firebasejs/${sdkVersion}/firebase-app.js`),
     import(`https://www.gstatic.com/firebasejs/${sdkVersion}/firebase-auth.js`),
     import(`https://www.gstatic.com/firebasejs/${sdkVersion}/firebase-firestore.js`)
@@ -265,6 +274,13 @@ if(!configOK){
    accountLabel.textContent=`Compte privé : ${user.email || user.uid}`;
    setStatus('☁ Connecté : choisis une copie locale ou cloud.');
    beginListener();watchPhotos();
+   // Badge live : lit uniquement les messages non lus de l'atelier du propriétaire.
+   try {
+    unreadUnsub=onSnapshot(query(collection(db,'boutiques',user.uid,'messages'),where('read','==',false)),snapshot=>{
+      setUnreadBadge(snapshot.size);
+    },err=>{console.warn('Badge Messages Boutique:',err);setUnreadBadge(0);});
+   } catch(err){console.warn('Badge Messages Boutique:',err);setUnreadBadge(0);}
+
   });
  }catch(e){showError(e);authArea.hidden=true;}
 }
