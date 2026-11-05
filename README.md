@@ -1,21 +1,23 @@
-# PrintPilot v4.7 — Portail Boutique sécurisé
+# PrintPilot 3D v4.8 — Boutique : fiches agrandies et messages automatiques
+
+Cette version reprend v4.7 et ne modifie aucune donnée d’inventaire.
 
 ## Installation
-1. Faire **Exporter une sauvegarde** JSON depuis PrintPilot v4.6.3.
-2. Envoyer à GitHub Pages tous les fichiers du ZIP en conservant les chemins, y compris **boutique.html, css/boutique.css, js/boutique.js et firestore.rules**.
-3. **ESSENTIEL** : dans console.firebase.google.com → projet printpilot-3d → Firestore Database → Rules, remplacer les règles existantes par le contenu complet de `firestore.rules` et cliquer Publish. GitHub Pages ne déploie pas les règles Firestore.
-4. Depuis le site principal, se connecter avec le compte administrateur Firebase qui contient l'inventaire, et vérifier `☁ Synchronisation active`.
-5. Créer le compte Boutique depuis Firebase Authentication → Users → Add user. Choisir un vrai mot de passe unique (pas 123). Copier son UID (identifiant utilisateur), pas le mot de passe.
-6. Dans PrintPilot → Synchronisation → Portail Boutique, coller l'UID dans le champ, puis cliquer **Autoriser ce compte**.
-7. Cliquer **Publier / actualiser le catalogue**, attendre la fin. Seules les données autorisées sont copiées.
-8. Copier le lien `boutique.html?atelier=<UID_ADMIN>` depuis le champ et l'envoyer à la boutique. La boutique s'y connecte avec son compte.
-9. Republier après changements de produits, stocks, prix ou photos. Pour retirer l’accès, saisir le même UID et **Révoquer ce compte**.
 
-## Protection
-- Le document `/workspaces/{ownerUid}` reste strictement accessible à son propriétaire.
-- Le compte boutique ne peut lire que `/boutiques/{ownerUid}/catalogue/current` et ses photos publiées; il n'a pas accès aux finances, profits, ventes, commandes, filaments, historique ni aux photos privées.
-- Autorisation par UID, révocable dans l’interface admin. Un nouveau compte sans autorisation ne peut rien consulter.
-- Catalogue de lecture seule. Les quantités sont un **instantané** de la dernière publication, pas une modification de l'inventaire réel.
-- Ne pas ouvrir l'index.html principal avec le compte Boutique sur l'ordinateur administrateur; le portail dédié fonctionne indépendamment.
-- Les photos visibles dans le portail sont seulement celles déjà synchronisées dans le cloud admin. Les photos locales non synchronisées ne seront pas incluses.
-- Aucun changement à la logique des stocks, du temps ou aux objets Firebase historiques.
+1. Sauvegarde JSON de l’app principale.
+2. Remplace sur GitHub TOUS les fichiers correspondants à la même version. En plus des fichiers existants, ajoute `messages.html` et `js/messages.js`. Préserve `js/firebase-config.js` (configuration actuelle du projet).
+3. Dans Firebase Console > Firestore Database > Rules, remplace les anciennes règles par le contenu COMPLET de `firestore.rules`, puis Publier. Sans cette étape, l’envoi des notes sera refusé.
+4. Sur ton site admin ouvre « Messages Boutique » dans le menu. Si le navigateur demande une connexion, utilise le compte admin. Les messages arrivent automatiquement avec un abonnement temps réel Firestore.
+5. Sur `boutique.html?atelier=TON_UID`, le compte Boutique déjà autorisé ouvre une fiche en cliquant une carte, peut écrire une note sur cette fiche ou envoyer un commentaire général, puis cliquer « Enregistrer et envoyer ». Le navigateur envoie directement le message à Firestore sans passer par Synchronisation ni publier de nouveau le catalogue.
+
+## Sécurité
+
+- Le compte Boutique peut uniquement créer de nouveaux messages; il ne peut pas lire les messages existants ou ceux des autres.
+- Seul le propriétaire lit les messages et change leur statut lu/non lu.
+- L’inventaire, les revenus, les achats et les coûts restent dans `/workspaces/{ownerUid}`, privés au compte propriétaire.
+- Le lien Boutique et son identifiant `atelier` restent identiques.
+- L’envoi d’email automatique n’est **pas** inclus : un email déclenché par Firebase nécessite une fonction serveur / extension ou un fournisseur tiers. Les nouveaux messages arrivent immédiatement dans « Messages Boutique ».
+
+## Test suggéré
+
+Envoie une note test depuis le compte Boutique; attends « Message envoyé »; ouvre Messages Boutique en admin; elle doit y apparaître. Marque comme lu pour confirmer le droit de mise à jour. Laisse une sauvegarde JSON avant installation.

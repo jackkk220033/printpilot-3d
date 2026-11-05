@@ -1,0 +1,17 @@
+// v4.8 — messages admin, isolés du document privé, synchronisés en direct.
+const $=id=>document.getElementById(id),msg=(s)=>{$('message').textContent=s};
+let auth,db,api,user=null,stop=null,items=[];
+const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function render(){const filter=$('filter').value;const visible=items.filter(x=>filter==='all'||(filter==='read'===Boolean(x.read)));$('count').textContent=visible.length+' message(s) · '+items.filter(x=>!x.read).length+' non lu(s)';$('messages').innerHTML=visible.map(x=>`<article class="inbox-message ${x.read?'':'is-unread'}"><div class="inbox-top"><strong>${escapeHTML(x.productName||'Commentaire général')}</strong><span>${x.read?'Lu':'Nouveau'}</span></div><p class="inbox-meta">${escapeHTML(x.senderEmail||'Compte Boutique')} · ${x.createdAt?.toDate?.()?.toLocaleString('fr-CA')||'Date en attente'}</p>${x.productId?`<p class="inbox-meta">ID : ${escapeHTML(x.productId)}</p>`:''}<p class="inbox-body">${escapeHTML(x.body)}</p><button type="button" data-toggle="${escapeHTML(x.id)}">${x.read?'Marquer non lu':'Marquer comme lu'}</button></article>`).join('')||'<p class="empty">Aucun message pour ce filtre.</p>';}
+$('filter').addEventListener('change',render);
+$('messages').addEventListener('click',async e=>{const b=e.target.closest('[data-toggle]');if(!b)return;const m=items.find(x=>x.id===b.dataset.toggle);if(!m)return;b.disabled=true;try{await api.updateDoc(api.doc(db,'boutiques',user.uid,'messages',m.id),{read:!m.read});}catch(err){msg('Impossible de changer le statut : '+(err.code||err.message));}finally{b.disabled=false;}});
+$('refresh').addEventListener('click',()=>render());
+try{
+ const cfg=window.PRINTPILOT_FIREBASE_CONFIG;if(!cfg?.apiKey)throw Error('Configuration Firebase manquante');
+ const v='13.1.0';const [{initializeApp},{getAuth,onAuthStateChanged,signInWithEmailAndPassword},{getFirestore,collection,doc,onSnapshot,query,orderBy,updateDoc}]=await Promise.all([import(`https://www.gstatic.com/firebasejs/${v}/firebase-app.js`),import(`https://www.gstatic.com/firebasejs/${v}/firebase-auth.js`),import(`https://www.gstatic.com/firebasejs/${v}/firebase-firestore.js`)]);
+ const app=initializeApp(cfg);auth=getAuth(app);db=getFirestore(app);api={doc,updateDoc};
+ $('login-form').addEventListener('submit',async e=>{e.preventDefault();const f=e.currentTarget;const b=f.querySelector('button');b.disabled=true;try{await signInWithEmailAndPassword(auth,f.elements.email.value.trim(),f.elements.password.value);f.elements.password.value='';}catch(err){msg('Connexion impossible : '+(err.code||err.message));}finally{b.disabled=false;}});
+ onAuthStateChanged(auth,u=>{if(stop){stop();stop=null;}user=u;items=[];render();$('account').textContent=u?.email||'';$('inbox').hidden=!u;$('login-panel').hidden=!!u;
+ if(!u){msg('Connecte-toi avec le compte administrateur de PrintPilot.');return;}
+ msg('Chargement des messages…');stop=onSnapshot(query(collection(db,'boutiques',u.uid,'messages'),orderBy('createdAt','desc')),snapshot=>{items=snapshot.docs.map(d=>({id:d.id,...d.data()}));render();msg('✓ Messages synchronisés automatiquement');},err=>{msg('Impossible d’ouvrir les messages de cet atelier : '+(err.code||err.message)+'. Utilise le compte administrateur et vérifie les règles v4.8.');});});
+}catch(err){msg('Erreur : '+err.message);console.error(err);}

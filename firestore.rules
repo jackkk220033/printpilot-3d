@@ -49,6 +49,31 @@ service cloud.firestore {
           && request.resource.data.products.size() <= 450;
         allow delete: if isBoutiqueOwner(ownerUid);
       }
+      // v4.8 — boutique peut ENVOYER, seul le propriétaire peut LIRE et classer.
+      match /messages/{messageId} {
+        allow create: if request.auth != null
+          && exists(/databases/$(database)/documents/boutiques/$(ownerUid)/members/$(request.auth.uid))
+          && request.resource.data.keys().hasOnly(['senderUid','senderEmail','body','productId','productName','createdAt','read'])
+          && request.resource.data.keys().hasAll(['senderUid','senderEmail','body','productId','productName','createdAt','read'])
+          && request.resource.data.senderUid == request.auth.uid
+          && request.resource.data.senderEmail is string
+          && request.resource.data.senderEmail == request.auth.token.email
+          && request.resource.data.senderEmail.size() <= 254
+          && request.resource.data.body is string
+          && request.resource.data.body.size() >= 2
+          && request.resource.data.body.size() <= 1200
+          && request.resource.data.productId is string
+          && request.resource.data.productId.size() <= 160
+          && request.resource.data.productName is string
+          && request.resource.data.productName.size() <= 160
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.read == false;
+        allow get, list: if isBoutiqueOwner(ownerUid);
+        allow update: if isBoutiqueOwner(ownerUid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])
+          && request.resource.data.read is bool;
+        allow delete: if false;
+      }
       match /photos/{photoId} {
         allow get: if canViewBoutique(ownerUid);
         allow list: if false;

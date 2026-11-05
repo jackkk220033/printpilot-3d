@@ -1,8 +1,8 @@
-// Portail Boutique v4.7 — aucun accès aux données privées /workspaces.
+// Portail Boutique v4.8 — aucun accès aux données privées /workspaces.
 const $=id=>document.getElementById(id);
 const owner=new URL(location.href).searchParams.get('atelier')||'';
 const msg=(s,ok=false)=>{$('message').textContent=s;$('message').classList.toggle('success',ok)};
-let auth,db,api,current=null,products=[],images=new Map(),detach=null;
+let auth,db,api,current=null,products=[],images=new Map(),detach=null,selectedProductId=null;
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const photoId=key=>Array.from(new TextEncoder().encode(key),b=>b.toString(16).padStart(2,'0')).join('');
 const cad=v=>new Intl.NumberFormat('fr-CA',{style:'currency',currency:'CAD'}).format(v||0);
@@ -10,12 +10,12 @@ function render(){
  const q=$('search').value.trim().toLocaleLowerCase('fr');const cat=$('category').value;const avail=$('availability').value;
  const list=products.filter(p=>(!cat||p.category===cat)&&(avail!=='instock'||p.stock>0)&&[p.name,p.colors,p.shopId,p.id,p.category].join(' ').toLocaleLowerCase('fr').includes(q));
  $('result-count').textContent=list.length+' produit(s)';$('empty').hidden=Boolean(list.length);
- $('cards').innerHTML=list.map(p=>`<article class="product"><div class="photo" data-photo="${escapeHTML(p.id)}">▧</div><div class="details"><h3>${escapeHTML(p.name)}</h3><div class="price">${cad(p.price)}</div><p class="sub">#${escapeHTML(p.shopId)} · ${escapeHTML(p.category||'Autre')}</p><p class="sub">${escapeHTML(p.colors||'')}</p><span class="stock ${p.stock>0?'':'zero'}">${p.stock>0?p.stock+' disponible(s)':'Épuisé'}</span></div></article>`).join('');
+ $('cards').innerHTML=list.map(p=>`<article class="product"><button type="button" class="product-open" data-open-product="${escapeHTML(p.id)}" aria-label="Voir ${escapeHTML(p.name)} en détail"><div class="photo" data-photo="${escapeHTML(p.id)}">▧</div><div class="details"><h3>${escapeHTML(p.name)}</h3><div class="price">${cad(p.price)}</div><p class="sub">#${escapeHTML(p.shopId)} · ${escapeHTML(p.category||'Autre')}</p><p class="sub">${escapeHTML(p.colors||'')}</p><span class="stock ${p.stock>0?'':'zero'}">${p.stock>0?p.stock+' disponible(s)':'Épuisé'}</span></div></button></article>`).join('');
  for(const element of document.querySelectorAll('[data-photo]')){
   const pId=element.dataset.photo;if(images.has(pId)){const img=document.createElement('img');img.src=images.get(pId);img.alt='Photo de '+(products.find(p=>p.id===pId)?.name||'produit');img.loading='lazy';element.replaceChildren(img);}
  }
 }
-function resetUI(){products=[];images.clear();$('catalogue-panel').hidden=true;$('login-panel').hidden=false;$('logout').hidden=true;$('who').textContent='';if(detach){detach();detach=null;}}
+function resetUI(){selectedProductId=null;if($('product-dialog').open)$('product-dialog').close();products=[];images.clear();$('catalogue-panel').hidden=true;$('login-panel').hidden=false;$('logout').hidden=true;$('who').textContent='';if(detach){detach();detach=null;}}
 function fillCategories(){const selected=$('category').value;const cats=[...new Set(products.map(p=>p.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));$('category').replaceChildren(new Option('Toutes les catégories',''),...cats.map(x=>new Option(x,x)));$('category').value=cats.includes(selected)?selected:'';}
 async function getCatalogue(user){
  if(!owner||!/^[A-Za-z0-9_-]{10,128}$/.test(owner))throw Error('Le lien de la boutique est incomplet. Demande le lien généré depuis PrintPilot.');
@@ -36,16 +36,45 @@ async function getCatalogue(user){
  },err=>msg('Accès refusé au catalogue : '+(err.code||err.message)));
  $('login-panel').hidden=true;$('catalogue-panel').hidden=false;$('logout').hidden=false;$('who').textContent=user.email||'Boutique';
 }
+function openProduct(id){
+ const p=products.find(x=>x.id===id);if(!p)return;selectedProductId=id;
+ $('detail-name').textContent=p.name||'Produit';$('detail-price').textContent=cad(p.price);
+ $('detail-meta').textContent='ID boutique #'+(p.shopId||'—')+' · ID Excel '+(p.id||'—')+' · '+(p.category||'Autre');
+ $('detail-colors').textContent='Couleur(s) : '+(p.colors||'—');
+ $('detail-stock').textContent=p.stock>0?p.stock+' disponible(s)':'Épuisé';
+ const wrap=$('detail-photo');wrap.replaceChildren();
+ if(images.has(id)){const im=document.createElement('img');im.src=images.get(id);im.alt='Photo de '+p.name;wrap.append(im);}else wrap.textContent='Aucune photo disponible';
+ const f=$('product-note-form');f.reset();f.querySelector('.send-status').textContent='';$('product-dialog').showModal();
+}
+$('cards').addEventListener('click',e=>{const el=e.target.closest('[data-open-product]');if(el)openProduct(el.dataset.openProduct);});
+$('detail-close').addEventListener('click',()=>$('product-dialog').close());
+async function sendNote(form,product){
+ const button=form.querySelector('button[type=submit]');const status=form.querySelector('.send-status');
+ if(!current||!owner){status.textContent='Connecte-toi au compte Boutique.';status.classList.add('error');return;}
+ const body=form.elements.body.value.trim();if(body.length<2||body.length>1200){status.textContent='Entre un message de 2 à 1200 caractères.';status.classList.add('error');return;}
+ button.disabled=true;status.classList.remove('error');status.textContent='Envoi en cours…';
+ try{
+  await api.addDoc(api.collection(db,'boutiques',owner,'messages'),{
+   senderUid:current.uid,senderEmail:String(current.email||'').slice(0,254),
+   body,productId:String(product?.id||'').slice(0,160),productName:String(product?.name||'').slice(0,160),
+   createdAt:api.serverTimestamp(),read:false
+  });
+  form.reset();status.textContent='✓ Message envoyé automatiquement à l’atelier!';
+ }catch(err){status.classList.add('error');status.textContent='Envoi impossible : '+(err.code||err.message)+'. Ton texte n’a pas été supprimé.';console.error('Message Boutique:',err);}
+ finally{button.disabled=false;}
+}
+$('general-note-form').addEventListener('submit',e=>{e.preventDefault();sendNote(e.currentTarget,null);});
+$('product-note-form').addEventListener('submit',e=>{e.preventDefault();sendNote(e.currentTarget,products.find(p=>p.id===selectedProductId));});
 $('search').addEventListener('input',render);$('category').addEventListener('change',render);$('availability').addEventListener('change',render);
 try{
  const cfg=window.PRINTPILOT_FIREBASE_CONFIG;
  if(!cfg?.apiKey)throw Error('Configuration Firebase absente.');
  const v='13.1.0';
- const [{initializeApp},{getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut},{getFirestore,doc,getDoc,onSnapshot}]=await Promise.all([
+ const [{initializeApp},{getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut},{getFirestore,doc,getDoc,onSnapshot,addDoc,collection,serverTimestamp}]=await Promise.all([
   import(`https://www.gstatic.com/firebasejs/${v}/firebase-app.js`),
   import(`https://www.gstatic.com/firebasejs/${v}/firebase-auth.js`),
   import(`https://www.gstatic.com/firebasejs/${v}/firebase-firestore.js`)]);
- const app=initializeApp(cfg);auth=getAuth(app);db=getFirestore(app);api={doc,getDoc,onSnapshot};
+ const app=initializeApp(cfg);auth=getAuth(app);db=getFirestore(app);api={doc,getDoc,onSnapshot,addDoc,collection,serverTimestamp};
  $('login-form').addEventListener('submit',async e=>{e.preventDefault();const f=e.currentTarget;const b=f.querySelector('button[type=submit]');b.disabled=true;msg('Connexion en cours…');try{await signInWithEmailAndPassword(auth,f.elements.email.value.trim(),f.elements.password.value);f.elements.password.value='';}catch(e){msg('Connexion impossible : '+(e.code||e.message));}finally{b.disabled=false;}});
  $('logout').addEventListener('click',()=>signOut(auth));
  onAuthStateChanged(auth,async u=>{resetUI();current=u;msg('');if(!u)return;try{await getCatalogue(u);}catch(e){msg(e.message||String(e));$('who').textContent=u.email||'';$('logout').hidden=false;}});

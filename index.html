@@ -2,15 +2,15 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b1020">
-<title>PrintPilot 3D v4.7</title>
-<link rel="stylesheet" href="css/style.css?v=4.7">
+<title>PrintPilot 3D v4.8</title>
+<link rel="stylesheet" href="css/style.css?v=4.8">
 <!-- Handlebars est facultatif : si ce CDN est bloqué, les fonctions continuent de marcher. -->
 <script defer src="https://cdn.jsdelivr.net/npm/handlebars@4.7.8/dist/handlebars.min.js"></script>
 <!-- Données Excel volontairement absentes des fichiers publiables : elles viennent du stockage local ou de Firebase. -->
 <script defer src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-<script defer src="js/app.js?v=4.7"></script>
-<script defer src="js/firebase-config.js?v=4.7"></script>
-<script type="module" src="js/cloud.js?v=4.7"></script>
+<script defer src="js/app.js?v=4.8"></script>
+<script defer src="js/firebase-config.js?v=4.8"></script>
+<script type="module" src="js/cloud.js?v=4.8"></script>
 </head>
 <body>
 <div class="shell">
@@ -28,8 +28,9 @@
  <a href="#commandes" data-page="commandes" class="nav"><span>▣</span> Commandes</a>
  <a href="#hardware" data-page="hardware" class="nav"><span>⚙</span> Hardware</a>
  <a href="#imprimantes" data-page="imprimantes" class="nav"><span>▥</span> Imprimantes</a>
+ <a href="messages.html" class="nav"><span>✉</span> Messages Boutique</a>
  </nav>
- <div class="sidebar-foot"><div class="local-label" id="sidebar-storage">● &nbsp;Stockage local actif</div><p>v4.7 • Synchronisation Firebase</p></div>
+ <div class="sidebar-foot"><div class="local-label" id="sidebar-storage">● &nbsp;Stockage local actif</div><p>v4.8 • Synchronisation Firebase</p></div>
  </aside>
  <div class="workarea">
  <header class="topbar"><div><button type="button" id="menu-toggle" aria-label="Ouvrir le menu">☰</button><span>Atelier / <b id="page-name">Tableau de bord</b></span></div><div class="topright"><button type="button" class="secondary-btn cloud-open" id="open-cloud">☁ Synchronisation</button><span id="today"></span><span class="avatar">3D</span></div></header>
@@ -51,6 +52,7 @@
   <a href="#horsproduction" data-page="horsproduction">⚠ Personnel / Échecs / Tests</a>
   <a href="#finances" data-page="finances">$ Finances</a>
   <a href="#imprimantes" data-page="imprimantes">▥ Imprimantes</a>
+  <a href="messages.html">✉ Messages Boutique</a>
  </div>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
