@@ -2,15 +2,15 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b1020">
-<title>PrintPilot 3D v3.6</title>
-<link rel="stylesheet" href="css/style.css">
+<title>PrintPilot 3D v4.2</title>
+<link rel="stylesheet" href="css/style.css?v=4.2.0">
 <!-- Handlebars est facultatif : si ce CDN est bloqué, les fonctions continuent de marcher. -->
 <script defer src="https://cdn.jsdelivr.net/npm/handlebars@4.7.8/dist/handlebars.min.js"></script>
 <!-- Données Excel volontairement absentes des fichiers publiables : elles viennent du stockage local ou de Firebase. -->
 <script defer src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-<script defer src="js/app.js"></script>
-<script defer src="js/firebase-config.js"></script>
-<script type="module" src="js/cloud.js"></script>
+<script defer src="js/app.js?v=4.2.0"></script>
+<script defer src="js/firebase-config.js?v=4.2.0"></script>
+<script type="module" src="js/cloud.js?v=4.2.0"></script>
 </head>
 <body>
 <div class="shell">
@@ -35,6 +35,22 @@
  <main id="app" class="page"><p>Chargement de PrintPilot…</p></main>
  </div>
 </div>
+<nav class="mobile-navigation" id="mobile-navigation" aria-label="Navigation mobile">
+ <div class="mobile-navigation-row">
+  <a href="#dashboard" data-page="dashboard"><span>▦</span>Accueil</a>
+  <a href="#produits" data-page="produits"><span>⬡</span>Produits</a>
+  <a href="#impressions" data-page="impressions"><span>▤</span>Impressions</a>
+  <a href="#catalogue" data-page="catalogue"><span>▧</span>Catalogue</a>
+  <button type="button" id="mobile-more-btn" aria-expanded="false" aria-controls="mobile-more-sheet"><span>☰</span>Plus</button>
+ </div>
+ <div class="mobile-more-sheet" id="mobile-more-sheet" hidden>
+  <a href="#filaments" data-page="filaments">◉ Filaments</a>
+  <a href="#commandes" data-page="commandes">▣ Ventes et commandes</a>
+  <a href="#hardware" data-page="hardware">⚙ Hardware</a>
+  <a href="#finances" data-page="finances">$ Finances</a>
+  <a href="#imprimantes" data-page="imprimantes">▥ Imprimantes</a>
+ </div>
+</nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <!-- Le formulaire est permanent et jamais remplacé par le rendu des pages. -->
 <dialog id="roll-dialog" class="dialog">
