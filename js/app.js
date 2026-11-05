@@ -715,18 +715,47 @@
   if(file.size>2_000_000)throw Error('Fichier trop volumineux.');
   const patch=JSON.parse(await file.text());
   if(patch.format!=='PrintPilotReconciliationV1'||!Array.isArray(patch.products)||!Array.isArray(patch.baseline)||!patch.expectedCounts)throw Error('Ce fichier n’est pas une correction PrintPilot reconnue.');
-  if(extras.products.length!==patch.expectedCounts.products||prints.length!==patch.expectedCounts.prints||extras.sales.length!==patch.expectedCounts.sales)throw Error('Ton inventaire a évolué depuis la sauvegarde. Il faut une nouvelle comparaison avant de corriger.');
-  const byShopId=new Map(extras.products.map(p=>[String(p.shopId),p]));
-  for(const base of patch.baseline){
-   const curr=byShopId.get(String(base.shopId));
-   if(!curr||curr.id!==base.id||String(curr.colors||'')!==String(base.colors||'')||['printed','stock','price','timeDays'].some(k=>Math.abs(safeNum(curr[k])-safeNum(base[k]))>1e-7))throw Error('Un produit a changé depuis la sauvegarde : '+(base.id||'inconnu')+'.');
+  // Three-way merge: only fields intentionally corrected in the patch are touched.
+  // A field that already matches the target is accepted as previously corrected;
+  // a field that differs from both baseline and target is a genuine conflict.
+  if(prints.length!==patch.expectedCounts.prints||extras.sales.length!==patch.expectedCounts.sales)throw Error('Les impressions ou les ventes ont changé depuis la sauvegarde. Exporte une nouvelle sauvegarde pour recalculer la correction.');
+  const baseByShop=new Map(patch.baseline.map(p=>[String(p.shopId),p]));
+  const desiredByShop=new Map(patch.products.map(p=>[String(p.shopId),p]));
+  const currentByShop=new Map(extras.products.map(p=>[String(p.shopId),p]));
+  const equal=(a,b)=>typeof a==='number'||typeof b==='number'?Math.abs(safeNum(a)-safeNum(b))<=1e-7:String(a??'')===String(b??'');
+  const corrections=['printed','stock','price','timeDays'];
+  const conflicts=[];
+  const nextProducts=extras.products.map(curr=>{
+    const key=String(curr.shopId),base=baseByShop.get(key),wanted=desiredByShop.get(key);
+    if(!base||!wanted)return {...curr}; // Respect products added to PrintPilot meanwhile.
+    if(curr.id!==base.id||String(curr.colors||'')!==String(base.colors||'')){
+      conflicts.push(`${curr.name||curr.id} : identité ou couleur modifiée`);return {...curr};
+    }
+    const merged={...curr}; // Preserve photos, notes, components, latest metadata, etc.
+    for(const field of corrections){
+      if(equal(base[field],wanted[field]))continue;
+      if(equal(curr[field],base[field]))merged[field]=wanted[field];
+      else if(!equal(curr[field],wanted[field]))conflicts.push(`${curr.name||curr.id} : ${field} (${curr[field]} différent de ${base[field]} et ${wanted[field]})`);
+    }
+    return merged;
+  });
+  for(const desired of patch.products){
+    const key=String(desired.shopId);
+    if(currentByShop.has(key)){
+      if(!baseByShop.has(key) && currentByShop.get(key).id!==desired.id)conflicts.push(`ID boutique #${key} utilisé par un autre produit`);
+      continue;
+    }
+    if(baseByShop.has(key)){conflicts.push(`Produit existant supprimé depuis la sauvegarde : ${desired.name||desired.id}`);continue;}
+    if(nextProducts.some(p=>p.id===desired.id && String(p.colors||'')===String(desired.colors||''))){conflicts.push(`Produit déjà présent sous un autre ID : ${desired.name||desired.id}`);continue;}
+    nextProducts.push(desired);
   }
-  if(patch.products.length<extras.products.length||!patch.products.every(p=>p&&typeof p.id==='string'&&Number.isFinite(Number(p.price))&&Number.isFinite(Number(p.stock))))throw Error('Produits invalides dans le correctif.');
-  const newRetail=patch.products.reduce((sum,p)=>sum+safeNum(p.stock)*safeNum(p.price),0);
-  const newMins=patch.products.reduce((sum,p)=>sum+safeNum(p.timeDays)*1440*safeNum(p.printed),0);
-  const msg=`Correction vérifiée.\n\nAvant : ${extras.products.length} variantes, ${money(extras.products.reduce((s,p)=>s+safeNum(p.stock)*safeNum(p.price),0))} de stock.\nAprès : ${patch.products.length} variantes, ${money(newRetail)} de stock et ${clockDuration(newMins)} de production équivalente.\n\nLes rouleaux, les impressions, les ventes, le hardware et les photos ne seront PAS modifiés. Aucun gramme déduit.\n\nTu as bien exporté ta sauvegarde JSON avant de continuer ?`;
+  if(conflicts.length)throw Error('Conflits à vérifier (aucune donnée modifiée) : '+conflicts.slice(0,3).join(' ; ')+(conflicts.length>3?` ; +${conflicts.length-3} autres`:''));
+  if(!nextProducts.every(p=>p&&typeof p.id==='string'&&Number.isFinite(Number(p.price))&&Number.isFinite(Number(p.stock))))throw Error('Produits invalides dans le correctif.');
+  const newRetail=nextProducts.reduce((sum,p)=>sum+safeNum(p.stock)*safeNum(p.price),0);
+  const newMins=nextProducts.reduce((sum,p)=>sum+safeNum(p.timeDays)*1440*safeNum(p.printed),0);
+  const msg=`Correction vérifiée.\n\nAvant : ${extras.products.length} variantes, ${money(extras.products.reduce((s,p)=>s+safeNum(p.stock)*safeNum(p.price),0))} de stock.\nAprès : ${nextProducts.length} variantes, ${money(newRetail)} de stock et ${clockDuration(newMins)} de production équivalente.\n\nLes rouleaux, les impressions, les ventes, le hardware et les photos ne seront PAS modifiés. Aucun gramme déduit.\n\nTu as bien exporté ta sauvegarde JSON avant de continuer ?`;
   if(!confirm(msg))return;
-  const next={...extras,products:patch.products};
+  const next={...extras,products:nextProducts};
   if(!persistExtras(next))throw Error('Échec de sauvegarde des nouveaux produits.');
   render();notify('✓ Correction appliquée. Vérifie la synchronisation Firebase et les statistiques.');
  }

@@ -1,14 +1,18 @@
-# PrintPilot v4.5 — rapprochement inventaire 5 novembre 2026
+# PrintPilot 3D v4.5.1 — correction inventaire
 
-Cette version corrige le calcul de temps de fabrication équivalent (temps par unité × quantité) et ajoute un importeur sécurisé de correction du catalogue, dans **Impressions → Appliquer correction d’inventaire**.
+## Correction
+L’importateur réconcilie maintenant les champs visés (`printed`, `stock`, `price`, `timeDays`) avec une comparaison à trois voies :
+- si la valeur actuelle correspond au point de départ, elle est corrigée;
+- si elle correspond déjà à la valeur finale, elle est préservée;
+- si elle est différente des deux, la correction est refusée sans modifier les données.
 
-1. Faites d’abord **Exporter une sauvegarde** depuis Impressions.
-2. Publiez index.html, js/app.js et css/style.css ensemble sur GitHub Pages (et conservez le reste du site).
-3. Ouvrez Impressions et cliquez **Appliquer correction d’inventaire**.
-4. Sélectionnez le fichier `correction-inventaire.json` de ce paquet.
-5. Vérifiez l’aperçu des changements et confirmez.
-6. Vérifiez la synchronisation Firebase et les chiffres (stock : 2 254 $, production : 860:57 h, 248 unités, 101 variantes).
+La fusion conserve les autres propriétés des produits ainsi que les nouvelles fiches qui auraient été créées; elle ne touche pas aux bobines, à l’historique des impressions, aux ventes, au hardware ou aux photos.
 
-Le correctif refuse si votre catalogue, journal des impressions ou journal des ventes ont évolué depuis la sauvegarde du 5 novembre. Les bobines, le journal des impressions, les ventes, le hardware et les photos ne sont pas remplacés. Aucun filament n’est déduit.
+## Installation
+1. Exporte une sauvegarde JSON complète depuis Impressions.
+2. Remplace `index.html`, `js/app.js` et `css/style.css` ensemble sur GitHub Pages (les fichiers Firebase restent ceux du site).
+3. Recharge le navigateur après le déploiement.
+4. Dans Impressions → Appliquer correction d’inventaire, choisis `correction-inventaire.json`, vérifie l’aperçu et confirme.
+5. Attends la synchronisation et vérifie les totaux.
 
-Le temps affiché est **équivalent par unité**, pas le temps d’occupation réel de l’imprimante.
+Aucune déduction de filament n’est effectuée. Ne pas utiliser « Importer Excel » pour cette correction.
