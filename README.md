@@ -40,3 +40,35 @@ Dans « Impressions → Nouveau produit » et « Produits → Ajouter/Modifier �
 - Les boutons Choisir une photo et Prendre une photo sont dans la fiche. Fermer avec × ou Échap.
 - Aucun changement au calcul des stocks, aux données Firestore, ni aux règles de sécurité.
 - Sur GitHub, publier les fichiers à la RACINE de main, puis vérifier GitHub Pages.
+
+
+## v4.1 — Catalogue compact et cache navigateur
+- Les produits sans photo occupent seulement 56 px de hauteur pour la zone image; ceux avec une photo affichent une vignette 166 px.
+- Les textes restent sous les photos, les fiches conservent le popup.
+- Les fichiers CSS et JS incluent un paramètre de version `?v=4.1.1` pour forcer le navigateur à recharger les ressources après le déploiement.
+- Les données Firestore et les règles de sécurité ne changent pas.
+
+Pour mettre à jour GitHub Pages, remplacer index.html, css/style.css et js/app.js sur la branche main, à la racine du dépôt. Ne pas ajouter Excel/JSON privés.
+
+
+## v4.2 — Mobile et filtres
+Menu mobile fixe (Accueil, Produits, Impressions, Catalogue, Plus), catalogue compact à deux colonnes, recherche et filtres catégorie / couleur / stock sur Catalogue, Produits et Impressions. Ces filtres ne modifient aucune donnée. Publier index.html, css/ et js/ à la racine de GitHub Pages.
+
+
+## v4.3 — Dashboard enrichi et rapprochement Excel
+- Durées de production historiques : somme de la durée par unité × la quantité imprimée, comme dans le dashboard Excel (808 h 06 min pour le classeur fourni). Les impressions saisies depuis sont additionnées séparément.
+- Carte « Valeur des produits au prix de vente » : somme du stock de chaque produit × son prix de vente; différente de la valeur des bobines.
+- Carte « Valeur estimée du filament restant » : prix payé pour chaque bobine × fraction restante; différente du total des prix d'achat.
+- Statistiques supplémentaires : coût de fabrication du stock, stock disponible, modèles, catégories, poids utilisé, transactions, ventes, commissions, profit et marge.
+- Aucun recalcul historique ne déduit de filament ni ne modifie Firebase. Les montants sont tirés des données actuelles.
+- **Attention** : Excel historique et état courant de Firebase peuvent différer si des productions, ventes ou modifications ont été saisies depuis.
+
+Mettre à jour index.html, css/style.css et js/app.js ENSEMBLE à la racine de main; attendre le déploiement GitHub Pages réussi.
+
+
+## v4.4 — Durées en heures:minutes
+
+- Affiche 3:10 h au lieu de 3,17 h (heures décimales).
+- Change uniquement la présentation dans Produits, Impressions, Dashboard.
+- Temps par produit historique conservé en minutes/jours, sans modifier les stocks ni Firebase.
+- Pour les modèles imprimés en lots de quatre, saisir la durée unitaire calculée depuis les trois passages de l'imprimante. Le total historique reste durée unitaire × unités produites.

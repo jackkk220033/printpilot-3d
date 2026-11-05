@@ -1,4 +1,4 @@
-/* PrintPilot 3D v3.9 — HTML/CSS/JavaScript natif, sans Node.js.
+/* PrintPilot 3D v4.3 — HTML/CSS/JavaScript natif, sans Node.js.
    Handlebars améliore facultativement le rendu des cartes, mais n'est pas nécessaire. */
 (() => {
  'use strict';
@@ -226,8 +226,7 @@
   const days=Number(p.timeDays);
   if(!Number.isFinite(days)||days<=0)return 'Non renseigné';
   const minutes=Math.round(days*24*60);
-  const h=Math.floor(minutes/60), m=minutes%60;
-  return h>0?`${h} h ${String(m).padStart(2,'0')} min`:`${m} min`;
+  return clockDuration(minutes);
  }
 
  // v4.2 — filtres de présentation uniquement (aucune modification de stock).
@@ -456,9 +455,10 @@
    total.units+=quantity;
    // Dans le classeur, `grams` correspond au poids unitaire du produit.
    total.grams+=Math.max(0,safeNum(p.grams))*quantity;
-   // `timeDays` est la durée renseignée par fiche/lot. Elle n'est PAS
-   // multipliée par la quantité, car le classeur ne distingue pas les lots.
-   total.minutes+=Math.max(0,safeNum(p.timeDays))*24*60;
+   // Conformément au Dashboard Excel : la durée est par unité.
+   // La feuille Excel calcule SUMPRODUCT(temps d'impression, quantité imprimée).
+   // Le stockage des bobines reste inchangé : ces heures sont une statistique, pas une transaction.
+   total.minutes+=Math.max(0,safeNum(p.timeDays))*24*60*quantity;
    return total;
   },{units:0,grams:0,minutes:0});
  }
@@ -468,14 +468,82 @@
   const recent={units:current.reduce((a,p)=>a+Math.max(1,safeNum(p.quantity)),0),grams:current.reduce((a,p)=>a+p.usage.reduce((b,u)=>b+safeNum(u.grams),0),0),minutes:current.reduce((a,p)=>a+safeNum(p.minutes),0)};
   return {historic,recent,units:historic.units+recent.units,grams:historic.grams+recent.grams,minutes:historic.minutes+recent.minutes};
  }
- function dashboard(){const m=metrics(), x=extrasSummary(), production=combinedProductionMetrics();return header('VUE D’ENSEMBLE','Tableau de bord','L’atelier 3D, au même endroit.',importButton())+warning()+(rolls.length?'<div class="notice">ⓘ &nbsp; Les statistiques utilisent tes données locales importées ou ajoutées.</div>':excelNotice())+`<div class="stats-grid">${statCard('◉',number(m.grams/1000,2)+' kg','Filament restant')}${statCard('▣',number(m.count),'Rouleaux enregistrés')}${statCard('⚠',number(m.low),'Rouleaux sous 200 g')}${statCard('$',money(m.cost),'Coût total des rouleaux')}</div><div class="stats-grid three">${statCard('⬡',number(x.products),'Variantes de produits')}${statCard('▣',number(x.units),'Unités produits en stock')}${statCard('↗',money(x.profit),'Profit des ventes enregistrées')}</div><div class="stats-grid three">${statCard('▤',number(production.units),'Unités imprimées (Excel + nouvelles)')}${statCard('◉',number(production.grams,1)+' g','Filament utilisé (historique + nouveau)')}${statCard('◷',number(production.minutes/60,1)+' h','Durées recensées (Excel + nouvelles)')}</div><div class="notice">ⓘ &nbsp; Production Excel : <b>${number(production.historic.units)} unités</b>, <b>${number(production.historic.grams,1)} g</b> estimés et <b>${number(production.historic.minutes/60,1)} h</b> de durées enregistrées par fiche. Ces données historiques sont déjà reflétées dans le stock Excel : <b>aucune nouvelle déduction</b>. Les impressions ajoutées dans PrintPilot sont comptabilisées à part, puis incluses dans les totaux.</div><div class="dash-grid"><section class="panel"><div class="panel-head"><div><h2>Stock par matériau</h2><p>Poids restant de tes rouleaux</p></div></div>${materialChart()}</section><section class="panel"><div class="panel-head"><div><h2>Actions rapides</h2><p>Pour commencer</p></div></div><div class="quick-actions"><button type="button" data-go="filaments">◉ &nbsp; Ajouter ou modifier un filament <span>→</span></button><button type="button" data-go="produits">⬡ &nbsp; Catalogue de produits <span>→</span></button><button type="button" data-go="impressions">▤ &nbsp; Historique des impressions <span>→</span></button></div></section></div><section class="panel recent"><div class="panel-head"><div><h2>Filaments récents</h2><p>Les derniers rouleaux enregistrés</p></div><button type="button" class="link-btn" data-go="filaments">Voir l’inventaire →</button></div>${rolls.length?`<div class="table-wrap"><table><thead><tr><th>ROULEAU</th><th>MATÉRIAU</th><th>RESTANT</th></tr></thead><tbody>${rolls.slice(-5).reverse().map(r=>`<tr><td><i class="dot" style="background:${safeColor(r.swatch)}"></i>${esc(r.brand)} — ${esc(r.color)}</td><td>${esc(r.material)}</td><td>${number(r.remaining)} g</td></tr>`).join('')}</tbody></table></div>`:`<p class="empty">Aucun filament pour le moment. Va dans Filaments pour commencer.</p>`}</section>`;}
+ function humanDuration(minutes){
+  const total=Math.round(Math.max(0,safeNum(minutes)));
+  return `${number(Math.floor(total/60))} h ${String(total%60).padStart(2,'0')} min`;
+ }
+ // Format horloge explicite, pas des heures décimales (3:10 h = 3 h 10).
+ function clockDuration(minutes){
+  const total=Math.round(Math.max(0,safeNum(minutes)));
+  return `${number(Math.floor(total/60))}:${String(total%60).padStart(2,'0')} h`;
+ }
+ function dashboardAnalytics(){
+  const m=metrics(),prods=extras.products,sales=activeSales(),prod=combinedProductionMetrics();
+  const retail=prods.reduce((sum,p)=>sum+Math.max(0,safeNum(p.stock))*Math.max(0,safeNum(p.price)),0);
+  const productionCost=prods.reduce((sum,p)=>sum+Math.max(0,safeNum(p.stock))*Math.max(0,safeNum(p.unitCost)),0);
+  const remainingFilamentValue=rolls.reduce((sum,r)=>sum+(safeNum(r.initial)>0?Math.max(0,safeNum(r.remaining))/safeNum(r.initial)*Math.max(0,safeNum(r.price)):0),0);
+  const gross=sales.reduce((sum,v)=>sum+safeNum(v.gross),0);
+  const commission=sales.reduce((sum,v)=>sum+safeNum(v.commission),0);
+  const profit=sales.reduce((sum,v)=>sum+safeNum(v.profit),0);
+  const sold=sales.reduce((sum,v)=>sum+Math.max(0,safeNum(v.quantity)),0);
+  const categoryNames=new Set(prods.map(p=>String(p.category||'').trim().toLocaleLowerCase('fr')).filter(Boolean));
+  const uniqueNames=new Set(prods.map(p=>String(p.name||'').trim().toLocaleLowerCase('fr')).filter(Boolean));
+  return {m,prod,retail,productionCost,remainingFilamentValue,gross,commission,profit,sold,
+   uniqueProducts:uniqueNames.size,categories:categoryNames.size,
+   productsOut:prods.filter(p=>safeNum(p.stock)<=0).length,
+   productStock:prods.reduce((sum,p)=>sum+Math.max(0,safeNum(p.stock)),0),
+   products:prods.length,transactions:sales.length,
+   availableFilamentPercent:m.initial>0?m.grams/m.initial*100:0,
+   potentialMargin:retail-productionCost,
+   usedFilament:m.initial-m.grams};
+ }
+ function dashGroup(title,description,cards){return `<section class="pp-dash-section"><div class="pp-dash-section-head"><h2>${esc(title)}</h2><p>${esc(description)}</p></div><div class="pp-dash-kpis">${cards.map(c=>statCard(c[0],c[1],c[2])).join('')}</div></section>`;}
+ function dashboard(){
+  const d=dashboardAnalytics(),m=d.m,p=d.prod;
+  const stockDescription='La valeur commerciale utilise la quantité disponible × le prix de vente. Le coût de fabrication est une autre mesure.';
+  return header('VUE D’ENSEMBLE','Tableau de bord','Statistiques de ton atelier — calculs comparables à ton Excel.',importButton())
+  +warning()+(rolls.length?'<div class="notice">ⓘ &nbsp; Chiffres calculés depuis les données actuelles de PrintPilot (locales ou Firebase). Ton ancien Excel reste un instantané et peut différer après des nouvelles impressions ou ventes.</div>':excelNotice())
+  +dashGroup('Production','Historique Excel + impressions ajoutées dans PrintPilot. La durée Excel est multipliée par la quantité imprimée.',[
+   ['◷',clockDuration(p.minutes),'Temps total d’impression'],
+   ['▤',number(p.units),'Unités imprimées'],
+   ['◉',number(p.grams/1000,2)+' kg','Filament consommé estimé'],
+   ['▣',number(p.recent.units),'Unités ajoutées dans PrintPilot']])
+  +`<div class="pp-dash-explain">⏱ <b>Réconciliation des durées :</b> Excel historique : ${clockDuration(p.historic.minutes)}; nouvelles impressions : ${clockDuration(p.recent.minutes)}. Total : <b>${clockDuration(p.minutes)}</b>. Le calcul historique suit la formule de ton Excel (durée unitaire × nombre d’unités), sans déduire de filament supplémentaire.</div>`
+  +dashGroup('Produits et valeur du stock',stockDescription,[
+   ['$',money(d.retail),'Valeur des produits au prix de vente'],
+   ['▣',money(d.productionCost),'Coût de fabrication du stock'],
+   ['⬡',number(d.productStock),'Unités disponibles'],
+   ['↗',money(d.potentialMargin),'Écart théorique vente − fabrication'],
+   ['◈',number(d.products),'Variantes de produits'],
+   ['◉',number(d.uniqueProducts),'Modèles distincts'],
+   ['⚠',number(d.productsOut),'Variantes en rupture'],
+   ['▤',number(d.categories),'Catégories']])
+  +dashGroup('Filaments','Le prix payé pour les bobines entières est différent de la valeur du filament restant.',[
+   ['◉',number(m.grams/1000,2)+' kg','Filament restant'],
+   ['$',money(d.remainingFilamentValue),'Valeur estimée du filament restant'],
+   ['▣',money(m.cost),'Total payé pour les bobines'],
+   ['◷',number(d.availableFilamentPercent,1)+' %','Poids initial encore disponible'],
+   ['⬡',number(m.count),'Bobines enregistrées'],
+   ['⚠',number(m.low),'Bobines sous 200 g'],
+   ['◈',number(m.initial/1000,2)+' kg','Poids initial des bobines'],
+   ['▤',number(d.usedFilament/1000,2)+' kg','Poids utilisé selon le stock']])
+  +dashGroup('Ventes','Transactions enregistrées (annulations exclues). Les profits sont ceux du journal de ventes.',[
+   ['$',money(d.gross),'Ventes brutes'],
+   ['↗',money(d.profit),'Profit des ventes'],
+   ['▣',money(d.commission),'Commissions'],
+   ['◉',number(d.sold),'Unités vendues'],
+   ['▤',number(d.transactions),'Transactions'],
+   ['◷',d.gross>0?number(d.profit/d.gross*100,1)+' %':'—','Marge constatée']])
+  +`<div class="dash-grid"><section class="panel"><div class="panel-head"><div><h2>Stock par matériau</h2><p>Poids restant de tes bobines</p></div></div>${materialChart()}</section><section class="panel"><div class="panel-head"><div><h2>Actions rapides</h2><p>Pour gérer l’atelier</p></div></div><div class="quick-actions"><button type="button" data-go="filaments">◉ &nbsp; Filaments <span>→</span></button><button type="button" data-go="produits">⬡ &nbsp; Produits <span>→</span></button><button type="button" data-go="impressions">▤ &nbsp; Impressions <span>→</span></button><button type="button" data-go="finances">$ &nbsp; Finances <span>→</span></button></div></section></div>`
+  +`<section class="panel recent"><div class="panel-head"><div><h2>Derniers filaments ajoutés</h2><p>Bobines de ton inventaire</p></div><button type="button" class="link-btn" data-go="filaments">Voir les bobines →</button></div>${rolls.length?`<div class="table-wrap"><table><thead><tr><th>ROULEAU</th><th>MATÉRIAU</th><th>RESTANT</th></tr></thead><tbody>${rolls.slice(-5).reverse().map(r=>`<tr><td><i class="dot" style="background:${safeColor(r.swatch)}"></i>${esc(r.brand)} — ${esc(r.color)}</td><td>${esc(r.material)}</td><td>${number(r.remaining)} g</td></tr>`).join('')}</tbody></table></div>`:`<p class="empty">Aucun filament enregistré.</p>`}</section>`;
+ }
  function materialChart(){const totals={};rolls.forEach(r=>{const mat=String(r.material||'Autre');totals[mat]=(totals[mat]||0)+Number(r.remaining)});const entries=Object.entries(totals).sort((a,b)=>b[1]-a[1]);const max=Math.max(1,...entries.map(x=>x[1]));return entries.length?`<div class="bars">${entries.map(([name,value])=>`<div class="bar-row"><b>${esc(name)}</b><div class="bar-track"><span style="width:${Math.round(value/max*100)}%"></span></div><strong>${number(value/1000,2)} kg</strong></div>`).join('')}</div>`:'<p class="empty">Le graphique apparaîtra dès que tu ajouteras un rouleau.</p>';}
  function tableRows(){const filtered=rolls.filter(r=>`${r.brand} ${r.color} ${r.material} ${r.code||''}`.toLowerCase().includes(search.toLowerCase()));if(!filtered.length)return `<div class="empty">${rolls.length?'Aucun résultat pour cette recherche.':'Aucun rouleau enregistré. Clique sur « Ajouter un rouleau » pour commencer.'}</div>`;return `<div class="table-wrap"><table><thead><tr><th>FILAMENT</th><th>TYPE</th><th>RESTANT</th><th>PRIX</th><th>ÉTAT</th><th>ACTIONS</th></tr></thead><tbody>${filtered.map(r=>{const p=Math.round(Number(r.remaining)/Number(r.initial)*100);return `<tr data-roll-row="${esc(r.id)}"><td><i class="dot" style="background:${safeColor(r.swatch)}"></i><b>${esc(r.brand)} — ${esc(r.color)}</b><small class="code">${esc(r.code||'')}</small></td><td>${esc(r.material)}</td><td><b>${number(r.remaining)} / ${number(r.initial)} g</b><div class="progress"><span style="width:${p}%"></span></div></td><td>${money(r.price||0)}</td><td><span class="pill ${Number(r.remaining)<200?'low':'ok'}">${Number(r.remaining)<200?'Stock faible':'OK'}</span></td><td class="actions"><button type="button" class="secondary-btn" data-edit="${esc(r.id)}">Modifier</button><button type="button" class="secondary-btn danger" data-delete="${esc(r.id)}">Supprimer</button></td></tr>`}).join('')}</tbody></table></div>`;}
  function filaments(){const m=metrics();return header('INVENTAIRE','Mes filaments','Ajoute et gère tes rouleaux. Données enregistrées dans ce navigateur.',`<div class="header-actions"><button type="button" id="add-roll" class="primary-btn">＋ Ajouter un rouleau</button>${importButton()}</div>`)+warning()+`<div class="notice">ⓘ &nbsp; Version locale : les données ne sont pas encore synchronisées avec ton téléphone. Évite toute donnée professionnelle ou sensible.</div><div class="stats-grid three">${statCard('◉',number(m.count),'Rouleaux')}${statCard('▥',number(m.grams/1000,2)+' kg','Poids restant')}${statCard('⚠',number(m.low),'Stock faible : moins de 200 g')}</div><section class="panel"><div class="panel-head inventory-title"><div><h2>Inventaire</h2><p>Modifie ou supprime tes rouleaux à droite.</p></div><div class="inventory-tools"><input type="search" id="roll-search" placeholder="Rechercher un rouleau…" value="${esc(search)}" aria-label="Rechercher un rouleau"><button type="button" class="secondary-btn" id="export-json">Exporter JSON</button></div></div><div id="inventory-rows">${tableRows()}</div></section>`;}
 
  function printPage(){const active=prints.filter(p=>p.status==='active');const grams=active.reduce((a,p)=>a+p.usage.reduce((b,u)=>b+Number(u.grams),0),0);const mins=active.reduce((a,p)=>a+Number(p.minutes||0),0);const production=combinedProductionMetrics();
-  const rows=prints.slice().reverse().map(p=>{const used=p.usage.map(u=>{const r=rolls.find(x=>x.id===u.rollId);return esc(r?(r.brand+' — '+r.color):(u.label||u.rollId))+' · '+number(u.grams,1)+' g'}).join('<br>');return `<tr><td><div class="print-product-cell">${thumb(p.id)}<div><b>${esc(p.product||'Impression libre')}</b><small class="code">${esc(p.date||'')} · ${esc(p.printer||'—')}</small><small class="code">${esc(p.id)}</small></div></div></td><td>${number(p.quantity||1)}</td><td>${used}</td><td>${number(p.usage.reduce((a,u)=>a+Number(u.grams),0),1)} g</td><td>${number(Number(p.minutes||0)/60,2)} h</td><td><span class="pill ${p.status==='active'?'ok':'low'}">${p.status==='active'?'Enregistrée':'Annulée'}</span></td><td>${p.status==='active'?`<div class="actions"><button type="button" class="secondary-btn" data-edit-print="${esc(p.id)}">Modifier</button>${!p.productId?`<button type="button" class="secondary-btn" data-convert-print="${esc(p.id)}">📦 Créer la fiche Produit</button>`:""}<button type="button" class="secondary-btn danger" data-cancel-print="${esc(p.id)}">Annuler</button></div>`:'—'}</td></tr>`}).join('');
-  return header('PRODUCTION','Mes impressions','Une seule saisie : crée ton produit au besoin, déduis les bobines et ajoute les unités au catalogue.',`<div class="header-actions"><button type="button" class="primary-btn" id="add-print">＋ Ajouter une impression terminée</button></div>`)+warning()+`<div class="notice">ⓘ &nbsp; L’enregistrement déduit immédiatement les grammes indiqués de chaque bobine. Une annulation remet ces grammes dans le stock. Les anciennes impressions sont conservées dans l’historique.</div><div class="stats-grid three">${statCard('▤',number(production.units),'Unités produites (Excel + nouvelles)')}${statCard('◉',number(production.grams,1)+' g','Filament consommé (historique + nouveau)')}${statCard('◷',number(production.minutes/60,1)+' h','Temps recensé (Excel + nouveau)')}</div><div class="notice">📄 &nbsp; <b>Production Excel :</b> ${number(production.historic.units)} unités · ${number(production.historic.grams,1)} g estimés · ${number(production.historic.minutes/60,1)} h recensées. &nbsp; <b>Nouvelles impressions PrintPilot :</b> ${number(active.length)} sessions (${number(production.recent.units)} unités) · ${number(grams,1)} g · ${number(mins/60,2)} h. Les détails des bobines historiques figurent dans les fiches ci-dessous. <b>Le stock historique n’est jamais déduit une deuxième fois.</b></div><section class="panel"><div class="panel-head"><div><h2>Historique des impressions</h2><p>${prints.length} entrée(s), annulations incluses</p></div><div class="pp-history-tools"><input id="print-history-search" class="table-filter" type="search" placeholder="Rechercher une impression, une bobine, une date…" aria-label="Rechercher les impressions terminées"><button class="secondary-btn" id="export-full" type="button">Exporter une sauvegarde</button></div></div>${rows?`<div class="table-wrap"><table id="print-history-table"><thead><tr><th>PRODUIT / DATE</th><th>QTÉ</th><th>BOBINES UTILISÉES</th><th>CONSOMMATION</th><th>DURÉE</th><th>STATUT</th><th>ACTION</th></tr></thead><tbody>${rows}</tbody></table></div>`:'<p class="empty">Aucune impression enregistrée. Clique sur « Nouvelle impression » pour commencer.</p>'}</section><section class="panel"><div class="panel-head"><div><h2>Historique de production Excel — détails des filaments</h2><p>${extras.products.length} variantes disponibles comme références pour tes impressions. L’historique Excel est déjà reflété dans le stock : aucune déduction supplémentaire.</p></div><input id="print-catalog-search" type="search" class="table-filter" placeholder="Rechercher nom ou ID…" aria-label="Rechercher dans les produits Excel"></div>${filterToolbar('impressions')}<div id="print-catalog-results">${printCatalogRows('')}</div></section>`;
+  const rows=prints.slice().reverse().map(p=>{const used=p.usage.map(u=>{const r=rolls.find(x=>x.id===u.rollId);return esc(r?(r.brand+' — '+r.color):(u.label||u.rollId))+' · '+number(u.grams,1)+' g'}).join('<br>');return `<tr><td><div class="print-product-cell">${thumb(p.id)}<div><b>${esc(p.product||'Impression libre')}</b><small class="code">${esc(p.date||'')} · ${esc(p.printer||'—')}</small><small class="code">${esc(p.id)}</small></div></div></td><td>${number(p.quantity||1)}</td><td>${used}</td><td>${number(p.usage.reduce((a,u)=>a+Number(u.grams),0),1)} g</td><td>${clockDuration(p.minutes||0)}</td><td><span class="pill ${p.status==='active'?'ok':'low'}">${p.status==='active'?'Enregistrée':'Annulée'}</span></td><td>${p.status==='active'?`<div class="actions"><button type="button" class="secondary-btn" data-edit-print="${esc(p.id)}">Modifier</button>${!p.productId?`<button type="button" class="secondary-btn" data-convert-print="${esc(p.id)}">📦 Créer la fiche Produit</button>`:""}<button type="button" class="secondary-btn danger" data-cancel-print="${esc(p.id)}">Annuler</button></div>`:'—'}</td></tr>`}).join('');
+  return header('PRODUCTION','Mes impressions','Une seule saisie : crée ton produit au besoin, déduis les bobines et ajoute les unités au catalogue.',`<div class="header-actions"><button type="button" class="primary-btn" id="add-print">＋ Ajouter une impression terminée</button></div>`)+warning()+`<div class="notice">ⓘ &nbsp; L’enregistrement déduit immédiatement les grammes indiqués de chaque bobine. Une annulation remet ces grammes dans le stock. Les anciennes impressions sont conservées dans l’historique.</div><div class="stats-grid three">${statCard('▤',number(production.units),'Unités produites (Excel + nouvelles)')}${statCard('◉',number(production.grams,1)+' g','Filament consommé (historique + nouveau)')}${statCard('◷',number(production.minutes/60,1)+' h','Temps recensé (Excel + nouveau)')}</div><div class="notice">📄 &nbsp; <b>Production Excel :</b> ${number(production.historic.units)} unités · ${number(production.historic.grams,1)} g estimés · ${clockDuration(production.historic.minutes)} recensées. &nbsp; <b>Nouvelles impressions PrintPilot :</b> ${number(active.length)} sessions (${number(production.recent.units)} unités) · ${number(grams,1)} g · ${clockDuration(mins)}. Les détails des bobines historiques figurent dans les fiches ci-dessous. <b>Le stock historique n’est jamais déduit une deuxième fois.</b></div><section class="panel"><div class="panel-head"><div><h2>Historique des impressions</h2><p>${prints.length} entrée(s), annulations incluses</p></div><div class="pp-history-tools"><input id="print-history-search" class="table-filter" type="search" placeholder="Rechercher une impression, une bobine, une date…" aria-label="Rechercher les impressions terminées"><button class="secondary-btn" id="export-full" type="button">Exporter une sauvegarde</button></div></div>${rows?`<div class="table-wrap"><table id="print-history-table"><thead><tr><th>PRODUIT / DATE</th><th>QTÉ</th><th>BOBINES UTILISÉES</th><th>CONSOMMATION</th><th>DURÉE</th><th>STATUT</th><th>ACTION</th></tr></thead><tbody>${rows}</tbody></table></div>`:'<p class="empty">Aucune impression enregistrée. Clique sur « Nouvelle impression » pour commencer.</p>'}</section><section class="panel"><div class="panel-head"><div><h2>Historique de production Excel — détails des filaments</h2><p>${extras.products.length} variantes disponibles comme références pour tes impressions. L’historique Excel est déjà reflété dans le stock : aucune déduction supplémentaire.</p></div><input id="print-catalog-search" type="search" class="table-filter" placeholder="Rechercher nom ou ID…" aria-label="Rechercher dans les produits Excel"></div>${filterToolbar('impressions')}<div id="print-catalog-results">${printCatalogRows('')}</div></section>`;
  }
  // Les matériaux du classeur sont des références historiques, par unité, sans nouveau débit de stock.
  function excelMaterials(p){
