@@ -15,8 +15,16 @@ const photoStatus=document.getElementById('photo-cloud-status');
 const photoMigrateButton=document.getElementById('cloud-migrate-photos');
 let photoUnsub=null,photoReady=false;
 let unreadUnsub=null,requestsUnsub=null;
-function setRequestBadge(count){document.querySelectorAll("[data-boutique-requests]").forEach(el=>{el.hidden=!count;el.textContent=count>99?"99+":String(count);el.setAttribute("aria-label",count+" demande(s) en attente");});}
-function setUnreadBadge(count){
+let ppRequestCount=0,ppUnreadCount=0;
+function showNotificationLocations(){
+ const area=document.getElementById('pp-notification-where');if(!area)return;
+ const parts=[];
+ if(ppRequestCount)parts.push(`<a href="#atelier-demandes">📨 Demandes Boutique : ${ppRequestCount} à traiter</a>`);
+ if(ppUnreadCount)parts.push(`<a href="messages.html">✉ Messages Boutique : ${ppUnreadCount} non lu(s)</a>`);
+ area.hidden=!parts.length;area.innerHTML=parts.join('');
+}
+function setRequestBadge(count){ppRequestCount=count;showNotificationLocations();document.querySelectorAll("[data-boutique-requests]").forEach(el=>{el.hidden=!count;el.textContent=count>99?"99+":String(count);el.setAttribute("aria-label",count+" demande(s) en attente");});}
+function setUnreadBadge(count){ppUnreadCount=count;showNotificationLocations();
  document.querySelectorAll('[data-boutique-unread]').forEach(el=>{
   el.hidden=!count; el.textContent=count>99?'99+':String(count);
   el.setAttribute('aria-label', count+' message(s) non lu(s)');

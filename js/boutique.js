@@ -1,4 +1,4 @@
-// Portail Boutique v4.9 — aucun accès aux données privées /workspaces.
+// Portail Boutique v4.9.1 — aucun accès aux données privées /workspaces.
 const $=id=>document.getElementById(id);
 const owner=new URL(location.href).searchParams.get('atelier')||'';
 const msg=(s,ok=false)=>{$('message').textContent=s;$('message').classList.toggle('success',ok)};
