@@ -73,6 +73,33 @@ service cloud.firestore {
           && request.resource.data.read is bool;
         allow delete: if isBoutiqueOwner(ownerUid);
       }
+      // v4.9 — Demandes boutique: seules des demandes en attente peuvent être créées.
+      match /requests/{requestId} {
+        allow create: if canViewBoutique(ownerUid)
+          && request.resource.data.keys().hasOnly(['kind','productId','productName','shopId','quantity','unitPrice','note','senderUid','senderEmail','status','createdAt'])
+          && request.resource.data.keys().hasAll(['kind','productId','productName','shopId','quantity','unitPrice','note','senderUid','senderEmail','status','createdAt'])
+          && request.resource.data.kind in ['sale','restock']
+          && request.resource.data.productId is string && request.resource.data.productId.size() <= 160
+          && request.resource.data.productName is string && request.resource.data.productName.size() <= 160
+          && request.resource.data.shopId is string && request.resource.data.shopId.size() <= 32
+          && request.resource.data.quantity is int && request.resource.data.quantity >= 1 && request.resource.data.quantity <= 300
+          && request.resource.data.unitPrice is number && request.resource.data.unitPrice >= 0 && request.resource.data.unitPrice <= 10000
+          && request.resource.data.note is string && request.resource.data.note.size() <= 400
+          && request.resource.data.senderUid == request.auth.uid
+          && request.resource.data.senderEmail == request.auth.token.email
+          && request.resource.data.status == 'pending'
+          && request.resource.data.createdAt == request.time;
+        allow get, list: if isBoutiqueOwner(ownerUid);
+        allow update: if isBoutiqueOwner(ownerUid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','resolvedAt'])
+          && request.resource.data.status in ['pending','accepted','rejected']
+          && request.resource.data.resolvedAt == request.time;
+        allow delete: if isBoutiqueOwner(ownerUid);
+      }
+      // v4.9 — Données Atelier + privées, indépendantes du catalogue boutique.
+      match /management/{docId} {
+        allow read, write: if isBoutiqueOwner(ownerUid);
+      }
       match /photos/{photoId} {
         allow get: if canViewBoutique(ownerUid);
         allow list: if false;

@@ -1,4 +1,4 @@
-/* PrintPilot 3D v4.6.3 — HTML/CSS/JavaScript natif, sans Node.js.
+/* PrintPilot 3D v4.9 — HTML/CSS/JavaScript natif, sans Node.js.
    Handlebars améliore facultativement le rendu des cartes, mais n'est pas nécessaire. */
 (() => {
  'use strict';

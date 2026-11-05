@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b1020">
-<title>PrintPilot 3D v4.8.1</title>
+<title>PrintPilot 3D v4.9</title>
 <link rel="stylesheet" href="css/style.css?v=4.8.1">
 <!-- Handlebars est facultatif : si ce CDN est bloqué, les fonctions continuent de marcher. -->
 <script defer src="https://cdn.jsdelivr.net/npm/handlebars@4.7.8/dist/handlebars.min.js"></script>
@@ -28,9 +28,10 @@
  <a href="#commandes" data-page="commandes" class="nav"><span>▣</span> Commandes</a>
  <a href="#hardware" data-page="hardware" class="nav"><span>⚙</span> Hardware</a>
  <a href="#imprimantes" data-page="imprimantes" class="nav"><span>▥</span> Imprimantes</a>
+ <a href="atelier-plus.html" class="nav"><span>▤</span> Atelier + (8 outils) <span class="message-badge" data-boutique-requests hidden aria-label="Demandes en attente"></span></a>
  <a href="messages.html" class="nav"><span>✉</span> Messages Boutique <span class="message-badge" data-boutique-unread hidden aria-label="Messages non lus"></span></a>
  </nav>
- <div class="sidebar-foot"><div class="local-label" id="sidebar-storage">● &nbsp;Stockage local actif</div><p>v4.8.1 • Synchronisation Firebase</p></div>
+ <div class="sidebar-foot"><div class="local-label" id="sidebar-storage">● &nbsp;Stockage local actif</div><p>v4.9 • Synchronisation Firebase</p></div>
  </aside>
  <div class="workarea">
  <header class="topbar"><div><button type="button" id="menu-toggle" aria-label="Ouvrir le menu">☰</button><span>Atelier / <b id="page-name">Tableau de bord</b></span></div><div class="topright"><button type="button" class="secondary-btn cloud-open" id="open-cloud">☁ Synchronisation</button><span id="today"></span><span class="avatar">3D</span></div></header>
@@ -52,6 +53,7 @@
   <a href="#horsproduction" data-page="horsproduction">⚠ Personnel / Échecs / Tests</a>
   <a href="#finances" data-page="finances">$ Finances</a>
   <a href="#imprimantes" data-page="imprimantes">▥ Imprimantes</a>
+  <a href="atelier-plus.html">▤ Atelier + (8 outils) <span class="message-badge" data-boutique-requests hidden aria-label="Demandes en attente"></span></a>
   <a href="messages.html">✉ Messages Boutique <span class="message-badge" data-boutique-unread hidden aria-label="Messages non lus"></span></a>
  </div>
 </nav>

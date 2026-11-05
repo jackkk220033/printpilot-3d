@@ -1,4 +1,4 @@
-// Portail Boutique v4.8 — aucun accès aux données privées /workspaces.
+// Portail Boutique v4.9 — aucun accès aux données privées /workspaces.
 const $=id=>document.getElementById(id);
 const owner=new URL(location.href).searchParams.get('atelier')||'';
 const msg=(s,ok=false)=>{$('message').textContent=s;$('message').classList.toggle('success',ok)};
@@ -25,7 +25,8 @@ async function getCatalogue(user){
  detach=api.onSnapshot(reference,async snap=>{
   if(!snap.exists()){msg('Le catalogue n’a pas encore été publié par l’atelier.');products=[];render();return;}
   products=Array.isArray(snap.data().products)?snap.data().products:[];
-  fillCategories();render();msg('Catalogue publié · lecture seule',true);
+  fillCategories();render();msg('Catalogue publié · lecture seule',true);const targetProduct=new URL(location.href).searchParams.get('produit');if(targetProduct&&products.some(p=>p.id===targetProduct))setTimeout(()=>openProduct(targetProduct),50);
+  const selector=$('boutique-request-product');if(selector)selector.innerHTML=products.map(p=>'<option value="'+escapeHTML(p.id)+'">'+escapeHTML(p.name)+' (#'+escapeHTML(p.shopId)+')</option>').join('');
   // Les photos partagées se trouvent dans une collection distincte et sécurisée.
   for(const p of products){
    if(!current||current.uid!==user.uid)return;
@@ -63,6 +64,7 @@ async function sendNote(form,product){
  }catch(err){status.classList.add('error');status.textContent='Envoi impossible : '+(err.code||err.message)+'. Ton texte n’a pas été supprimé.';console.error('Message Boutique:',err);}
  finally{button.disabled=false;}
 }
+$('boutique-operation-form')?.addEventListener('submit',async e=>{e.preventDefault();const f=e.currentTarget;const status=$('operation-status');const button=f.querySelector('button[type=submit]');const p=products.find(x=>x.id===f.elements.productId.value);const kind=f.elements.kind.value;const quantity=Number(f.elements.quantity.value);if(!current||!owner||!p||!['sale','restock'].includes(kind)||!Number.isInteger(quantity)||quantity<1||quantity>300){status.textContent='Vérifie la connexion, le produit et la quantité.';return;}button.disabled=true;status.textContent='Envoi en cours…';try{await api.addDoc(api.collection(db,'boutiques',owner,'requests'),{kind,productId:p.id,productName:p.name,shopId:String(p.shopId||''),quantity,unitPrice:Number(p.price)||0,note:String(f.elements.note.value||'').trim().slice(0,400),senderUid:current.uid,senderEmail:String(current.email||''),status:'pending',createdAt:api.serverTimestamp()});f.reset();status.textContent='✓ Demande envoyée automatiquement!';}catch(err){status.textContent='Échec : '+(err.code||err.message)+'. La demande n’a pas été effacée.';}finally{button.disabled=false;}});
 $('general-note-form').addEventListener('submit',e=>{e.preventDefault();sendNote(e.currentTarget,null);});
 $('product-note-form').addEventListener('submit',e=>{e.preventDefault();sendNote(e.currentTarget,products.find(p=>p.id===selectedProductId));});
 $('search').addEventListener('input',render);$('category').addEventListener('change',render);$('availability').addEventListener('change',render);
