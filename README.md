@@ -18,3 +18,6 @@ Cette version reprend tous les fichiers de la **v4.9.1** et conserve les règles
 
 ## Précision
 Les notifications fonctionnent en temps réel **quand PrintPilot est ouvert et connecté**. Il ne s'agit pas encore de notifications système lorsque le navigateur est fermé. Les données Atelier restent dans leurs collections Firebase existantes et le stock principal n'est pas modifié par une demande en attente.
+
+
+PrintPilot v4.10
