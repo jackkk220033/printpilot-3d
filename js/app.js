@@ -1,4 +1,4 @@
-/* PrintPilot 3D v3.7 — HTML/CSS/JavaScript natif, sans Node.js.
+/* PrintPilot 3D v3.9 — HTML/CSS/JavaScript natif, sans Node.js.
    Handlebars améliore facultativement le rendu des cartes, mais n'est pas nécessaire. */
 (() => {
  'use strict';
@@ -235,23 +235,83 @@
  function productMaterialRow(rollId='',grams=''){
   return `<div class="usage-line product-material-line"><select class="product-roll" aria-label="Bobine pour ce produit"><option value="">Choisir une bobine…</option>${rollId&&!rolls.some(r=>r.id===rollId||r.code===rollId)?`<option value="${esc(rollId)}" selected>Référence historique : ${esc(rollId)}</option>`:''}${rolls.map(r=>`<option value="${esc(r.id)}" ${r.id===rollId?'selected':''}>${esc(r.brand)} — ${esc(r.color)} (${esc(r.code||r.id)})</option>`).join('')}</select><input type="number" class="product-grams" aria-label="Grammes par unité" min="0.1" step="0.1" placeholder="Grammes" value="${esc(grams)}"><button type="button" class="secondary-btn product-remove-material" aria-label="Retirer">×</button></div>`;
  }
+ // Composants : coût par unité sur la fiche Produit, déduction réelle dans Impressions.
+ function hardwareRow(kind,id='',quantity=''){
+  const opts=extras.hardware.map(h=>`<option value="${esc(h.id)}" ${h.id===id?'selected':''}>${esc(h.name||h.id)} — ${money(safeNum(h.unitCost))}/pièce (${number(safeNum(h.remaining))} restants)</option>`).join('');
+  return `<div class="usage-line hardware-line"><select class="hardware-select" aria-label="Composant"><option value="">Choisir un composant…</option>${opts}</select><input class="hardware-qty" type="number" min="1" step="1" placeholder="Quantité" aria-label="Quantité de composants" value="${esc(quantity)}"><button type="button" class="secondary-btn hardware-remove" aria-label="Retirer ce composant">×</button></div>`;
+ }
+ function getHardwareLines(container){
+  return [...document.querySelectorAll('#'+container+' .hardware-line')].map(el=>({id:el.querySelector('.hardware-select').value,quantity:Number(el.querySelector('.hardware-qty').value),raw:el.querySelector('.hardware-qty').value}));
+ }
+ function hardwareLinesValid(lines){return lines.every(x=>(!x.id&&!x.raw)||(x.id&&x.raw!==''&&Number.isInteger(x.quantity)&&x.quantity>0&&extras.hardware.some(h=>h.id===x.id)));}
+ function hardwareCost(lines){return lines.reduce((total,line)=>total+safeNum(extras.hardware.find(h=>h.id===line.id)?.unitCost)*line.quantity,0);}
+ function drawProductHardware(list=[]){document.getElementById('product-hardware-lines').innerHTML=list.length?list.map(x=>hardwareRow('product',x.id,x.quantity)).join(''):hardwareRow('product');}
+ function drawPrintHardware(list=[]){document.getElementById('print-hardware-lines').innerHTML=list.length?list.map(x=>hardwareRow('print',x.id,x.quantity)).join(''):hardwareRow('print');}
+ function suggestHardwareFromProduct(){
+  if(editingPrintId)return;
+  const p=extras.products.find(x=>x.id===document.getElementById('print-product').value);
+  const qty=Math.max(1,Number(document.getElementById('print-form').elements.namedItem('quantity').value)||1);
+  drawPrintHardware((p?.hardware||[]).map(h=>({id:h.id,quantity:safeNum(h.quantity)*qty})));
+  updatePrintCreationCost();
+ }
  let newProductPhotoDraft=null;
  function productMaterialLines(){return [...document.querySelectorAll('#product-material-lines .product-material-line')].map(line=>({id:line.querySelector('.product-roll').value, grams:Number(line.querySelector('.product-grams').value),raw:line.querySelector('.product-grams').value}));}
  function productMaterialCost(materials){return materials.reduce((sum,m)=>{const r=rolls.find(x=>x.id===m.id||x.code===m.id);return sum+(r&&Number(r.initial)>0?Number(m.grams)*safeNum(r.price)/Number(r.initial):0);},0);}
  function updateProductCost(){
   const f=document.getElementById('product-form');const lines=productMaterialLines().filter(m=>m.id&&m.raw!==''&&m.grams>0);
-  const filamentCost=productMaterialCost(lines),otherCost=Number(f.elements.namedItem('otherCost').value)||0,price=Number(f.elements.namedItem('price').value)||0,rate=Number(f.elements.namedItem('commissionRate').value)||0;
-  const total=filamentCost+otherCost,profit=price-total-price*rate/100;
-  document.getElementById('product-cost-preview').innerHTML=`<div><small>Filament / unité</small><strong>${money(filamentCost)}</strong></div><div><small>Coût total / unité</small><strong>${money(total)}</strong></div><div><small>Prix de vente</small><strong>${money(price)}</strong></div><div><small>Profit après commission</small><strong>${money(profit)}</strong></div>`;
+  const filamentCost=productMaterialCost(lines),hardwarePerUnit=hardwareCost(getHardwareLines('product-hardware-lines').filter(x=>x.id&&x.raw)),otherCost=Number(f.elements.namedItem('otherCost').value)||0,price=Number(f.elements.namedItem('price').value)||0,rate=Number(f.elements.namedItem('commissionRate').value)||0;
+  const total=filamentCost+hardwarePerUnit+otherCost,profit=price-total-price*rate/100;
+  document.getElementById('product-cost-preview').innerHTML=`<div><small>Filament / unité</small><strong>${money(filamentCost)}</strong></div><div><small>Hardware / unité</small><strong>${money(hardwarePerUnit)}</strong></div><div><small>Coût total / unité</small><strong>${money(total)}</strong></div><div><small>Prix de vente</small><strong>${money(price)}</strong></div><div><small>Profit après commission</small><strong>${money(profit)}</strong></div>`;
  }
+ // Menus intelligents : valeurs importées d'Excel + celles ajoutées dans PrintPilot.
+ const CHOICE_OTHER='__other__';
+ function choiceItems(kind){
+  const defaults={
+   category:['Porte-clés','Décoration','Figurines','Jouets','Accessoires','Supports','Vases','Autre'],
+   colors:['Noir','Blanc','Rouge','Bleu','Vert','Rose','Jaune','Gris','Orange','Mauve','Multicolore'],
+   printer:['Anycubic Kobra X','Qidi X-Plus 3','Ender-3 V2 Neo']
+  };
+  const field=kind==='category'?'category':kind==='colors'?'colors':'printer';
+  const values=[...defaults[kind],...extras.products.map(p=>p[field]),...(kind==='colors'?rolls.map(r=>r.color):[]),...(kind==='printer'?prints.map(p=>p.printer):[])];
+  const seen=new Set();return values.map(v=>String(v||'').trim()).filter(v=>{const k=v.toLocaleLowerCase('fr');if(!v||seen.has(k))return false;seen.add(k);return true;}).sort((a,b)=>a.localeCompare(b,'fr',{sensitivity:'base'}));
+ }
+ function toggleChoice(select){
+  const other=select.closest('label')?.querySelector('[data-choice-other]');if(!other)return;
+  other.hidden=select.value!==CHOICE_OTHER;
+  other.required=select.value===CHOICE_OTHER;
+  if(other.hidden)other.value='';
+ }
+ function populateChoices(form){
+  form.querySelectorAll('select[data-choice]').forEach(select=>{
+   const chosen=select.value;const values=choiceItems(select.dataset.choice);
+   select.innerHTML='<option value="">Sélectionner…</option>'+values.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('')+'<option value="__other__">＋ Autre…</option>';
+   if(values.includes(chosen))select.value=chosen;else select.value='';
+   toggleChoice(select);
+  });
+ }
+ function setChoiceValue(form,name,value){
+  const select=form.elements.namedItem(name);if(!select)return;
+  const v=String(value||'').trim();if(!v){select.value='';toggleChoice(select);return;}
+  if(![...select.options].some(o=>o.value===v)){
+   const option=document.createElement('option');option.value=v;option.textContent=v;
+   select.insertBefore(option,select.querySelector('option[value="__other__"]'));
+  }
+  select.value=v;toggleChoice(select);
+ }
+ function choiceValue(form,field){
+  const select=form.elements.namedItem(field);if(!select)return '';
+  if(select.value===CHOICE_OTHER)return String(form.querySelector(`[data-choice-other="${field}"]`)?.value||'').trim();
+  return String(select.value||'').trim();
+ }
+ document.querySelectorAll('select[data-choice]').forEach(select=>select.addEventListener('change',()=>toggleChoice(select)));
  function openProduct(id=null){
   const p=id?extras.products.find(x=>x.id===id):null;
-  const f=document.getElementById('product-form');f.reset();newProductPhotoDraft=null;
+  const f=document.getElementById('product-form');f.reset();populateChoices(f);newProductPhotoDraft=null;
   document.getElementById('product-form-error').textContent='';document.getElementById('product-dialog-title').textContent=p?'Modifier un produit':'Ajouter un produit';
   const rows=p?.materials?.length?p.materials.map(m=>productMaterialRow(rolls.find(r=>r.id===m.id||r.code===m.id)?.id||m.id,m.grams)).join(''):productMaterialRow();
-  document.getElementById('product-material-lines').innerHTML=rows;
+  document.getElementById('product-material-lines').innerHTML=rows;drawProductHardware(p?.hardware||[]);
   document.getElementById('product-new-photo-preview').replaceChildren();
-  if(p){for(const key of ['id','name','category','colors','printer','stock','otherCost','price','commissionRate','notes']){const input=f.elements.namedItem(key);if(input)input.value=(key==='commissionRate'?safeNum(p[key])*100:p[key])??'';}f.elements.namedItem('originalId').value=p.id;const mins=Math.round(safeNum(p.timeDays)*1440);f.elements.namedItem('hours').value=Math.floor(mins/60);f.elements.namedItem('mins').value=mins%60;getPhoto('print:product:'+p.id).then(photo=>{if(photo&&document.getElementById('product-dialog').open){const img=document.createElement('img');img.src=photo;img.alt='Photo actuelle';document.getElementById('product-new-photo-preview').replaceChildren(img);}});}
+  if(p){for(const key of ['id','name','category','colors','printer','stock','otherCost','price','commissionRate','notes']){const input=f.elements.namedItem(key);if(input){const value=(key==='commissionRate'?safeNum(p[key])*100:p[key])??'';if(input.matches('select[data-choice]'))setChoiceValue(f,key,value);else input.value=value;}}f.elements.namedItem('originalId').value=p.id;const mins=Math.round(safeNum(p.timeDays)*1440);f.elements.namedItem('hours').value=Math.floor(mins/60);f.elements.namedItem('mins').value=mins%60;getPhoto('print:product:'+p.id).then(photo=>{if(photo&&document.getElementById('product-dialog').open){const img=document.createElement('img');img.src=photo;img.alt='Photo actuelle';document.getElementById('product-new-photo-preview').replaceChildren(img);}});}
   else {f.elements.namedItem('originalId').value='';f.elements.namedItem('id').placeholder='Généré automatiquement';f.elements.namedItem('commissionRate').value=30;f.elements.namedItem('stock').value=0;}
   updateProductCost();document.getElementById('product-dialog').showModal();
  }
@@ -269,10 +329,10 @@
   }
   convertingPrintId=id;openProduct();
   const f=document.getElementById('product-form');f.elements.namedItem('name').value=entry.product;
-  f.elements.namedItem('printer').value=entry.printer||'';
+  setChoiceValue(f,'printer',entry.printer||'');
   f.elements.namedItem('stock').value=String(entry.quantity||1);
   f.elements.namedItem('hours').value=String(Math.floor(safeNum(entry.minutes)/60));f.elements.namedItem('mins').value=String(safeNum(entry.minutes)%60);
-  document.getElementById('product-material-lines').innerHTML=entry.usage.map(u=>productMaterialRow(u.rollId,(u.grams/Math.max(1,entry.quantity)).toFixed(3))).join('');
+  document.getElementById('product-material-lines').innerHTML=entry.usage.map(u=>productMaterialRow(u.rollId,(u.grams/Math.max(1,entry.quantity)).toFixed(3))).join('');drawProductHardware((entry.hardwareUsage||[]).map(h=>({id:h.id,quantity:h.quantity/Math.max(1,entry.quantity)})));
   document.getElementById('product-dialog-title').textContent='Créer le produit depuis cette impression — sans déduire à nouveau';
   const pic=await getPhoto('print:'+id);if(pic&&document.getElementById('product-dialog').open){newProductPhotoDraft=pic;const img=document.createElement('img');img.src=pic;img.alt='Photo de l’impression';document.getElementById('product-new-photo-preview').replaceChildren(img);}
   updateProductCost();
@@ -284,9 +344,10 @@
   if(!name||!Number.isInteger(stock)||stock<0||!Number.isInteger(hours)||hours<0||!Number.isInteger(mins)||mins<0||mins>59||![other,price,rate].every(Number.isFinite)||other<0||price<0||rate<0||rate>100){err.textContent='Vérifie le nom, les durées (minutes 0–59), la quantité, le prix et les coûts.';return;}
   if(extras.products.some(p=>p.id===id&&p.id!==originalId)){err.textContent='Cet ID interne existe déjà. Choisis un ID unique.';return;}
   if(materialsRaw.some(m=>(m.id&&!m.raw)||(!m.id&&m.raw)||(m.id&&(!Number.isFinite(m.grams)||m.grams<=0)))){err.textContent='Sélectionne une bobine et des grammes positifs pour chaque ligne utilisée.';return;}
+  const hardwareRaw=getHardwareLines('product-hardware-lines');if(!hardwareLinesValid(hardwareRaw)){err.textContent='Vérifie le composant et sa quantité entière par unité.';return;}const hardware=hardwareRaw.filter(h=>h.id).map(h=>({id:h.id,quantity:h.quantity}));
   const materials=materialsRaw.filter(m=>m.id&&m.grams>0).map(m=>({id:rolls.find(r=>r.id===m.id)?.code||m.id,grams:m.grams}));
-  const prev=extras.products.find(p=>p.id===originalId);const unchangedMaterials=prev&&JSON.stringify(materials)===JSON.stringify(prev.materials||[]);const filamentCost=unchangedMaterials?safeNum(prev.filamentCost):productMaterialCost(materials),unitCost=filamentCost+other;
-  const row={...prev,id,name,category:String(raw.category||'').trim(),colors:String(raw.colors||'').trim(),printer:String(raw.printer||'').trim(),materials,grams:materials.reduce((a,m)=>a+m.grams,0),timeDays:(hours*60+mins)/1440,filamentCost,otherCost:other,unitCost,stock,price,commissionRate:rate/100,unitProfit:price-unitCost-price*rate/100,notes:String(raw.notes||'').trim(),printed:prev?.printed??0,sold:prev?.sold??0,shopId:prev?.shopId||'',source:prev?.source||'PrintPilot'};
+  const prev=extras.products.find(p=>p.id===originalId);const unchangedMaterials=prev&&JSON.stringify(materials)===JSON.stringify(prev.materials||[]);const filamentCost=unchangedMaterials?safeNum(prev.filamentCost):productMaterialCost(materials),unitCost=filamentCost+hardwareCost(hardware)+other;
+  const row={...prev,id,name,category:choiceValue(f,'category'),colors:choiceValue(f,'colors'),printer:choiceValue(f,'printer'),materials,hardware,grams:materials.reduce((a,m)=>a+m.grams,0),timeDays:(hours*60+mins)/1440,filamentCost,otherCost:other,unitCost,stock,price,commissionRate:rate/100,unitProfit:price-unitCost-price*rate/100,notes:String(raw.notes||'').trim(),printed:prev?.printed??0,sold:prev?.sold??0,shopId:prev?.shopId||'',source:prev?.source||'PrintPilot'};
   // Commission en modèle Excel : fraction 0..1. Existing XLSM uses e.g. 0.30.
   const next={...extras,products:ensureShopIds(prev?extras.products.map(p=>p.id===originalId?row:p):[...extras.products,row])};
   if(convertingPrintId){
@@ -450,7 +511,7 @@
   if(!rolls.length){notify('Ajoute ou importe d’abord une bobine.',true);location.hash='filaments';return;}
   const prev=id?prints.find(x=>x.id===id&&x.status==='active'):null;if(id&&!prev)return;
   editingPrintId=id;photoDraft=null;
-  const f=document.getElementById('print-form');f.reset();
+  const f=document.getElementById('print-form');f.reset();populateChoices(f);
   document.getElementById('print-form-error').textContent='';
   document.getElementById('print-dialog-title').textContent=id?'Modifier une impression':'Ajouter une impression terminée';
   document.getElementById('print-submit').textContent=id?'Enregistrer les modifications':'Enregistrer et déduire';
@@ -458,17 +519,17 @@
   const select=document.getElementById('print-product');
   select.innerHTML='<option value="__new__">＋ Nouveau produit (créé automatiquement)</option><option value="">Impression libre sans produit</option>'+extras.products.map(p=>`<option value="${esc(p.id)}">${esc(p.name)} · #${esc(p.shopId)} · ${esc(p.id)}</option>`).join('');
   document.getElementById('usage-lines').innerHTML=prev?prev.usage.map(u=>usageRow(u.rollId,u.grams)).join(''):usageRow();
-  document.getElementById('usage-excel-hint').textContent=prev?'Valeurs réelles enregistrées pour cette impression; une modification recalcule le stock.':'';
+  document.getElementById('usage-excel-hint').textContent=prev?'Valeurs réelles enregistrées pour cette impression; une modification recalcule le stock.':'';drawPrintHardware(prev?.hardwareUsage||[]);
   if(prev){
-   for(const k of ['date','printer','quantity','minutes','notes']){const inp=f.elements.namedItem(k);if(inp)inp.value=prev[k]??'';}
+   for(const k of ['date','printer','quantity','minutes','notes']){const inp=f.elements.namedItem(k);if(inp){if(inp.matches('select[data-choice]'))setChoiceValue(f,k,prev[k]??'');else inp.value=prev[k]??'';}}
    f.elements.namedItem('hours').value=Math.floor(safeNum(prev.minutes)/60);f.elements.namedItem('minutePart').value=safeNum(prev.minutes)%60;select.value=prev.productId||'';
    f.elements.namedItem('customProduct').value=prev.productId?'':prev.product;
    selectedProductInfo(); // Ne jamais écraser la durée d’une impression déjà enregistrée.
   }else{
    select.value=preselectProduct||'__new__';
-   selectedProductInfo({prefillDuration:true});
+   selectedProductInfo({prefillDuration:true});suggestHardwareFromProduct();
    const product=extras.products.find(p=>String(p.id)===select.value);
-   if(product){suggestExcelUsage(product);if(product.printer)f.elements.namedItem('printer').value=product.printer;}
+   if(product){suggestExcelUsage(product);if(product.printer)setChoiceValue(f,'printer',product.printer);}
   }
   const preview=document.getElementById('photo-preview');preview.replaceChildren();
   if(id){const photo=await getPhoto('print:'+id);if(photo){const img=document.createElement('img');img.src=photo;img.alt='Photo actuelle';preview.appendChild(img);}}
@@ -491,27 +552,35 @@
   const qty=Math.max(1,Number(f.elements.namedItem('quantity').value)||1);
   const usage=[...document.querySelectorAll('#usage-lines .usage-line')].map(line=>({rollId:line.querySelector('.usage-roll').value,grams:Number(line.querySelector('.usage-grams').value)}));
   const cost=usage.reduce((sum,u)=>{const roll=rolls.find(r=>r.id===u.rollId);return sum+(roll?Math.max(0,u.grams||0)*safeNum(roll.price)/Math.max(1,safeNum(roll.initial)):0);},0)/qty;
+  const hw=hardwareCost(getHardwareLines('print-hardware-lines').filter(x=>x.id&&x.raw))/qty;
   const price=Number(f.elements.namedItem('newPrice').value)||0,extra=Number(f.elements.namedItem('newOther').value)||0,rate=Number(f.elements.namedItem('newRate').value)||0;
-  target.innerHTML=`<div><small>Filament / unité</small><strong>${money(cost)}</strong></div><div><small>Fabrication / unité</small><strong>${money(cost+extra)}</strong></div><div><small>Prix de vente</small><strong>${money(price)}</strong></div><div><small>Profit après commission</small><strong>${money(price-cost-extra-price*rate/100)}</strong></div>`;
+  target.innerHTML=`<div><small>Filament / unité</small><strong>${money(cost)}</strong></div><div><small>Hardware / unité</small><strong>${money(hw)}</strong></div><div><small>Fabrication / unité</small><strong>${money(cost+hw+extra)}</strong></div><div><small>Prix de vente</small><strong>${money(price)}</strong></div><div><small>Profit après commission</small><strong>${money(price-cost-hw-extra-price*rate/100)}</strong></div>`;
  }
  function newProductFromPrint(entry,printUsage,raw){
   const qty=entry.quantity,id='PROD-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,6);
   const materials=printUsage.map(u=>({id:rolls.find(r=>r.id===u.rollId)?.code||u.rollId,grams:Math.round(u.grams/qty*1000)/1000}));
   const filamentCost=printUsage.reduce((sum,u)=>{const r=rolls.find(x=>x.id===u.rollId);return sum+(r?safeNum(r.price)*u.grams/Number(r.initial):0);},0)/qty;
-  const rate=Number(raw.newRate)/100,other=Number(raw.newOther),price=Number(raw.newPrice),unitCost=filamentCost+other;
-  return {id,name:entry.product,category:String(raw.newCategory||'').trim(),colors:String(raw.newColors||'').trim(),printer:entry.printer,materials,grams:materials.reduce((a,m)=>a+m.grams,0),timeDays:entry.minutes/1440,filamentCost,otherCost:other,unitCost,price,commissionRate:rate,unitProfit:price-unitCost-price*rate,stock:qty,printed:qty,sold:0,shopId:'',source:'PrintPilot',notes:entry.notes};
+  const hardware=(entry.hardwareUsage||[]).map(h=>({id:h.id,quantity:h.quantity/qty}));
+  const rate=Number(raw.newRate)/100,other=Number(raw.newOther),price=Number(raw.newPrice),unitCost=filamentCost+hardwareCost(hardware)+other;
+  return {id,name:entry.product,category:choiceValue(document.getElementById('print-form'),'newCategory'),colors:choiceValue(document.getElementById('print-form'),'newColors'),printer:entry.printer,materials,hardware,grams:materials.reduce((a,m)=>a+m.grams,0),timeDays:entry.minutes/1440,filamentCost,otherCost:other,unitCost,price,commissionRate:rate,unitProfit:price-unitCost-price*rate,stock:qty,printed:qty,sold:0,shopId:'',source:'PrintPilot',notes:entry.notes};
  }
  function savePrint(event){event.preventDefault();const f=event.currentTarget;const error=document.getElementById('print-form-error');error.textContent='';const usages=[...document.querySelectorAll('#usage-lines .usage-line')].map(line=>({rollId:line.querySelector('.usage-roll').value,grams:Number(line.querySelector('.usage-grams').value),raw:line.querySelector('.usage-grams').value}));if(!usages.length||usages.some(u=>!u.rollId||!Number.isFinite(u.grams)||u.grams<=0||u.raw==='')){error.textContent='Sélectionne une bobine et une quantité positive pour chaque ligne.';return;}
+  const hardwareRaw=getHardwareLines('print-hardware-lines');if(!hardwareLinesValid(hardwareRaw)){error.textContent='Sélectionne un composant et une quantité entière positive.';return;}const hardwareUsage=hardwareRaw.filter(h=>h.id).map(h=>({id:h.id,quantity:h.quantity}));
   const existing=editingPrintId?prints.find(p=>p.id===editingPrintId&&p.status==='active'):null;
   const combined=new Map();for(const u of usages)combined.set(u.rollId,(combined.get(u.rollId)||0)+u.grams);
   for(const [id,qty] of combined){const r=rolls.find(x=>x.id===id);if(!r){error.textContent='Une bobine sélectionnée est introuvable.';return;}const refundable=existing?existing.usage.filter(u=>u.rollId===id).reduce((a,u)=>a+Number(u.grams),0):0;if(Number(r.remaining)+refundable+1e-7<qty){error.textContent=`Stock insuffisant pour ${r.brand} — ${r.color} : ${number(r.remaining,1)} g disponibles, ${number(qty,1)} g demandés.`;return;}}
+  const oldHardware=new Map();for(const h of existing?.hardwareUsage||[])oldHardware.set(h.id,(oldHardware.get(h.id)||0)+safeNum(h.quantity));
+  const newHardware=new Map();for(const h of hardwareUsage)newHardware.set(h.id,(newHardware.get(h.id)||0)+h.quantity);
+  const nextHardware=extras.hardware.map(h=>({...h,remaining:safeNum(h.remaining)+(oldHardware.get(h.id)||0)-(newHardware.get(h.id)||0)}));
+  if(nextHardware.some(h=>h.remaining<0)){error.textContent='Stock de hardware insuffisant pour cette impression.';return;}
+  if([...newHardware.keys()].some(id=>!extras.hardware.some(h=>h.id===id))){error.textContent='Un composant sélectionné a été supprimé.';return;}
   const quantity=Number(f.elements.namedItem('quantity').value),hours=Number(f.elements.namedItem('hours').value),minutePart=Number(f.elements.namedItem('minutePart').value),minutes=hours*60+minutePart;if(!Number.isInteger(quantity)||quantity<1||!Number.isInteger(hours)||hours<0||!Number.isInteger(minutePart)||minutePart<0||minutePart>59){error.textContent='Vérifie la quantité et la durée.';return;}
   const selection=document.getElementById('print-product');const creating=selection.value==='__new__';const product=extras.products.find(p=>String(p.id)===selection.value);
   const name=product?.name||(f.elements.namedItem('customProduct').value.trim()||(creating?'':'Impression libre'));
   if(creating){const vals=['newPrice','newOther','newRate'].map(k=>Number(f.elements.namedItem(k).value));if(!name||vals.some(v=>!Number.isFinite(v)||v<0)||vals[2]>100){error.textContent='Pour créer le produit, indique son nom et des prix / commissions valides.';return;}}
   if(existing&&creating){error.textContent='Pour associer une impression existante, utilise « Créer la fiche Produit » dans son historique.';return;}
   const usage=[...combined].map(([rollId,grams])=>{const r=rolls.find(x=>x.id===rollId);return {rollId,grams,label:r.brand+' — '+r.color};});
-  const entry={id:existing?existing.id:'print-'+Date.now()+'-'+Math.random().toString(36).slice(2,9),date:f.elements.namedItem('date').value,productId:product?.id||'',product:name,printer:f.elements.namedItem('printer').value.trim(),quantity,minutes,notes:f.elements.namedItem('notes').value.trim(),usage,status:'active',createdAt:existing?existing.createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+  const entry={id:existing?existing.id:'print-'+Date.now()+'-'+Math.random().toString(36).slice(2,9),date:f.elements.namedItem('date').value,productId:product?.id||'',product:name,printer:choiceValue(f,'printer'),quantity,minutes,notes:f.elements.namedItem('notes').value.trim(),usage,hardwareUsage,status:'active',createdAt:existing?existing.createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
   const refunds=new Map();if(existing)existing.usage.forEach(u=>refunds.set(u.rollId,(refunds.get(u.rollId)||0)+Number(u.grams)));
   const nextRolls=rolls.map(r=>{const remaining=Math.round((Number(r.remaining)+(refunds.get(r.id)||0)-(combined.get(r.id)||0))*1000)/1000;return {...r,remaining};});
   if(nextRolls.some(r=>r.remaining<0||r.remaining>Number(r.initial)+1e-7)){error.textContent='Stock insuffisant ou poids initial dépassé. Vérifie les bobines.';return;}
@@ -524,7 +593,7 @@
    const productRow=ensureShopIds([...nextProducts,row]).at(-1);entry.productId=productRow.id;nextProducts.push(productRow);
   }else if(product){const target=nextProducts.find(p=>p.id===product.id);target.stock=safeNum(target.stock)+quantity;if(target.source!=='Excel')target.printed=safeNum(target.printed)+quantity;}
   if(nextProducts.some(p=>safeNum(p.stock)<0)){error.textContent='Modification impossible : des produits de cette impression ont déjà été vendus. Vérifie leur stock avant de modifier.';return;}
-  if(!persistWorkshop(nextRolls,nextPrints,{...extras,products:nextProducts})){error.textContent='Impossible de sauvegarder ensemble l’impression et le catalogue.';return;}
+  if(!persistWorkshop(nextRolls,nextPrints,{...extras,hardware:nextHardware,products:nextProducts})){error.textContent='Impossible de sauvegarder ensemble l’impression et le catalogue.';return;}
   document.getElementById('print-dialog').close();editingPrintId=null;render();notify('✓ Impression enregistrée, bobines déduites et catalogue / stock mis à jour!');
   if(photoDraft){const pic=photoDraft;photoDraft=null;Promise.all([setPhoto('print:'+entry.id,pic),...(creating?[setPhoto('print:product:'+entry.productId,pic)]:[])]).then(()=>hydratePhotos()).catch(e=>{console.error(e);notify('Production enregistrée, mais photo non synchronisée; garde ta photo originale.',true);});}
 
@@ -535,10 +604,13 @@
   const nextRolls=rolls.map(r=>restore.has(r.id)?{...r,remaining:Math.round((Number(r.remaining)+restore.get(r.id))*1000)/1000}:r);
   // Un ajustement manuel pourrait déjà avoir remis du stock : éviter de dépasser le poids initial.
   if(nextRolls.some(r=>Number(r.remaining)>Number(r.initial)+1e-7)){notify('Annulation impossible : le retour dépasserait le poids initial d’une bobine. Ajuste son stock avant de réessayer.',true);return;}
+  const hardwareRefunds=new Map();for(const h of p.hardwareUsage||[])hardwareRefunds.set(h.id,(hardwareRefunds.get(h.id)||0)+safeNum(h.quantity));
+  if([...hardwareRefunds.keys()].some(id=>!extras.hardware.some(h=>h.id===id))){notify('Impossible : un composant de cette impression a été supprimé.',true);return;}
+  const nextHardware=extras.hardware.map(h=>({...h,remaining:safeNum(h.remaining)+(hardwareRefunds.get(h.id)||0)}));
   const nextPrints=prints.map(x=>x.id===id?{...x,status:'cancelled',cancelledAt:new Date().toISOString()}:x);
   const nextProducts=extras.products.map(x=>({...x}));const target=nextProducts.find(x=>x.id===p.productId);
   if(target){if(safeNum(target.stock)<safeNum(p.quantity)){notify('Annulation impossible : ces unités ont déjà été vendues. Annule la vente d’abord.',true);return;}target.stock-=safeNum(p.quantity);if(target.source!=='Excel')target.printed=Math.max(0,safeNum(target.printed)-safeNum(p.quantity));}
-  if(!persistWorkshop(nextRolls,nextPrints,{...extras,products:nextProducts}))return;
+  if(!persistWorkshop(nextRolls,nextPrints,{...extras,hardware:nextHardware,products:nextProducts}))return;
   render();notify('✓ Impression annulée, filament remis et stock produit ajusté.');
  }
  function exportFull(){const data={version:2,exportedAt:new Date().toISOString(),filaments:rolls,prints,products:extras.products,hardware:extras.hardware,sales:extras.sales};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='printpilot-sauvegarde-complete.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);notify('Sauvegarde complète exportée.');}
@@ -576,7 +648,27 @@
    +`<section class="panel"><div class="panel-head"><div><h2>Coûts matière des impressions ajoutées</h2><p>Calculés selon le prix payé par bobine et les grammes enregistrés : ${money(materials)} au total.</p></div></div><div class="table-wrap"><table><thead><tr><th>ID</th><th>IMPRESSION</th><th>DATE</th><th>QUANTITÉ</th><th>GRAMMES</th><th>COÛT MATIÈRE</th></tr></thead><tbody>${active.map(p=>`<tr><td>${esc(p.id)}</td><td>${esc(p.product)}</td><td>${esc(p.date)}</td><td>${number(p.quantity)}</td><td>${number(p.usage.reduce((a,u)=>a+Number(u.grams),0),1)} g</td><td>${money(printMaterialCost(p))}</td></tr>`).join('')||'<tr><td colspan="6">Aucune impression pour le moment.</td></tr>'}</tbody></table></div></section>`;
  }
  function catalogPage(){const items=extras.products;return header('PARTAGE','Catalogue à partager','ID, nom, photo, prix et stock : une vue destinée à ta partenaire de vente.',`<button type="button" class="primary-btn" id="download-catalog">↧ Catalogue HTML</button><button type="button" class="secondary-btn" id="download-catalog-csv">↧ IDs / stock CSV</button>`)+`<div class="notice">🔒 &nbsp; Le catalogue exporté est une copie publique sans tes coûts ni tes profits. Il n’est pas encore accessible par lien : pour cela, il faudra le publier sur un hébergement autorisé. Ajoute une photo à un produit ci-dessous; connecté à Firebase, elle sera visible sur tes autres appareils.</div><section class="panel"><div class="panel-head"><div><h2>Produits à présenter (${items.length})</h2></div><input type="search" id="catalog-search" class="table-filter" placeholder="Rechercher un ID ou produit…"></div><div id="catalog-results">${catalogRows('')}</div></section>`;}
- function catalogRows(query){const items=extras.products.filter(p=>(p.name+' '+p.id+' '+p.shopId+' '+p.category).toLowerCase().includes(query.toLowerCase()));return `<div class="catalog-grid">${items.map(p=>`<article class="catalog-card">${thumb('product:'+p.id,'catalog-image')}<div><small><b>ID stock : ${esc(p.shopId)}</b></small><small>ID Excel : ${esc(p.id)}</small><h3>${esc(p.name)}</h3><p>${esc(p.category||'')} · ${esc(p.colors||'')}</p><b>${money(p.price)}</b><span>Stock : ${number(p.stock)}</span><div class="photo-actions"><button type="button" class="secondary-btn" data-upload-product="${esc(p.id)}">🖼 Choisir photo</button><button type="button" class="secondary-btn" data-camera-product="${esc(p.id)}">📸 Prendre photo</button></div></div></article>`).join('')||'<p class="empty">Aucun produit.</p>'}</div>`;}
+ function catalogRows(query){
+  const term=String(query||'').toLowerCase();
+  const items=extras.products.filter(p=>(p.name+' '+p.id+' '+p.shopId+' '+p.category+' '+p.colors).toLowerCase().includes(term));
+  return `<div class="catalog-grid">${items.map(p=>`<article class="catalog-card"><button type="button" class="catalog-card-open" data-view-catalog="${esc(p.id)}" aria-label="Voir la fiche de ${esc(p.name)}">${thumb('product:'+p.id,'catalog-image')}<div class="catalog-card-caption"><span class="catalog-card-name">${esc(p.name)}</span><span class="catalog-card-price">${money(p.price)}</span><small>ID stock #${esc(p.shopId)} · Stock : ${number(p.stock)}</small><span class="catalog-card-hint">Voir la fiche →</span></div></button></article>`).join('')||'<p class="empty">Aucun produit.</p>'}</div>`;
+ }
+ function openCatalogDetails(id){
+  const p=extras.products.find(x=>String(x.id)===String(id));
+  if(!p){notify('Ce produit est introuvable.',true);return;}
+  const dialog=document.getElementById('catalog-detail-dialog');
+  const photo=document.getElementById('catalog-detail-photo');
+  const title=document.getElementById('catalog-detail-name');
+  photo.innerHTML=thumb('product:'+p.id,'catalog-detail-image');
+  title.textContent=p.name||'Produit';
+  const details=document.getElementById('catalog-detail-fields');
+  details.innerHTML=`<div><small>Prix de vente</small><strong class="catalog-detail-price">${money(p.price)}</strong></div><div><small>Quantité en stock</small><strong>${number(p.stock)}</strong></div><div><small>ID stock</small><strong>#${esc(p.shopId)}</strong></div><div><small>ID Excel / référence</small><strong>${esc(p.id)}</strong></div><div><small>Catégorie</small><strong>${esc(p.category||'—')}</strong></div><div><small>Couleur(s)</small><strong>${esc(p.colors||'—')}</strong></div>`;
+  document.getElementById('catalog-detail-upload').dataset.uploadProduct=p.id;
+  document.getElementById('catalog-detail-camera').dataset.cameraProduct=p.id;
+  dialog.showModal();
+  hydratePhotos();
+ }
+
  function downloadText(filename,content,type){const url=URL.createObjectURL(new Blob([content],{type}));const a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);}
  function exportFinance(){
   const rows=[['ID stock','ID Excel','Produit','Catégorie','Couleurs','Prix de vente CAD','Coût filament CAD','Autres coûts CAD','Coût unitaire CAD','Commission %','Commission unitaire CAD','Profit unitaire estimé CAD','Quantité stock','Valeur stock CAD'],
@@ -596,23 +688,24 @@
  document.getElementById('close-dialog').addEventListener('click',()=>dialog.close());
  document.getElementById('cancel-dialog').addEventListener('click',()=>dialog.close());
  document.getElementById('print-form').addEventListener('submit',savePrint);
- document.getElementById('print-product').addEventListener('change',()=>{if(!editingPrintId){selectedProductInfo({prefillDuration:true});const p=extras.products.find(x=>String(x.id)===document.getElementById('print-product').value);suggestExcelUsage(p);if(p?.printer)document.getElementById('print-form').elements.namedItem('printer').value=p.printer;refreshPrintCreation();}else{selectedProductInfo();refreshPrintCreation();}});
+ document.getElementById('print-product').addEventListener('change',()=>{if(!editingPrintId){selectedProductInfo({prefillDuration:true});const p=extras.products.find(x=>String(x.id)===document.getElementById('print-product').value);suggestExcelUsage(p);suggestHardwareFromProduct();if(p?.printer)setChoiceValue(document.getElementById('print-form'),'printer',p.printer);refreshPrintCreation();}else{selectedProductInfo();refreshPrintCreation();}});
  document.getElementById('print-form').addEventListener('input',updatePrintCreationCost);document.getElementById('print-form').addEventListener('change',updatePrintCreationCost);
- document.getElementById('print-form').elements.namedItem('quantity').addEventListener('change',()=>{if(!editingPrintId){const p=extras.products.find(x=>String(x.id)===document.getElementById('print-product').value);if(p)suggestExcelUsage(p);}});
+ document.getElementById('print-form').elements.namedItem('quantity').addEventListener('change',()=>{if(!editingPrintId){const p=extras.products.find(x=>String(x.id)===document.getElementById('print-product').value);if(p)suggestExcelUsage(p);suggestHardwareFromProduct();}});
  document.getElementById('sale-form').addEventListener('submit',saveSale);
  document.getElementById('sale-form').elements.namedItem('productId').addEventListener('change',()=>updateSaleProduct(true));
  document.getElementById('sale-form').elements.namedItem('channel').addEventListener('change',()=>updateSaleChannel(true));
  document.getElementById('sale-form').addEventListener('input',updateSalePreview);
  document.getElementById('close-sale').addEventListener('click',()=>document.getElementById('sale-dialog').close());
  document.getElementById('cancel-sale-dialog').addEventListener('click',()=>document.getElementById('sale-dialog').close());
- document.getElementById('product-form').addEventListener('submit',saveProduct);document.getElementById('product-form').addEventListener('input',updateProductCost);document.getElementById('product-form').addEventListener('change',updateProductCost);document.getElementById('close-product').addEventListener('click',()=>{convertingPrintId=null;document.getElementById('product-dialog').close();});document.getElementById('cancel-product').addEventListener('click',()=>{convertingPrintId=null;document.getElementById('product-dialog').close();});document.getElementById('product-camera-button').addEventListener('click',()=>document.getElementById('product-new-camera').click());document.getElementById('product-new-camera').addEventListener('change',e=>{selectNewProductPhoto(e.target.files[0]);e.target.value='';});document.getElementById('product-new-photo').addEventListener('change',e=>{selectNewProductPhoto(e.target.files[0]);e.target.value='';});
+ document.getElementById('print-form').addEventListener('input',e=>{if(e.target.closest('#print-hardware-lines'))updatePrintCreationCost();});document.getElementById('print-form').addEventListener('change',e=>{if(e.target.closest('#print-hardware-lines'))updatePrintCreationCost();});document.getElementById('product-form').addEventListener('submit',saveProduct);document.getElementById('product-form').addEventListener('input',updateProductCost);document.getElementById('product-form').addEventListener('change',updateProductCost);document.getElementById('close-product').addEventListener('click',()=>{convertingPrintId=null;document.getElementById('product-dialog').close();});document.getElementById('cancel-product').addEventListener('click',()=>{convertingPrintId=null;document.getElementById('product-dialog').close();});document.getElementById('product-camera-button').addEventListener('click',()=>document.getElementById('product-new-camera').click());document.getElementById('product-new-camera').addEventListener('change',e=>{selectNewProductPhoto(e.target.files[0]);e.target.value='';});document.getElementById('product-new-photo').addEventListener('change',e=>{selectNewProductPhoto(e.target.files[0]);e.target.value='';});
  document.getElementById('hardware-form').addEventListener('submit',saveHardware);
  document.getElementById('close-hardware').addEventListener('click',()=>document.getElementById('hardware-dialog').close());
  document.getElementById('cancel-hardware').addEventListener('click',()=>document.getElementById('hardware-dialog').close());
  document.getElementById('close-print').addEventListener('click',()=>document.getElementById('print-dialog').close());
  document.getElementById('cancel-print-dialog').addEventListener('click',()=>document.getElementById('print-dialog').close());
+ document.getElementById('catalog-detail-close').addEventListener('click',()=>document.getElementById('catalog-detail-dialog').close());
  document.getElementById('menu-toggle').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('open'));
- document.addEventListener('click',event=>{const add=event.target.closest('#add-roll');const edit=event.target.closest('[data-edit]');const del=event.target.closest('[data-delete]');const go=event.target.closest('[data-go]');if(add)openRoll();else if(edit)openRoll(edit.dataset.edit);else if(del)removeRoll(del.dataset.delete);else if(go)location.hash=go.dataset.go;else if(event.target.closest('#export-json'))exportData();else if(event.target.closest('#import-excel'))document.getElementById('excel-upload-file').click();else if(event.target.closest('#add-product')){convertingPrintId=null;openProduct();}else if(event.target.closest('[data-edit-product]'))openProduct(event.target.closest('[data-edit-product]').dataset.editProduct);else if(event.target.closest('#add-print'))openPrint();else if(event.target.closest('#add-sale'))openSale();else if(event.target.closest('[data-new-sale-product]')){location.hash='commandes';openSale(null,event.target.closest('[data-new-sale-product]').dataset.newSaleProduct);}else if(event.target.closest('[data-edit-sale]'))openSale(event.target.closest('[data-edit-sale]').dataset.editSale);else if(event.target.closest('[data-cancel-sale]'))cancelSale(event.target.closest('[data-cancel-sale]').dataset.cancelSale);else if(event.target.closest('#add-hardware'))openHardware();else if(event.target.closest('[data-edit-hardware]'))openHardware(event.target.closest('[data-edit-hardware]').dataset.editHardware);else if(event.target.closest('[data-delete-hardware]'))deleteHardware(event.target.closest('[data-delete-hardware]').dataset.deleteHardware);else if(event.target.closest('[data-new-print-product]')){location.hash='impressions';openPrint(null,event.target.closest('[data-new-print-product]').dataset.newPrintProduct);}else if(event.target.closest('[data-convert-print]'))createProductFromExistingPrint(event.target.closest('[data-convert-print]').dataset.convertPrint);else if(event.target.closest('[data-edit-print]'))openPrint(event.target.closest('[data-edit-print]').dataset.editPrint);else if(event.target.closest('#add-product-material')){document.getElementById('product-material-lines').insertAdjacentHTML('beforeend',productMaterialRow());updateProductCost();}else if(event.target.closest('.product-remove-material')){event.target.closest('.product-material-line').remove();updateProductCost();}else if(event.target.closest('#add-usage'))document.getElementById('usage-lines').insertAdjacentHTML('beforeend',usageRow());else if(event.target.closest('.usage-remove')){const lines=document.querySelectorAll('#usage-lines .usage-line');if(lines.length>1)event.target.closest('.usage-line').remove();else notify('Il faut au moins une bobine.',true);}else if(event.target.closest('[data-cancel-print]'))cancelPrint(event.target.closest('[data-cancel-print]').dataset.cancelPrint);else if(event.target.closest('#export-full'))exportFull();else if(event.target.closest('#export-finance'))exportFinance();else if(event.target.closest('#download-catalog'))exportCatalog();else if(event.target.closest('#download-catalog-csv'))catalogCsv();else if(event.target.closest('[data-upload-product]')){document.getElementById('product-photo').dataset.productId=event.target.closest('[data-upload-product]').dataset.uploadProduct;document.getElementById('product-photo').click();}else if(event.target.closest('[data-camera-product]')){const file=document.getElementById('product-camera');file.dataset.productId=event.target.closest('[data-camera-product]').dataset.cameraProduct;file.click();}});
+ document.addEventListener('click',event=>{const add=event.target.closest('#add-roll');const edit=event.target.closest('[data-edit]');const del=event.target.closest('[data-delete]');const go=event.target.closest('[data-go]');if(add)openRoll();else if(edit)openRoll(edit.dataset.edit);else if(del)removeRoll(del.dataset.delete);else if(go)location.hash=go.dataset.go;else if(event.target.closest('#export-json'))exportData();else if(event.target.closest('#import-excel'))document.getElementById('excel-upload-file').click();else if(event.target.closest('#add-product')){convertingPrintId=null;openProduct();}else if(event.target.closest('[data-edit-product]'))openProduct(event.target.closest('[data-edit-product]').dataset.editProduct);else if(event.target.closest('#add-print'))openPrint();else if(event.target.closest('#add-sale'))openSale();else if(event.target.closest('[data-new-sale-product]')){location.hash='commandes';openSale(null,event.target.closest('[data-new-sale-product]').dataset.newSaleProduct);}else if(event.target.closest('[data-edit-sale]'))openSale(event.target.closest('[data-edit-sale]').dataset.editSale);else if(event.target.closest('[data-cancel-sale]'))cancelSale(event.target.closest('[data-cancel-sale]').dataset.cancelSale);else if(event.target.closest('#add-hardware'))openHardware();else if(event.target.closest('[data-edit-hardware]'))openHardware(event.target.closest('[data-edit-hardware]').dataset.editHardware);else if(event.target.closest('[data-delete-hardware]'))deleteHardware(event.target.closest('[data-delete-hardware]').dataset.deleteHardware);else if(event.target.closest('[data-new-print-product]')){location.hash='impressions';openPrint(null,event.target.closest('[data-new-print-product]').dataset.newPrintProduct);}else if(event.target.closest('[data-convert-print]'))createProductFromExistingPrint(event.target.closest('[data-convert-print]').dataset.convertPrint);else if(event.target.closest('[data-edit-print]'))openPrint(event.target.closest('[data-edit-print]').dataset.editPrint);else if(event.target.closest('#add-product-material')){document.getElementById('product-material-lines').insertAdjacentHTML('beforeend',productMaterialRow());updateProductCost();}else if(event.target.closest('.product-remove-material')){event.target.closest('.product-material-line').remove();updateProductCost();}else if(event.target.closest('#add-product-hardware')){document.getElementById('product-hardware-lines').insertAdjacentHTML('beforeend',hardwareRow('product'));updateProductCost();}else if(event.target.closest('#add-print-hardware')){document.getElementById('print-hardware-lines').insertAdjacentHTML('beforeend',hardwareRow('print'));updatePrintCreationCost();}else if(event.target.closest('.hardware-remove')){event.target.closest('.hardware-line').remove();updateProductCost();updatePrintCreationCost();}else if(event.target.closest('#add-usage'))document.getElementById('usage-lines').insertAdjacentHTML('beforeend',usageRow());else if(event.target.closest('.usage-remove')){const lines=document.querySelectorAll('#usage-lines .usage-line');if(lines.length>1)event.target.closest('.usage-line').remove();else notify('Il faut au moins une bobine.',true);}else if(event.target.closest('[data-cancel-print]'))cancelPrint(event.target.closest('[data-cancel-print]').dataset.cancelPrint);else if(event.target.closest('#export-full'))exportFull();else if(event.target.closest('#export-finance'))exportFinance();else if(event.target.closest('[data-view-catalog]'))openCatalogDetails(event.target.closest('[data-view-catalog]').dataset.viewCatalog);else if(event.target.closest('#download-catalog'))exportCatalog();else if(event.target.closest('#download-catalog-csv'))catalogCsv();else if(event.target.closest('[data-upload-product]')){document.getElementById('product-photo').dataset.productId=event.target.closest('[data-upload-product]').dataset.uploadProduct;document.getElementById('product-photo').click();}else if(event.target.closest('[data-camera-product]')){const file=document.getElementById('product-camera');file.dataset.productId=event.target.closest('[data-camera-product]').dataset.cameraProduct;file.click();}});
  document.addEventListener('input',event=>{if(event.target.id==='print-catalog-search'){document.getElementById('print-catalog-results').innerHTML=printCatalogRows(event.target.value);}else if(event.target.id==='roll-search'){search=event.target.value;document.getElementById('inventory-rows').innerHTML=tableRows();}else if(event.target.id==='finance-search'){document.getElementById('finance-products').innerHTML=financeProductRows(event.target.value);}else if(event.target.id==='catalog-search'){document.getElementById('catalog-results').innerHTML=catalogRows(event.target.value);hydratePhotos();}else if(event.target.id==='sales-search'){document.getElementById('sales-results').innerHTML=salesCards(event.target.value);}else if(event.target.id==='product-search'){document.getElementById('product-results').innerHTML=productRows(event.target.value);}});
  async function selectPrintPhoto(file){if(!file)return;try{photoDraft=await fileToPhoto(file);const preview=document.getElementById('photo-preview');preview.replaceChildren();const img=document.createElement('img');img.src=photoDraft;img.alt='Aperçu de la photo';preview.appendChild(img);}catch(e){notify(e.message,true);}}
  document.getElementById('print-photo').addEventListener('change',event=>selectPrintPhoto(event.target.files[0]));
