@@ -1,13 +1,9 @@
-# PrintPilot 3D v4.10.6 — ID variantes et photos séparées
+# PrintPilot 3D v4.10.7 — Photos admin restaurées
 
-Base v4.10.5. Remplacer ensemble `index.html`, `boutique.html`, `js/app.js`, `js/cloud.js`, `js/boutique.js` et `css/style.css` sur GitHub; ou envoyer tous les fichiers du ZIP au bon emplacement.
+**Correctif ciblé de la v4.10.6.** Bug corrigé dans `js/app.js` : `hydratePhotos()` recherchait uniquement `[data-photo-id]`, alors que les fiches produits utilisent maintenant `[data-photo-shop]`. Il n'affichait plus les images des produits, même quand elles étaient encore dans Firebase ou IndexedDB.
 
-Avant tout : exporter une sauvegarde JSON depuis PrintPilot.
+**Installer :** remplacer seulement `index.html` et `js/app.js` dans GitHub (mêmes chemins). Les autres fichiers du ZIP sont repris de v4.10.6 et ne doivent pas être remplacés pour ce correctif. Faire une sauvegarde JSON avant toute mise à jour. Après déploiement vert, recharger en forçant le cache (`Ctrl+Shift+R`).
 
-## Résolution
-- Les photos Produit sont stockées par **ID stock #** au lieu de l'ID Excel, y compris dans le catalogue Boutique après publication. Une nouvelle photo pour #75 ne modifie plus #76.
-- Fallback : les anciennes photos restent lisibles grâce à leur ancien ID; si elles étaient partagées, les deux fiches peuvent encore montrer la même image tant que tu n'as pas remplacé les photos individuellement.
-- Bouton Produits → « Réparer ID variantes » : aperçu et confirmation. Corrige #20–22 (Bleu, Blanc, Or/Mauve), #28–30 (Blanc, Noir, Rouge), #70–71 (Rouge, Rose), #75–76 (Or/Mauve, Or). Ne modifie pas les stocks, ventes, coûts, grammes ni filaments. Refuse de modifier les références utilisées par des historiques.
-- Une fois les photos corrigées, Synchronisation → Portail Boutique → Publier / actualiser le catalogue.
+**Aucune modification Firestore, des règles Firebase ou du stock.** Le correctif restaure le chargement des images selon leurs clés uniques (`product-shop`) avec repli sur leurs anciennes clés d'ID Excel. Une image remplacée précédemment reste enregistrée, sans récupération automatique de la photo qu'elle aurait écrasée.
 
-Le ZIP n'est pas connecté à ton Firebase réel; vérifier l'aperçu de migration et faire un essai photo avant de publier le catalogue. Aucune modification de règles Firebase nécessaire.
+Test statique JavaScript: OK. La connexion au compte Firebase en production n'a pas été testée.

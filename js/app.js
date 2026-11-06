@@ -1,4 +1,4 @@
-/* PrintPilot 3D v4.10.6 — HTML/CSS/JavaScript natif, sans Node.js.
+/* PrintPilot 3D v4.10.7 — HTML/CSS/JavaScript natif, sans Node.js.
    Handlebars améliore facultativement le rendu des cartes, mais n'est pas nécessaire. */
 (() => {
  'use strict';
@@ -103,7 +103,7 @@
  function productThumb(p,cls='photo-thumb'){return `<div class="${cls}" data-photo-shop="${esc(p.shopId)}" aria-label="Photo de ${esc(p.name)}">▧</div>`;}
  function thumb(id,cls='photo-thumb'){return `<div class="${cls}" data-photo-id="${esc(id)}" aria-label="Photo de l'impression">▧</div>`;}
  async function hydratePhotos(){
-   const elements=[...document.querySelectorAll('[data-photo-id]')];
+   const elements=[...document.querySelectorAll('[data-photo-id], [data-photo-shop]')];
    await Promise.all(elements.map(async el=>{
      const product=el.dataset.photoShop?extras.products.find(p=>String(p.shopId)===el.dataset.photoShop):null;
      const data=product?await getProductPhoto(product):await getPhoto('print:'+el.dataset.photoId);
