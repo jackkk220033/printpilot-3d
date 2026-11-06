@@ -322,3 +322,10 @@ select[data-choice]{width:100%;min-width:0}
   .pp-mobile-links a{display:flex;align-items:center;gap:6px;padding:11px 8px;font-size:12px;min-height:42px;word-break:normal;}
   .pp-mobile-links .message-badge{margin-left:auto;}
 }
+
+/* v4.10.4: admin product image preview, no cropping; print cards retain actions */
+.admin-product-preview{border:0;background:transparent;padding:0;display:block;width:100%;cursor:zoom-in;text-align:inherit;border-radius:12px;}
+.admin-product-preview:focus-visible{outline:3px solid #a18bfa;outline-offset:3px}
+.admin-product-preview .product-card-image{margin-bottom:0;max-height:none;height:215px;aspect-ratio:auto;background:#192238}
+.admin-product-preview .product-card-image img{object-fit:contain;width:100%;height:100%}
+.inventory-card .admin-product-preview + .inventory-card-head{margin-top:2px}

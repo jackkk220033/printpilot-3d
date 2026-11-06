@@ -2,3 +2,38 @@ body{font-family:system-ui,sans-serif}.back{color:#bfaaff}.tabbar{display:flex;o
 /* v4.9.1 — Suppression des demandes */
 button.danger-action{background:#51242c;color:#ffe5e5;border:1px solid #a44959;}
 button.danger-action:hover{background:#73313e;}
+
+/* PrintPilot 4.10.2: étiquettes QR prêtes à imprimer */
+.labels-intro{max-width:74ch}
+.labels-toolbar{margin-bottom:18px}
+.labels-toolbar button{min-height:44px}
+.label-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:14px;align-items:stretch;margin:16px 0}
+.printlabel{width:100%;min-height:173px;display:grid;grid-template-columns:minmax(0,1fr) 122px;align-items:center;gap:14px;background:#fff;color:#172033;border:1px solid #bac2d2;border-radius:9px;padding:15px;box-sizing:border-box;break-inside:avoid;page-break-inside:avoid;overflow:hidden}
+.printlabel-details{display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-width:0;overflow-wrap:anywhere}
+.printlabel-name{display:block;font-size:16px;line-height:1.2;color:#151a2a;font-weight:750;overflow-wrap:anywhere}
+.printlabel-price{font-size:21px;font-weight:800;line-height:1;color:#151a2a}
+.printlabel-id,.printlabel-colors{font-size:11px;color:#384258;line-height:1.2}
+.printlabel-brand{font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:#667085;margin-top:auto}
+.printlabel-qr{display:flex;flex-direction:column;gap:4px;align-items:center;justify-content:center;min-width:0}
+.printlabel-qr .qr{display:flex;align-items:center;justify-content:center;width:112px;height:112px;flex:none;padding:0;margin:0;background:white}
+.printlabel-qr .qr img,.printlabel-qr .qr canvas{display:block!important;width:112px!important;height:112px!important;max-width:none!important;object-fit:contain}
+.printlabel-qr small{color:#576074;font-size:9px;text-align:center}
+.labels-print-actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:8px}
+.labels-print-actions p{flex:1;min-width:220px}
+.labels-print-actions button[hidden]{display:none!important}
+@media(max-width:460px){.printlabel{grid-template-columns:minmax(0,1fr) 122px;padding:12px;gap:8px}}
+@media print{
+ @page{size:A4 portrait;margin:12mm}
+ body.printing-labels{background:#fff!important;color:#111!important}
+ body.printing-labels .header,body.printing-labels .footer,body.printing-labels .pp-standalone-only,body.printing-labels #notice,body.printing-labels .tabbar,body.printing-labels #login-panel,body.printing-labels .labels-toolbar,body.printing-labels .labels-intro,body.printing-labels .labels-print-actions,body.printing-labels #view .panel>h2{display:none!important}
+ body.printing-labels .wrap,body.printing-labels main,body.printing-labels #workspace,body.printing-labels #view,body.printing-labels #view .panel{display:block!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important;background:#fff!important;border:0!important;box-shadow:none!important}
+ body.printing-labels .label-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:5mm;align-items:start;margin:0!important}
+ body.printing-labels .printlabel{height:51mm;min-height:51mm;max-height:51mm;border:1px dashed #b9bfca!important;border-radius:0!important;padding:3mm!important;grid-template-columns:minmax(0,1fr) 30mm;gap:2mm;break-inside:avoid;page-break-inside:avoid;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+ body.printing-labels .printlabel-name{font-size:12pt}
+ body.printing-labels .printlabel-price{font-size:15pt}
+ body.printing-labels .printlabel-qr .qr,body.printing-labels .printlabel-qr .qr img,body.printing-labels .printlabel-qr .qr canvas{width:28mm!important;height:28mm!important}
+}
+@media print{
+ html.pp-embedded,body.pp-embedded{overflow:visible!important;height:auto!important;min-height:0!important}
+ body.printing-labels .pp-embedded .wrap{overflow:visible!important}
+}
