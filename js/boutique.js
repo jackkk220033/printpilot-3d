@@ -30,7 +30,7 @@ async function getCatalogue(user){
   // Les photos partagées se trouvent dans une collection distincte et sécurisée.
   for(const p of products){
    if(!current||current.uid!==user.uid)return;
-   try{const photo=await api.getDoc(api.doc(db,'boutiques',owner,'photos',photoId('product:'+p.id)));
+   try{let photo=await api.getDoc(api.doc(db,'boutiques',owner,'photos',photoId('shop:'+p.shopId)));if(!photo.exists())photo=await api.getDoc(api.doc(db,'boutiques',owner,'photos',photoId('product:'+p.id)));
     if(photo.exists()&&typeof photo.data().image==='string'&&photo.data().image.startsWith('data:image/jpeg;base64,')){images.set(p.id,photo.data().image);const el=[...document.querySelectorAll('[data-photo]')].find(e=>e.dataset.photo===p.id);if(el){const img=document.createElement('img');img.src=photo.data().image;img.alt='Photo de '+p.name;img.loading='lazy';el.replaceChildren(img);}}
    }catch(e){console.warn('Photo boutique:',p.id,e.code||e.message);}
   }

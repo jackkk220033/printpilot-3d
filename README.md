@@ -1,16 +1,13 @@
-# PrintPilot 3D v4.10.4 — Produits admin et couleurs Noël
+# PrintPilot 3D v4.10.6 — ID variantes et photos séparées
 
-## Modifications
-- La photo des produits côté admin est cliquable et ouvre la fiche agrandie existante.
-- Images admin en `object-fit: contain` pour éviter les recadrages trop serrés.
-- Tri par ID stock (par défaut), par catégorie et par nom sur la page Produits.
-- Action **Corriger couleurs Noël (#20–22)**, avec confirmation : #20 Bleu, #21 Blanc, #22 Or / Mauve. N’altère ni le stock, ni les ID, ni les ventes, ni le filament.
-- Conserve le correctif v4.10.3 pour pouvoir donner des ID différents aux variantes via « Modifier ».
+Base v4.10.5. Remplacer ensemble `index.html`, `boutique.html`, `js/app.js`, `js/cloud.js`, `js/boutique.js` et `css/style.css` sur GitHub; ou envoyer tous les fichiers du ZIP au bon emplacement.
 
-## IMPORTANT — ID et photos en double
-Les sets #20–22 et les sapins zigzag #28–30 ont des ID partagés importés d’Excel. Il faut attribuer un ID distinct à chaque fiche via **Modifier**, avec validation des liens d’historique. Les photos liées à un ID partagé resteront identiques tant que vous n’aurez pas réimporté la bonne photo sur chaque variante après correction de l’ID. La v4.10.4 n’essaie pas de deviner quelle photo appartient à quelle couleur.
+Avant tout : exporter une sauvegarde JSON depuis PrintPilot.
 
-## Installation
-Sauvegarder JSON dans Impressions. Remplacer ensemble `index.html`, `js/app.js`, `css/style.css` sur GitHub. Aucun changement des règles Firebase. Rafraîchir Ctrl+Shift+R.
+## Résolution
+- Les photos Produit sont stockées par **ID stock #** au lieu de l'ID Excel, y compris dans le catalogue Boutique après publication. Une nouvelle photo pour #75 ne modifie plus #76.
+- Fallback : les anciennes photos restent lisibles grâce à leur ancien ID; si elles étaient partagées, les deux fiches peuvent encore montrer la même image tant que tu n'as pas remplacé les photos individuellement.
+- Bouton Produits → « Réparer ID variantes » : aperçu et confirmation. Corrige #20–22 (Bleu, Blanc, Or/Mauve), #28–30 (Blanc, Noir, Rouge), #70–71 (Rouge, Rose), #75–76 (Or/Mauve, Or). Ne modifie pas les stocks, ventes, coûts, grammes ni filaments. Refuse de modifier les références utilisées par des historiques.
+- Une fois les photos corrigées, Synchronisation → Portail Boutique → Publier / actualiser le catalogue.
 
-Cette mise à jour est validée syntaxiquement mais n’a pas été testée sur le compte Firebase réel.
+Le ZIP n'est pas connecté à ton Firebase réel; vérifier l'aperçu de migration et faire un essai photo avant de publier le catalogue. Aucune modification de règles Firebase nécessaire.

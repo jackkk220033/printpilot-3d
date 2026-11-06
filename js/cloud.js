@@ -210,11 +210,11 @@ if(!configOK){
       });
       let uploaded=0,missing=0,failed=0;
       for(let i=0;i<products.length;i++){
-        const p=products[i];const photo=photoCache.get('print:product:'+p.id);
+        const p=products[i];const original=entries.find(x=>String(x.shopId)===String(p.shopId));const photo=photoCache.get('print:product-shop:'+p.shopId)||photoCache.get('print:product:'+(original?.legacyPhotoId||p.id));
         if(!photo||!photo.startsWith('data:image/jpeg;base64,')){missing++;continue;}
         if(photo.length>285000){failed++;continue;}
         try{
-          await setDoc(doc(db,'boutiques',currentUser.uid,'photos',photoId('product:'+p.id)),{image:photo,updatedAt:serverTimestamp()});
+          await setDoc(doc(db,'boutiques',currentUser.uid,'photos',photoId('shop:'+p.shopId)),{image:photo,updatedAt:serverTimestamp()});
           uploaded++;
         }catch(e){failed++;console.error('Boutique photo',p.id,e);}
         if(i%10===0)boutiqueNotice(`Publication : ${i+1}/${products.length} fiches vérifiées…`);
