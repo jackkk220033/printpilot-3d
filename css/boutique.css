@@ -50,3 +50,40 @@ textarea{background:#0f192b;color:#f3f5ff;border:1px solid #456087;border-radius
 #planning-dialog .modal-body { padding:20px; }
 #planning-dialog .modal-body h2 { margin:0 0 8px; }
 @media(max-width:650px) { #planning-cards .details { padding:10px; } #planning-cards .details h3 { font-size:14px; } }
+
+/* v4.11.3 — fiche « À venir » : photo compacte, détails sous l'image.
+   Le même dialogue que le Catalogue reste utilisé; seules ses dimensions changent. */
+#planning-dialog {
+  width:min(92vw,570px);
+  max-height:calc(100dvh - 24px);
+  overflow-y:auto;
+  scrollbar-width:none;
+}
+#planning-dialog::-webkit-scrollbar {display:none;}
+#planning-dialog .modal-image {
+  box-sizing:border-box;
+  width:100%;
+  height:auto;
+  min-height:0;
+  max-height:min(30dvh,240px);
+  background:#101a2d;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+#planning-dialog .modal-image img {
+  display:block;
+  width:auto;
+  height:auto;
+  max-width:100%;
+  max-height:min(30dvh,240px);
+  object-fit:contain;
+}
+#planning-dialog .modal-body {padding:16px 20px 22px;}
+#planning-dialog .modal-body h2 {margin:0 0 8px;}
+#planning-dialog .planning-detail-note {font-size:14px;line-height:1.45;}
+@media(max-width:650px){
+ #planning-dialog .modal-image,#planning-dialog .modal-image img{max-height:min(27dvh,195px);}
+ #planning-dialog .modal-body{padding:12px 16px 18px;}
+}

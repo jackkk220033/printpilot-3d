@@ -1,6 +1,14 @@
-# PrintPilot 3D v4.11.2 — À venir comme Catalogue
+# PrintPilot 3D v4.11.3 — Photos « À venir »
 
-Modifie uniquement la présentation de l’onglet « À venir » du portail Boutique. Les cartes utilisent exactement les structures CSS et HTML du Catalogue (`.cards`, `.product`, `.product-open`, `.photo`, `.details`). Même fenêtre de détail, photo en haut, texte en dessous. Aucun changement Firebase, commandes ou stocks.
+Deux corrections ciblées sur la présentation, sans changer le stockage Firebase, les commandes ni les statuts.
 
-## Installation GitHub
-Remplacer uniquement `boutique.html`, `js/boutique.js`, `css/boutique.css` dans le dépôt, en conservant leurs chemins. Après déploiement, actualiser le portail. Le lien Boutique reste identique.
+- **Boutique / À venir** : photo limitée à 240 px de haut (195 px sur téléphone), détails placés en dessous, barre de défilement visuellement masquée si un texte exceptionnellement long dépasse. Même fenêtre de fiche que Catalogue.
+- **Admin / À imprimer** : miniature de capture plus grande et cadrée vers le bas de la capture (là où apparaît généralement l'objet). La photo originale est intacte et reste complète côté Boutique.
+
+## Sur GitHub, remplacer uniquement ces 4 fichiers :
+- `boutique.html`
+- `css/boutique.css`
+- `atelier-plus.html`
+- `css/atelier-plus.css`
+
+Les deux fichiers JavaScript inchangés sont fournis comme références, pas besoin de les uploader. Rien à changer dans Firestore. Recharger le site après le déploiement.
