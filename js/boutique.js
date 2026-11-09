@@ -71,7 +71,8 @@ async function fetchPlanningPhoto(id){
 }
 function renderPlanning(){
  const target=$('planning-cards');$('planning-empty').hidden=planning.length>0;
- target.innerHTML=planning.map(x=>`<article class="planning-card"><button type="button" class="planning-open" data-open-planning="${escapeHTML(x.id)}" aria-label="Voir ${escapeHTML(x.name)} et sa photo en grand"><div class="planning-image" data-planning-photo="${escapeHTML(x.id)}">${x.hasPhoto?'Chargement de la capture…':'🖨'}</div><div class="planning-content"><span class="planning-status">${planningStates[x.status]||'En attente'}</span><h3>${escapeHTML(x.name)}</h3><p class="sub">${Number(x.quantity)||1} unité(s)</p>${x.note?`<p>${escapeHTML(x.note)}</p>`:''}</div></button></article>`).join('');
+ // Même carte et mêmes classes que le catalogue, avec les informations de planification.
+ target.innerHTML=planning.map(x=>`<article class="product"><button type="button" class="product-open" data-open-planning="${escapeHTML(x.id)}" aria-label="Voir ${escapeHTML(x.name)} en détail"><div class="photo" data-planning-photo="${escapeHTML(x.id)}">${x.hasPhoto?'Chargement de la photo…':'▧'}</div><div class="details"><h3>${escapeHTML(x.name)}</h3><p class="sub planning-card-status">${escapeHTML(planningStates[x.status]||'En attente')}</p><p class="sub">${Number(x.quantity)||1} unité(s)</p></div></button></article>`).join('');
  for(const x of planning.filter(x=>x.hasPhoto)){
   if(planningImages.has(x.id)){displayPlanningPhoto(x.id,planningImages.get(x.id));continue;}
   fetchPlanningPhoto(x.id).then(src=>{if(!src){const el=[...target.querySelectorAll('[data-planning-photo]')].find(e=>e.dataset.planningPhoto===x.id);if(el)el.textContent='🖨';}}).catch(()=>{const el=[...target.querySelectorAll('[data-planning-photo]')].find(e=>e.dataset.planningPhoto===x.id);if(el)el.textContent='🖨';});
