@@ -100,6 +100,52 @@ service cloud.firestore {
       match /management/{docId} {
         allow read, write: if isBoutiqueOwner(ownerUid);
       }
+      // v4.11 — Commandes en une seule étape : boutique écrit, administrateur traite.
+      match /orders/{orderId} {
+        allow create: if canViewBoutique(ownerUid)
+          && request.resource.data.keys().hasOnly(['items','note','senderUid','senderEmail','status','createdAt'])
+          && request.resource.data.keys().hasAll(['items','note','senderUid','senderEmail','status','createdAt'])
+          && request.resource.data.senderUid == request.auth.uid
+          && request.resource.data.senderEmail == request.auth.token.email
+          && request.resource.data.senderEmail is string
+          && request.resource.data.senderEmail.size() <= 254
+          && request.resource.data.note is string
+          && request.resource.data.note.size() <= 400
+          && request.resource.data.status == 'pending'
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.items is list
+          && request.resource.data.items.size() >= 1
+          && request.resource.data.items.size() <= 25
+          && request.resource.data.items[0] is map
+          && request.resource.data.items[0].productId is string
+          && request.resource.data.items[0].productId.size() <= 160;
+        allow get, list: if isBoutiqueOwner(ownerUid);
+        allow update: if isBoutiqueOwner(ownerUid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','resolvedAt'])
+          && request.resource.data.status in ['accepted','rejected']
+          && request.resource.data.resolvedAt == request.time;
+        allow delete: if isBoutiqueOwner(ownerUid);
+      }
+      // Liste filtrée des prochaines impressions; pas d'accès au suivi privé.
+      match /planning/{docId} {
+        allow get: if docId == 'current' && canViewBoutique(ownerUid);
+        allow list: if false;
+        allow create, update: if docId == 'current' && isBoutiqueOwner(ownerUid)
+          && request.resource.data.keys().hasOnly(['items','updatedAt'])
+          && request.resource.data.items is list
+          && request.resource.data.items.size() <= 80;
+        allow delete: if isBoutiqueOwner(ownerUid);
+      }
+      match /planningPhotos/{photoId} {
+        allow get: if canViewBoutique(ownerUid);
+        allow list: if false;
+        allow create, update: if isBoutiqueOwner(ownerUid)
+          && request.resource.data.keys().hasOnly(['image','updatedAt'])
+          && request.resource.data.image is string
+          && request.resource.data.image.size() <= 180000
+          && request.resource.data.image.matches('^data:image/jpeg;base64,.*$');
+        allow delete: if isBoutiqueOwner(ownerUid);
+      }
       match /photos/{photoId} {
         allow get: if canViewBoutique(ownerUid);
         allow list: if false;

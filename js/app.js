@@ -574,7 +574,7 @@
  function dashGroup(title,description,cards){return `<section class="pp-dash-section"><div class="pp-dash-section-head"><h2>${esc(title)}</h2><p>${esc(description)}</p></div><div class="pp-dash-kpis">${cards.map(c=>statCard(c[0],c[1],c[2])).join('')}</div></section>`;}
  function dashboard(){
   const d=dashboardAnalytics(),m=d.m,p=d.prod;
-  const stockDescription='La valeur commerciale utilise la quantité disponible × le prix de vente. Le coût de fabrication est une autre mesure.';
+  const stockDescription='Stock invendu = unités disponibles × prix actuel. Production totale = unités fabriquées × prix actuel (valeur théorique). Ventes = montants réellement enregistrés, indépendants du stock.';
   return header('VUE D’ENSEMBLE','Tableau de bord','Statistiques de ton atelier — calculs comparables à ton Excel.',importButton())
   +warning()+(rolls.length?'<div class="notice">ⓘ &nbsp; Chiffres calculés depuis les données actuelles de PrintPilot (locales ou Firebase). Ton ancien Excel reste un instantané et peut différer après des nouvelles impressions ou ventes.</div>':excelNotice())
   +dashGroup('Production','Historique Excel + impressions ajoutées dans PrintPilot. La durée Excel est multipliée par la quantité imprimée.',[
@@ -586,7 +586,9 @@
    ['▣',number(p.units),'Unités fabriquées au total']])
   +`<div class="pp-dash-explain">⏱ <b>Réconciliation des durées :</b> Excel historique : ${clockDuration(p.historic.minutes)}; nouvelles impressions : ${clockDuration(p.recent.minutes)}. Total : <b>${clockDuration(p.minutes)}</b>. Le calcul historique suit la formule de ton Excel (durée unitaire × nombre d’unités), sans déduire de filament supplémentaire. Hors production : ${clockDuration(offMetrics().minutes)} (dont échecs/tests ${clockDuration((offMetrics().kinds.failed||0)+(offMetrics().kinds.test||0))}, personnel ${clockDuration(offMetrics().kinds.personal||0)}).</div>`
   +dashGroup('Produits et valeur du stock',stockDescription,[
-   ['$',money(d.retail),'Valeur des produits au prix de vente'],
+   ['$',money(d.retail),'Valeur du stock invendu (prix de vente)'],
+   ['▣',money(commercialProducts().reduce((total,product)=>total+Math.max(0,safeNum(product.printed),Math.max(0,safeNum(product.stock))+Math.max(0,safeNum(product.sold)))*Math.max(0,safeNum(product.price)),0)),'Valeur théorique de toute la production'],
+   ['↗',money(d.gross),'Revenus enregistrés des ventes'],
    ['▣',money(d.productionCost),'Coût de fabrication du stock'],
    ['⬡',number(d.productStock),'Unités disponibles'],
    ['↗',money(d.potentialMargin),'Écart théorique vente − fabrication'],

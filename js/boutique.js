@@ -2,7 +2,8 @@
 const $=id=>document.getElementById(id);
 const owner=new URL(location.href).searchParams.get('atelier')||'';
 const msg=(s,ok=false)=>{$('message').textContent=s;$('message').classList.toggle('success',ok)};
-let auth,db,api,current=null,products=[],images=new Map(),detach=null,selectedProductId=null;
+let auth,db,api,current=null,products=[],images=new Map(),detach=null,detachPlanning=null,selectedProductId=null;
+let boutiqueTab="catalogue",cart=[],planning=[],planningImages=new Map();
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const photoId=key=>Array.from(new TextEncoder().encode(key),b=>b.toString(16).padStart(2,'0')).join('');
 const cad=v=>new Intl.NumberFormat('fr-CA',{style:'currency',currency:'CAD'}).format(v||0);
@@ -15,7 +16,7 @@ function render(){
   const pId=element.dataset.photo;if(images.has(pId)){const img=document.createElement('img');img.src=images.get(pId);img.alt='Photo de '+(products.find(p=>p.id===pId)?.name||'produit');img.loading='lazy';element.replaceChildren(img);}
  }
 }
-function resetUI(){selectedProductId=null;if($('product-dialog').open)$('product-dialog').close();products=[];images.clear();$('catalogue-panel').hidden=true;$('login-panel').hidden=false;$('logout').hidden=true;$('who').textContent='';if(detach){detach();detach=null;}}
+function resetUI(){selectedProductId=null;if($('product-dialog').open)$('product-dialog').close();products=[];images.clear();$('catalogue-panel').hidden=true;$('login-panel').hidden=false;$('logout').hidden=true;$('who').textContent='';if(detach){detach();detach=null;}if(detachPlanning){detachPlanning();detachPlanning=null;}$('boutique-tabs').hidden=true;cart=[];planning=[];planningImages.clear();$('orders-panel').hidden=true;$('planning-panel').hidden=true;}
 function fillCategories(){const selected=$('category').value;const cats=[...new Set(products.map(p=>p.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));$('category').replaceChildren(new Option('Toutes les catégories',''),...cats.map(x=>new Option(x,x)));$('category').value=cats.includes(selected)?selected:'';}
 async function getCatalogue(user){
  if(!owner||!/^[A-Za-z0-9_-]{10,128}$/.test(owner))throw Error('Le lien de la boutique est incomplet. Demande le lien généré depuis PrintPilot.');
@@ -26,7 +27,7 @@ async function getCatalogue(user){
   if(!snap.exists()){msg('Le catalogue n’a pas encore été publié par l’atelier.');products=[];render();return;}
   products=Array.isArray(snap.data().products)?snap.data().products:[];
   fillCategories();render();msg('Catalogue publié · lecture seule',true);const targetProduct=new URL(location.href).searchParams.get('produit');if(targetProduct&&products.some(p=>p.id===targetProduct))setTimeout(()=>openProduct(targetProduct),50);
-  const selector=$('boutique-request-product');if(selector)selector.innerHTML=products.map(p=>'<option value="'+escapeHTML(p.id)+'">'+escapeHTML(p.name)+' (#'+escapeHTML(p.shopId)+')</option>').join('');
+  updateOrderOptions();const selector=$('boutique-request-product');if(selector)selector.innerHTML=products.map(p=>'<option value="'+escapeHTML(p.id)+'">'+escapeHTML(p.name)+' (#'+escapeHTML(p.shopId)+')</option>').join('');
   // Les photos partagées se trouvent dans une collection distincte et sécurisée.
   for(const p of products){
    if(!current||current.uid!==user.uid)return;
@@ -35,7 +36,7 @@ async function getCatalogue(user){
    }catch(e){console.warn('Photo boutique:',p.id,e.code||e.message);}
   }
  },err=>msg('Accès refusé au catalogue : '+(err.code||err.message)));
- $('login-panel').hidden=true;$('catalogue-panel').hidden=false;$('logout').hidden=false;$('who').textContent=user.email||'Boutique';
+ $('login-panel').hidden=true;$('boutique-tabs').hidden=false;$('logout').hidden=false;$('who').textContent=user.email||'Boutique';setBoutiqueTab(boutiqueTab);loadPlanning();
 }
 function openProduct(id){
  const p=products.find(x=>x.id===id);if(!p)return;selectedProductId=id;
@@ -47,6 +48,17 @@ function openProduct(id){
  if(images.has(id)){const im=document.createElement('img');im.src=images.get(id);im.alt='Photo de '+p.name;wrap.append(im);}else wrap.textContent='Aucune photo disponible';
  const f=$('product-note-form');f.reset();f.querySelector('.send-status').textContent='';$('product-dialog').showModal();
 }
+
+function setBoutiqueTab(next){boutiqueTab=next;['catalogue','orders','planning'].forEach(t=>{const el=$(t+'-panel');el.hidden=t!==next;});document.querySelectorAll('[data-btab]').forEach(b=>b.classList.toggle('selected',b.dataset.btab===next));if(next==='orders')renderCart();if(next==='planning')renderPlanning();}
+$('boutique-tabs').addEventListener('click',e=>{const b=e.target.closest('[data-btab]');if(b)setBoutiqueTab(b.dataset.btab);});
+function updateOrderOptions(){const select=$('order-product');if(!select)return;const previous=select.value;select.replaceChildren(...products.map(p=>new Option(`${p.name} — ${p.colors||''} (#${p.shopId||'—'})`,p.id)));if(products.some(p=>p.id===previous))select.value=previous;}
+function renderCart(){const el=$('order-cart');$('order-count').textContent=`(${cart.reduce((a,x)=>a+x.quantity,0)} unités)`;el.innerHTML=cart.length?cart.map((item,i)=>`<div class="cart-row"><div><strong>${escapeHTML(item.name)}</strong><small> ${escapeHTML(item.colors||'')} · ${item.quantity} unité(s)</small></div><button type="button" data-remove-cart="${i}" aria-label="Retirer">✕</button></div>`).join(''):'<p class="sub">Aucun produit ajouté.</p>';$('order-send').disabled=cart.length===0;}
+$('order-add').addEventListener('click',()=>{const p=products.find(x=>x.id===$('order-product').value),q=Number($('order-qty').value);const status=$('order-status');if(!p||!Number.isInteger(q)||q<1||q>300){status.textContent='Choisis un produit et une quantité de 1 à 300.';return;}const item=cart.find(x=>x.productId===p.id);if(item){if(item.quantity+q>300){status.textContent='Maximum de 300 unités par produit.';return;}item.quantity+=q;}else{if(cart.length>=25){status.textContent='Maximum de 25 produits différents par commande.';return;}cart.push({productId:p.id,name:String(p.name).slice(0,120),colors:String(p.colors||'').slice(0,120),shopId:String(p.shopId||'').slice(0,32),quantity:q});}status.textContent='✓ Ajouté à la commande';renderCart();});
+$('order-cart').addEventListener('click',e=>{const b=e.target.closest('[data-remove-cart]');if(b){cart.splice(Number(b.dataset.removeCart),1);renderCart();}});
+$('order-send').addEventListener('click',async()=>{const button=$('order-send'),status=$('order-status');if(!current||!owner||!cart.length)return;button.disabled=true;status.textContent='Envoi en cours…';try{await api.addDoc(api.collection(db,'boutiques',owner,'orders'),{items:cart.map(({productId,name,colors,shopId,quantity})=>({productId,productName:name,colors,shopId,quantity})),note:$('order-note').value.trim().slice(0,400),senderUid:current.uid,senderEmail:String(current.email||''),status:'pending',createdAt:api.serverTimestamp()});cart=[];$('order-note').value='';renderCart();status.textContent='✓ Commande envoyée à l’atelier!';}catch(e){status.textContent='Envoi impossible : '+(e.code||e.message)+'. La commande est conservée.';button.disabled=false;}});
+function renderPlanning(){const states={todo:'En attente',doing:'En impression',paused:'En pause',done:'Terminé',failed:'Échec'};const target=$('planning-cards');$('planning-empty').hidden=planning.length>0;target.innerHTML=planning.map(x=>`<article class="planning-card"><div class="planning-image" data-planning-photo="${escapeHTML(x.id)}">${x.hasPhoto?'Chargement de la capture…':'🖨'}</div><div class="planning-content"><span class="planning-status">${states[x.status]||'En attente'}</span><h3>${escapeHTML(x.name)}</h3><p class="sub">${Number(x.quantity)||1} unité(s)</p>${x.note?`<p>${escapeHTML(x.note)}</p>`:''}</div></article>`).join('');for(const x of planning.filter(x=>x.hasPhoto)){const el=[...target.querySelectorAll('[data-planning-photo]')].find(e=>e.dataset.planningPhoto===x.id);if(!el)continue;if(planningImages.has(x.id)){const im=document.createElement('img');im.src=planningImages.get(x.id);im.alt='Capture du projet '+x.name;el.replaceChildren(im);}else api.getDoc(api.doc(db,'boutiques',owner,'planningPhotos',x.id)).then(doc=>{const src=doc.data()?.image;if(typeof src==='string'&&src.startsWith('data:image/jpeg;base64,')){planningImages.set(x.id,src);if(el.isConnected){const im=document.createElement('img');im.src=src;im.alt='Capture du projet';el.replaceChildren(im);}}else if(el.isConnected)el.textContent='🖨';}).catch(()=>{if(el.isConnected)el.textContent='🖨';});}}
+function loadPlanning(){if(detachPlanning)detachPlanning();detachPlanning=api.onSnapshot(api.doc(db,'boutiques',owner,'planning','current'),snap=>{planning=snap.exists()&&Array.isArray(snap.data().items)?snap.data().items:[];if(boutiqueTab==='planning')renderPlanning();},e=>{if(boutiqueTab==='planning')$('planning-empty').textContent='Suivi indisponible : '+(e.code||e.message);});}
+
 $('cards').addEventListener('click',e=>{const el=e.target.closest('[data-open-product]');if(el)openProduct(el.dataset.openProduct);});
 $('detail-close').addEventListener('click',()=>$('product-dialog').close());
 async function sendNote(form,product){

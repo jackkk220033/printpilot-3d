@@ -14,23 +14,25 @@ const adapter = window.PrintPilotCloudAdapter;
 const photoStatus=document.getElementById('photo-cloud-status');
 const photoMigrateButton=document.getElementById('cloud-migrate-photos');
 let photoUnsub=null,photoReady=false;
-let unreadUnsub=null,requestsUnsub=null;
-let ppRequestCount=0,ppUnreadCount=0;
+let unreadUnsub=null,requestsUnsub=null,ordersUnsub=null;
+let ppRequestCount=0,ppOrderCount=0,ppUnreadCount=0;
 function showNotificationLocations(){
  const area=document.getElementById('pp-notification-where');if(!area)return;
  const parts=[];
- if(ppRequestCount)parts.push(`<a href="#atelier-demandes">📨 Demandes Boutique : ${ppRequestCount} à traiter</a>`);
+ if(ppRequestCount+ppOrderCount)parts.push(`<a href="#atelier-demandes">📨 Demandes et commandes Boutique : ${ppRequestCount+ppOrderCount} à traiter</a>`);
  if(ppUnreadCount)parts.push(`<a href="messages.html">✉ Messages Boutique : ${ppUnreadCount} non lu(s)</a>`);
  area.hidden=!parts.length;area.innerHTML=parts.join('');
 }
-function setRequestBadge(count){ppRequestCount=count;showNotificationLocations();document.querySelectorAll("[data-boutique-requests]").forEach(el=>{el.hidden=!count;el.textContent=count>99?"99+":String(count);el.setAttribute("aria-label",count+" demande(s) en attente");});}
+function setRequestBadge(count){ppRequestCount=count;updateRequestBadges();}
+function setOrderBadge(count){ppOrderCount=count;updateRequestBadges();}
+function updateRequestBadges(){const count=ppRequestCount+ppOrderCount;showNotificationLocations();document.querySelectorAll("[data-boutique-requests]").forEach(el=>{el.hidden=!count;el.textContent=count>99?"99+":String(count);el.setAttribute("aria-label",count+" demande(s) et commande(s) en attente");});}
 function setUnreadBadge(count){ppUnreadCount=count;showNotificationLocations();
  document.querySelectorAll('[data-boutique-unread]').forEach(el=>{
   el.hidden=!count; el.textContent=count>99?'99+':String(count);
   el.setAttribute('aria-label', count+' message(s) non lu(s)');
  });
 }
-function stopUnreadBadge(){if(unreadUnsub){unreadUnsub();unreadUnsub=null;}if(requestsUnsub){requestsUnsub();requestsUnsub=null;}setUnreadBadge(0);setRequestBadge(0);}
+function stopUnreadBadge(){if(unreadUnsub){unreadUnsub();unreadUnsub=null;}if(requestsUnsub){requestsUnsub();requestsUnsub=null;}if(ordersUnsub){ordersUnsub();ordersUnsub=null;}setUnreadBadge(0);setRequestBadge(0);setOrderBadge(0);}
 
 let photoCache=new Map();
 const photoId=key=>Array.from(new TextEncoder().encode(key),b=>b.toString(16).padStart(2,'0')).join('');
@@ -289,6 +291,7 @@ if(!configOK){
       setUnreadBadge(snapshot.size);
     },err=>{console.warn('Badge Messages Boutique:',err);setUnreadBadge(0);});
     try{requestsUnsub=onSnapshot(query(collection(db,'boutiques',user.uid,'requests'),where('status','==','pending')),snap=>setRequestBadge(snap.size),err=>{console.warn('Badge demandes:',err);setRequestBadge(0);});}catch(err){console.warn('Badge demandes:',err);setRequestBadge(0);}
+    try{ordersUnsub=onSnapshot(query(collection(db,'boutiques',user.uid,'orders'),where('status','==','pending')),snap=>setOrderBadge(snap.size),err=>{console.warn('Badge commandes:',err);setOrderBadge(0);});}catch(err){console.warn('Badge commandes:',err);setOrderBadge(0);}
    } catch(err){console.warn('Badge Messages Boutique:',err);setUnreadBadge(0);}
 
   });
