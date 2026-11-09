@@ -87,3 +87,7 @@ textarea{background:#0f192b;color:#f3f5ff;border:1px solid #456087;border-radius
  #planning-dialog .modal-image,#planning-dialog .modal-image img{max-height:min(27dvh,195px);}
  #planning-dialog .modal-body{padding:12px 16px 18px;}
 }
+
+/* v4.11.4 — Filtre nouveautés catalogue */
+.new-product-pill{display:inline-block;padding:5px 9px;background:#24564a;color:#aaf8d2;border-radius:20px;font-size:12px;font-weight:800;margin:0 0 8px}
+.new-filter{border:1px solid #8767ec;background:#252444;color:#eee;border-radius:10px;padding:11px 13px;cursor:pointer;white-space:nowrap}.new-filter.selected{background:#8662e9;color:#fff}

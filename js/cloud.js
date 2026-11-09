@@ -198,7 +198,12 @@ if(!configOK){
       const state=adapter.exportState();
       const entries=state.products.filter(p=>Number(p.stock)>0 && p.hiddenOffProduction!==true && p.commercialHidden!==true && p.hiddenFromCatalog!==true);
       // Liste blanche stricte : NE JAMAIS copier les objets Produit entiers.
+      const existingSnap=await getDoc(doc(db,'boutiques',currentUser.uid,'catalogue','current'));
+      const prior=existingSnap.exists()&&Array.isArray(existingSnap.data().products)?existingSnap.data().products:null;
+      const priorById=new Map((prior||[]).map(p=>[String(p.shopId||p.id),p]));
+      const firstPublication=new Date().toISOString();
       const products=entries.map(p=>({
+        firstPublishedAt: prior===null ? null : (priorById.has(String(p.shopId||p.id)) ? (priorById.get(String(p.shopId||p.id)).firstPublishedAt||null) : firstPublication),
         id:String(p.id||'').slice(0,160),shopId:String(p.shopId||'').slice(0,32),
         name:String(p.name||'Sans nom').slice(0,160),category:String(p.category||'').slice(0,90),
         colors:String(p.colors||'').slice(0,140),price:Math.max(0,Number(p.price)||0),

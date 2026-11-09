@@ -2,15 +2,15 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b1020">
-<title>PrintPilot 3D v4.11</title>
-<link rel="stylesheet" href="css/style.css?v=4.11">
+<title>PrintPilot 3D v4.11.4</title>
+<link rel="stylesheet" href="css/style.css?v=4.11.4">
 <!-- Handlebars est facultatif : si ce CDN est bloqué, les fonctions continuent de marcher. -->
 <script defer src="https://cdn.jsdelivr.net/npm/handlebars@4.7.8/dist/handlebars.min.js"></script>
 <!-- Données Excel volontairement absentes des fichiers publiables : elles viennent du stockage local ou de Firebase. -->
 <script defer src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-<script defer src="js/app.js?v=4.11"></script>
+<script defer src="js/app.js?v=4.11.4"></script>
 <script defer src="js/firebase-config.js?v=4.11"></script>
-<script type="module" src="js/cloud.js?v=4.11"></script>
+<script type="module" src="js/cloud.js?v=4.11.4"></script>
 </head>
 <body>
 <div class="shell">
@@ -103,7 +103,7 @@
  </div>
 </nav>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<dialog id="off-dialog" class="dialog pp-off-dialog"><form id="off-form"><div class="dialog-head"><h2>Nouvelle utilisation hors production</h2><button type="button" class="close" id="off-close" aria-label="Fermer">×</button></div><div class="form-grid"><label>Type<select name="kind"><option value="failed">Impression ratée</option><option value="personal">Projet personnel</option><option value="test">Test / calibration</option></select></label><label>Nom / description<input name="name" required maxlength="150" placeholder="Ex. Dragon raté"></label><label>Date<input name="date" type="date" required></label><label>Imprimante<input name="printer" placeholder="Anycubic Kobra X"></label><label>Nombre d’unités<input name="quantity" type="number" min="1" step="1" value="1" required></label><label>Heures réellement écoulées<input name="hours" type="number" min="0" step="1" value="0" required></label><label>Minutes<input name="minutes" type="number" min="0" max="59" step="1" value="0" required></label></div><p class="small-hint">Indique le temps réel perdu/utilisé par cette impression, et les grammes réellement consommés. Si tu as déjà suivi ce produit dans Excel, utilise plutôt « Déplacer un produit » pour ne pas déduire deux fois.</p><div class="pp-off-usage-head"><h3>Bobines consommées</h3><button id="add-off-usage" type="button" class="secondary-btn">＋ Bobine</button></div><div id="off-usage-lines"></div><label>Notes<textarea name="notes" rows="2" placeholder="Cause de l’échec, détails du test…"></textarea></label><p id="off-error" class="form-error" role="alert"></p><button type="submit" class="primary-btn">Enregistrer et déduire le filament</button></form></dialog>
+<dialog id="off-dialog" class="dialog pp-off-dialog"><form id="off-form"><div class="dialog-head"><h2>Nouvelle utilisation hors production</h2><button type="button" class="close" id="off-close" aria-label="Fermer">×</button></div><div class="form-grid"><label>Type<select name="kind"><option value="failed">Impression ratée</option><option value="personal">Projet personnel</option><option value="test">Test / calibration</option></select></label><label>Nom / description<input name="name" required maxlength="150" placeholder="Ex. Dragon raté"></label><label>Date<input name="date" type="date" required></label><label>Imprimante<input name="printer" placeholder="Anycubic Kobra X"></label><label>Nombre d’unités<input name="quantity" type="number" min="1" step="1" value="1" required></label><label>Heures réellement écoulées<input name="hours" type="number" min="0" step="1" placeholder="0" required></label><label>Minutes<input name="minutes" type="number" min="0" max="59" step="1" placeholder="0" required></label></div><p class="small-hint">Indique le temps réel perdu/utilisé par cette impression, et les grammes réellement consommés. Si tu as déjà suivi ce produit dans Excel, utilise plutôt « Déplacer un produit » pour ne pas déduire deux fois.</p><div class="pp-off-usage-head"><h3>Bobines consommées</h3><button id="add-off-usage" type="button" class="secondary-btn">＋ Bobine</button></div><div id="off-usage-lines"></div><label>Notes<textarea name="notes" rows="2" placeholder="Cause de l’échec, détails du test…"></textarea></label><p id="off-error" class="form-error" role="alert"></p><button type="submit" class="primary-btn">Enregistrer et déduire le filament</button></form></dialog>
 <!-- Le formulaire est permanent et jamais remplacé par le rendu des pages. -->
 <dialog id="roll-dialog" class="dialog">
  <form id="roll-form" novalidate>
@@ -135,8 +135,8 @@
     <h3>📦 Nouveau produit — créé avec cette impression</h3>
     <p class="small-hint">Une seule saisie : ton impression sera enregistrée, les bobines déduites, le stock produit augmenté et la fiche ajoutée au catalogue. Prix par unité.</p>
     <div class="form-grid">
-      <label>Prix de vente / unité ($)<input name="newPrice" type="number" min="0" step="0.01" value="0"></label>
-      <label>Autres coûts / unité ($)<input name="newOther" type="number" min="0" step="0.01" value="0"></label>
+      <label>Prix de vente / unité ($)<input name="newPrice" type="number" min="0" step="0.01" placeholder="Ex. 6,00"></label>
+      <label>Autres coûts / unité ($)<input name="newOther" type="number" min="0" step="0.01" placeholder="0,00 (facultatif)"></label>
       <label>Commission boutique (%)<input name="newRate" type="number" min="0" max="100" step="0.1" value="30"></label>
       <label>Catégorie<select name="newCategory" data-choice="category"></select><input type="text" class="choice-other" data-choice-other="newCategory" placeholder="Nouvelle catégorie" maxlength="80" hidden></label>
       <label>Couleurs du produit<select name="newColors" data-choice="colors"></select><input type="text" class="choice-other" data-choice-other="newColors" placeholder="Nouvelle couleur / combinaison" maxlength="100" hidden></label>
@@ -177,11 +177,11 @@
    <label>Catégorie<select name="category" data-choice="category"></select><input type="text" class="choice-other" data-choice-other="category" placeholder="Nouvelle catégorie" maxlength="80" hidden></label>
    <label>Couleurs<select name="colors" data-choice="colors"></select><input type="text" class="choice-other" data-choice-other="colors" placeholder="Nouvelle couleur / combinaison" maxlength="100" hidden></label>
    <label>Imprimante<select name="printer" data-choice="printer"></select><input type="text" class="choice-other" data-choice-other="printer" placeholder="Nouvelle imprimante" maxlength="100" hidden></label>
-   <label>Quantité déjà en stock<input name="stock" type="number" min="0" step="1" value="0" required></label>
-   <label>Heures par impression / lot<input name="hours" type="number" min="0" step="1" value="0"></label>
-   <label>Minutes (0 à 59)<input name="mins" type="number" min="0" max="59" step="1" value="0"></label>
-   <label>Autres coûts / unité ($)<input name="otherCost" type="number" min="0" step="0.01" value="0"></label>
-   <label>Prix de vente / unité ($)<input name="price" type="number" min="0" step="0.01" value="0" required></label>
+   <label>Quantité déjà en stock<input name="stock" type="number" min="0" step="1" placeholder="0" required></label>
+   <label>Heures par impression / lot<input name="hours" type="number" min="0" step="1" placeholder="0"></label>
+   <label>Minutes (0 à 59)<input name="mins" type="number" min="0" max="59" step="1" placeholder="0"></label>
+   <label>Autres coûts / unité ($)<input name="otherCost" type="number" min="0" step="0.01" placeholder="0,00 (facultatif)"></label>
+   <label>Prix de vente / unité ($)<input name="price" type="number" min="0" step="0.01" placeholder="Ex. 10,00" required></label>
    <label>Commission boutique (%)<input name="commissionRate" type="number" min="0" max="100" step="0.1" value="30"></label>
    <label>Notes<input name="notes" maxlength="400" placeholder="Détails facultatifs"></label>
   </div>
