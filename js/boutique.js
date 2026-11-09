@@ -3,7 +3,7 @@ const $=id=>document.getElementById(id);
 const owner=new URL(location.href).searchParams.get('atelier')||'';
 const msg=(s,ok=false)=>{$('message').textContent=s;$('message').classList.toggle('success',ok)};
 let auth,db,api,current=null,products=[],images=new Map(),detach=null,detachPlanning=null,selectedProductId=null;
-let boutiqueTab="catalogue",cart=[],planning=[],planningImages=new Map();
+let boutiqueTab="catalogue",cart=[],planning=[],planningImages=new Map(),selectedPlanningId=null;
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const photoId=key=>Array.from(new TextEncoder().encode(key),b=>b.toString(16).padStart(2,'0')).join('');
 const cad=v=>new Intl.NumberFormat('fr-CA',{style:'currency',currency:'CAD'}).format(v||0);
@@ -16,7 +16,7 @@ function render(){
   const pId=element.dataset.photo;if(images.has(pId)){const img=document.createElement('img');img.src=images.get(pId);img.alt='Photo de '+(products.find(p=>p.id===pId)?.name||'produit');img.loading='lazy';element.replaceChildren(img);}
  }
 }
-function resetUI(){selectedProductId=null;if($('product-dialog').open)$('product-dialog').close();products=[];images.clear();$('catalogue-panel').hidden=true;$('login-panel').hidden=false;$('logout').hidden=true;$('who').textContent='';if(detach){detach();detach=null;}if(detachPlanning){detachPlanning();detachPlanning=null;}$('boutique-tabs').hidden=true;cart=[];planning=[];planningImages.clear();$('orders-panel').hidden=true;$('planning-panel').hidden=true;}
+function resetUI(){selectedProductId=null;if($('product-dialog').open)$('product-dialog').close();if($('planning-dialog').open)$('planning-dialog').close();selectedPlanningId=null;products=[];images.clear();$('catalogue-panel').hidden=true;$('login-panel').hidden=false;$('logout').hidden=true;$('who').textContent='';if(detach){detach();detach=null;}if(detachPlanning){detachPlanning();detachPlanning=null;}$('boutique-tabs').hidden=true;cart=[];planning=[];planningImages.clear();$('orders-panel').hidden=true;$('planning-panel').hidden=true;}
 function fillCategories(){const selected=$('category').value;const cats=[...new Set(products.map(p=>p.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));$('category').replaceChildren(new Option('Toutes les catégories',''),...cats.map(x=>new Option(x,x)));$('category').value=cats.includes(selected)?selected:'';}
 async function getCatalogue(user){
  if(!owner||!/^[A-Za-z0-9_-]{10,128}$/.test(owner))throw Error('Le lien de la boutique est incomplet. Demande le lien généré depuis PrintPilot.');
@@ -56,7 +56,46 @@ function renderCart(){const el=$('order-cart');$('order-count').textContent=`(${
 $('order-add').addEventListener('click',()=>{const p=products.find(x=>x.id===$('order-product').value),q=Number($('order-qty').value);const status=$('order-status');if(!p||!Number.isInteger(q)||q<1||q>300){status.textContent='Choisis un produit et une quantité de 1 à 300.';return;}const item=cart.find(x=>x.productId===p.id);if(item){if(item.quantity+q>300){status.textContent='Maximum de 300 unités par produit.';return;}item.quantity+=q;}else{if(cart.length>=25){status.textContent='Maximum de 25 produits différents par commande.';return;}cart.push({productId:p.id,name:String(p.name).slice(0,120),colors:String(p.colors||'').slice(0,120),shopId:String(p.shopId||'').slice(0,32),quantity:q});}status.textContent='✓ Ajouté à la commande';renderCart();});
 $('order-cart').addEventListener('click',e=>{const b=e.target.closest('[data-remove-cart]');if(b){cart.splice(Number(b.dataset.removeCart),1);renderCart();}});
 $('order-send').addEventListener('click',async()=>{const button=$('order-send'),status=$('order-status');if(!current||!owner||!cart.length)return;button.disabled=true;status.textContent='Envoi en cours…';try{await api.addDoc(api.collection(db,'boutiques',owner,'orders'),{items:cart.map(({productId,name,colors,shopId,quantity})=>({productId,productName:name,colors,shopId,quantity})),note:$('order-note').value.trim().slice(0,400),senderUid:current.uid,senderEmail:String(current.email||''),status:'pending',createdAt:api.serverTimestamp()});cart=[];$('order-note').value='';renderCart();status.textContent='✓ Commande envoyée à l’atelier!';}catch(e){status.textContent='Envoi impossible : '+(e.code||e.message)+'. La commande est conservée.';button.disabled=false;}});
-function renderPlanning(){const states={todo:'En attente',doing:'En impression',paused:'En pause',done:'Terminé',failed:'Échec'};const target=$('planning-cards');$('planning-empty').hidden=planning.length>0;target.innerHTML=planning.map(x=>`<article class="planning-card"><div class="planning-image" data-planning-photo="${escapeHTML(x.id)}">${x.hasPhoto?'Chargement de la capture…':'🖨'}</div><div class="planning-content"><span class="planning-status">${states[x.status]||'En attente'}</span><h3>${escapeHTML(x.name)}</h3><p class="sub">${Number(x.quantity)||1} unité(s)</p>${x.note?`<p>${escapeHTML(x.note)}</p>`:''}</div></article>`).join('');for(const x of planning.filter(x=>x.hasPhoto)){const el=[...target.querySelectorAll('[data-planning-photo]')].find(e=>e.dataset.planningPhoto===x.id);if(!el)continue;if(planningImages.has(x.id)){const im=document.createElement('img');im.src=planningImages.get(x.id);im.alt='Capture du projet '+x.name;el.replaceChildren(im);}else api.getDoc(api.doc(db,'boutiques',owner,'planningPhotos',x.id)).then(doc=>{const src=doc.data()?.image;if(typeof src==='string'&&src.startsWith('data:image/jpeg;base64,')){planningImages.set(x.id,src);if(el.isConnected){const im=document.createElement('img');im.src=src;im.alt='Capture du projet';el.replaceChildren(im);}}else if(el.isConnected)el.textContent='🖨';}).catch(()=>{if(el.isConnected)el.textContent='🖨';});}}
+const planningStates={todo:'En attente',doing:'En impression',paused:'En pause',done:'Terminé',failed:'Échec'};
+function displayPlanningPhoto(id,src){
+ const slots=[...document.querySelectorAll('[data-planning-photo]')].filter(el=>el.dataset.planningPhoto===id);
+ for(const el of slots){const im=document.createElement('img');im.src=src;im.alt='Capture du projet';el.replaceChildren(im);}
+ if(selectedPlanningId===id&&$('planning-dialog').open){const target=$('planning-detail-photo');const im=document.createElement('img');im.src=src;im.alt='Capture du projet en grand';target.replaceChildren(im);}
+}
+async function fetchPlanningPhoto(id){
+ if(planningImages.has(id))return planningImages.get(id);
+ const snap=await api.getDoc(api.doc(db,'boutiques',owner,'planningPhotos',id));
+ const src=snap.data()?.image;
+ if(typeof src==='string'&&src.startsWith('data:image/jpeg;base64,')){planningImages.set(id,src);displayPlanningPhoto(id,src);return src;}
+ return null;
+}
+function renderPlanning(){
+ const target=$('planning-cards');$('planning-empty').hidden=planning.length>0;
+ target.innerHTML=planning.map(x=>`<article class="planning-card"><button type="button" class="planning-open" data-open-planning="${escapeHTML(x.id)}" aria-label="Voir ${escapeHTML(x.name)} et sa photo en grand"><div class="planning-image" data-planning-photo="${escapeHTML(x.id)}">${x.hasPhoto?'Chargement de la capture…':'🖨'}</div><div class="planning-content"><span class="planning-status">${planningStates[x.status]||'En attente'}</span><h3>${escapeHTML(x.name)}</h3><p class="sub">${Number(x.quantity)||1} unité(s)</p>${x.note?`<p>${escapeHTML(x.note)}</p>`:''}</div></button></article>`).join('');
+ for(const x of planning.filter(x=>x.hasPhoto)){
+  if(planningImages.has(x.id)){displayPlanningPhoto(x.id,planningImages.get(x.id));continue;}
+  fetchPlanningPhoto(x.id).then(src=>{if(!src){const el=[...target.querySelectorAll('[data-planning-photo]')].find(e=>e.dataset.planningPhoto===x.id);if(el)el.textContent='🖨';}}).catch(()=>{const el=[...target.querySelectorAll('[data-planning-photo]')].find(e=>e.dataset.planningPhoto===x.id);if(el)el.textContent='🖨';});
+ }
+}
+async function openPlanning(id){
+ const x=planning.find(item=>item.id===id);if(!x)return;
+ selectedPlanningId=id;
+ $('planning-detail-name').textContent=x.name||'Projet';
+ $('planning-detail-status').textContent=planningStates[x.status]||'En attente';
+ $('planning-detail-qty').textContent=(Number(x.quantity)||1)+' unité(s) prévues';
+ $('planning-detail-note').textContent=x.note||'Aucune précision ajoutée.';
+ const photo=$('planning-detail-photo');photo.replaceChildren();
+ if(planningImages.has(id)){const im=document.createElement('img');im.src=planningImages.get(id);im.alt='Capture du projet en grand';photo.replaceChildren(im);}
+ else{photo.textContent=x.hasPhoto?'Chargement de la capture…':'Aucune photo disponible';}
+ $('planning-dialog').showModal();
+ if(x.hasPhoto&&!planningImages.has(id)){
+  try{const src=await fetchPlanningPhoto(id);if(!src&&selectedPlanningId===id&&$('planning-dialog').open)photo.textContent='Aucune photo disponible';}
+  catch(e){if(selectedPlanningId===id&&$('planning-dialog').open)photo.textContent='Photo indisponible';}
+ }
+}
+$('planning-cards').addEventListener('click',e=>{const button=e.target.closest('[data-open-planning]');if(button)openPlanning(button.dataset.openPlanning);});
+$('planning-detail-close').addEventListener('click',()=>$('planning-dialog').close());
+$('planning-dialog').addEventListener('close',()=>{selectedPlanningId=null;});
 function loadPlanning(){if(detachPlanning)detachPlanning();detachPlanning=api.onSnapshot(api.doc(db,'boutiques',owner,'planning','current'),snap=>{planning=snap.exists()&&Array.isArray(snap.data().items)?snap.data().items:[];if(boutiqueTab==='planning')renderPlanning();},e=>{if(boutiqueTab==='planning')$('planning-empty').textContent='Suivi indisponible : '+(e.code||e.message);});}
 
 $('cards').addEventListener('click',e=>{const el=e.target.closest('[data-open-product]');if(el)openProduct(el.dataset.openProduct);});

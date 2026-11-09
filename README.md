@@ -1,4 +1,4 @@
-# PrintPilot 3D v4.11 — Commandes Boutique, À venir et statistiques
+# PrintPilot 3D v4.11.1 — Commandes Boutique, À venir et statistiques
 
 Basé sur la v4.10.7 stable, avec restauration des photos et ID indépendants.
 
@@ -28,3 +28,11 @@ Basé sur la v4.10.7 stable, avec restauration des photos et ID indépendants.
 - La section Atelier + reste intégrée dans l’interface principale. Les nouvelles commandes sont affichées dans l’onglet Demandes Boutique existant.
 
 Vérifications : syntaxe JavaScript par `node --check`, intégrité de l’archive ZIP. **La connexion Firebase de production et la navigation réelle restent à tester après déploiement.**
+
+## v4.11.1 — Fiches « À venir » en grand (Boutique)
+- Toucher/clique sur un projet dans **À venir** ouvre une fiche grand format avec la capture du slicer, le nom, le statut, la quantité et la note.
+- Fiche en lecture seule, même fonctionnement que l'agrandissement du Catalogue.
+- Aucun changement aux règles Firebase, aux stocks, aux photos enregistrées ou aux commandes.
+- Le lien Boutique reste identique.
+
+**Installation minimale :** remplacer `boutique.html`, `js/boutique.js` et `css/boutique.css`, en conservant les dossiers.
