@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#100c1f"><title>JJ3D v4.11.18 — Boutique</title>
-<link rel="stylesheet" href="css/boutique.css?v=4.11.18"><script defer src="js/firebase-config.js?v=4.8.1"></script><script type="module" src="js/boutique.js?v=4.11.18"></script><script defer src="js/dialog-dismiss.js?v=4.11.18"></script><link rel="manifest" href="manifest.webmanifest">
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#100c1f"><title>JJ3D v4.11.19 — Boutique</title>
+<link rel="stylesheet" href="css/boutique.css?v=4.11.19"><script defer src="js/firebase-config.js?v=4.8.1"></script><script type="module" src="js/boutique.js?v=4.11.19"></script><script defer src="js/dialog-dismiss.js?v=4.11.19"></script><link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="JJ3D">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<script defer src="js/pwa-install.js?v=4.11.18"></script>
+<script defer src="js/pwa-install.js?v=4.11.19"></script>
 <style id="jj3d-brand-styles">
 /* Identité JJ3D — texte et page de démarrage (sans modifier les modules métier). */
 #jj3d-splash {position:fixed;z-index:2147483647;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:radial-gradient(circle at 50% 38%,#312052,#110d20 65%,#090b17);color:#f8f5ff;font-family:system-ui,-apple-system,Segoe UI,sans-serif;opacity:1;transition:opacity .4s ease;pointer-events:auto}
@@ -31,7 +31,7 @@ setTimeout(removeSplash,4200)})();</script>
 <header class="header"><div class="brand"><img class="jj3d-header-logo" src="icons/splash-logo.png" alt="Logo JJ3D">JJ3D <span>BOUTIQUE</span></div><div class="account" id="who"></div></header>
 <main class="wrap"><section class="hero"><div><p class="eyebrow">ACCÈS BOUTIQUE · LECTURE SEULE</p><h1>Catalogue des produits</h1><p>Photos, prix, variantes et quantités disponibles.</p></div><button type="button" id="logout" hidden>Se déconnecter</button></section>
 <div id="message" role="status" aria-live="polite"></div>
-<nav id="boutique-tabs" class="boutique-tabs" hidden aria-label="Sections Boutique"><button type="button" data-btab="catalogue" class="selected">🛍 Catalogue</button><button type="button" data-btab="orders">🛒 Commander</button><button type="button" data-btab="planning">🖨 À venir</button></nav>
+<nav id="boutique-tabs" class="boutique-tabs" hidden aria-label="Sections Boutique"><button type="button" data-btab="catalogue" class="selected">🛍 Catalogue</button><button type="button" data-btab="orders">🛒 Commander</button><button type="button" data-btab="planning">🖨 À venir</button><button type="button" data-btab="deliveries">📦 Livraisons</button></nav>
 <section id="login-panel" class="panel"><h2>Connexion à la boutique</h2><p>Utilise le compte que l'administrateur a autorisé.</p><form id="login-form"><label>Courriel de la boutique<input required name="email" type="email" autocomplete="username"></label><label>Mot de passe<input required name="password" type="password" autocomplete="current-password"></label><button type="submit">Se connecter</button></form></section>
 <section id="catalogue-panel" hidden><section class="jj-order-info" aria-label="Informations sur les commandes">
   <h3>✨ Créations personnalisées et commandes</h3>
@@ -58,6 +58,7 @@ setTimeout(removeSplash,4200)})();</script>
  <p class="sub">Ceci est une demande de production, pas un paiement ni une vente. L’atelier confirmera la commande.</p>
 </section>
 <section id="planning-panel" hidden><div class="boutique-page-heading"><h2>🖨 Prochaines impressions</h2><p>Voici ce qui est prévu à l’atelier, avec l’avancement et les captures disponibles. La liste se met à jour automatiquement.</p></div><div id="planning-cards" class="cards"></div><p id="planning-empty" class="empty" hidden>Aucune impression planifiée pour le moment.</p></section>
+<section id="deliveries-panel" hidden><div class="boutique-page-heading"><h2>📦 Livraisons et réceptions JJ3D</h2><p>Voir les bons d’envoi, confirmer les quantités reçues et consulter leur historique.</p></div><div id="deliveries-list">Chargement des livraisons…</div></section>
 <!-- Fiches uniformisées : même présentation que Produits > Détails du catalogue. -->
 <dialog id="planning-dialog" class="detail-modal pp-product-detail" aria-labelledby="planning-detail-name">
  <div class="pp-detail-top"><h2 id="planning-detail-name">Projet à venir</h2><button type="button" class="modal-close" id="planning-detail-close" aria-label="Fermer la fiche du projet">×</button></div>

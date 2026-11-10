@@ -36,7 +36,7 @@
 .jj-delete-btn{border-color:#8a4557!important;color:#ffbfc9!important}
 .jj-delete-btn:hover,.jj-delete-btn:focus-visible{background:#a82843!important;color:#fff!important;border-color:#dd4964!important}
 
-/* JJ3D 4.11.18 — Gestion des documents */
+/* JJ3D 4.11.19 — Gestion des documents */
 .jj-doc-toolbar{display:flex;flex-wrap:wrap;gap:9px;margin:12px 0 18px}
 .jj-doc-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
 .jj-doc-subtitle{font-size:.87rem;color:#afc4e9;margin:5px 0}

@@ -14,7 +14,7 @@ const adapter = window.PrintPilotCloudAdapter;
 const photoStatus=document.getElementById('photo-cloud-status');
 const photoMigrateButton=document.getElementById('cloud-migrate-photos');
 let photoUnsub=null,photoReady=false;
-let unreadUnsub=null,requestsUnsub=null,ordersUnsub=null,invoiceOrdersUnsub=null;
+let unreadUnsub=null,requestsUnsub=null,ordersUnsub=null,invoiceOrdersUnsub=null,deliveryReceiptsUnsub=null;
 window.JJ3DClientOrders={ready:false,records:[]};
 function setInvoiceOrders(records,ready){window.JJ3DClientOrders={ready,records};window.dispatchEvent(new Event("jj3d:orders-updated"));}
 let ppRequestCount=0,ppOrderCount=0,ppUnreadCount=0;
@@ -34,7 +34,7 @@ function setUnreadBadge(count){ppUnreadCount=count;showNotificationLocations();
   el.setAttribute('aria-label', count+' message(s) non lu(s)');
  });
 }
-function stopUnreadBadge(){if(invoiceOrdersUnsub){invoiceOrdersUnsub();invoiceOrdersUnsub=null;}setInvoiceOrders([],false);if(unreadUnsub){unreadUnsub();unreadUnsub=null;}if(requestsUnsub){requestsUnsub();requestsUnsub=null;}if(ordersUnsub){ordersUnsub();ordersUnsub=null;}setUnreadBadge(0);setRequestBadge(0);setOrderBadge(0);}
+function stopUnreadBadge(){if(deliveryReceiptsUnsub){deliveryReceiptsUnsub();deliveryReceiptsUnsub=null;}window.JJ3DDeliveryReceipts=[];if(invoiceOrdersUnsub){invoiceOrdersUnsub();invoiceOrdersUnsub=null;}setInvoiceOrders([],false);if(unreadUnsub){unreadUnsub();unreadUnsub=null;}if(requestsUnsub){requestsUnsub();requestsUnsub=null;}if(ordersUnsub){ordersUnsub();ordersUnsub=null;}setUnreadBadge(0);setRequestBadge(0);setOrderBadge(0);}
 
 let photoCache=new Map();
 const photoId=key=>Array.from(new TextEncoder().encode(key),b=>b.toString(16).padStart(2,'0')).join('');
@@ -57,7 +57,7 @@ function safeSyncRemote(record){
   const old=localJSON();
   if(record?.data && JSON.stringify(record.data)!==old){adapter.closeAllDialogs();adapter.applyState(record.data);}
   baseRevision=record.revision;rememberSynced();active=true;pending=false;conflict=false;
-  setStatus(`☁ Synchronisé avec Firebase • ${stamp()}`);
+  setStatus(`☁ Synchronisé avec Firebase • ${stamp()}`);window.JJ3DPublishDeliveries?.(record.data)?.catch(e=>console.warn('Publication livraisons :',e));
 }
 function beginListener(){
  if(unsubscribe)unsubscribe();
@@ -101,6 +101,14 @@ async function uploadSnapshot(){
    return rev;
   });
   baseRevision=newRev;
+  // Les réceptions ne sont marquées traitées qu'APRÈS confirmation du stockage cloud.
+  for(const slip of snapshot.stockSlips||[]){
+   if(slip.status==='received' && (window.JJ3DDeliveryReceipts||[]).some(r=>r.slipId===slip.id&&r.status==='pending')){
+    await window.JJ3DReceiptResolve?.(slip.id);
+   }
+  }
+  // Publie une copie filtrée des bons Boutique, sans facture ni données privées.
+  try{await window.JJ3DPublishDeliveries?.(snapshot);}catch(e){console.warn('Publication livraisons Boutique :',e);}
   // Another edit may have happened while awaiting network; don't mark those changes synced.
   localStorage.setItem(LINK_UID,currentUser.uid);
   localStorage.setItem(DIGEST_KEY,serialized);
@@ -128,7 +136,7 @@ if(!configOK){
 }else{
  try{
   const sdkVersion='13.1.0';
-  const [{initializeApp},{getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut},{getFirestore,doc,getDoc,onSnapshot,runTransaction,serverTimestamp,collection,setDoc,deleteDoc,query,where}]=await Promise.all([
+  const [{initializeApp},{getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut},{getFirestore,doc,getDoc,onSnapshot,runTransaction,serverTimestamp,collection,setDoc,updateDoc,deleteDoc,query,where}]=await Promise.all([
     import(`https://www.gstatic.com/firebasejs/${sdkVersion}/firebase-app.js`),
     import(`https://www.gstatic.com/firebasejs/${sdkVersion}/firebase-auth.js`),
     import(`https://www.gstatic.com/firebasejs/${sdkVersion}/firebase-firestore.js`)
@@ -147,6 +155,16 @@ if(!configOK){
       photoCache.set(key,image);
       window.dispatchEvent(new Event('printpilot:photos-changed'));
     }
+  };
+  window.JJ3DPublishDeliveries=async snapshot=>{
+    if(!currentUser||!active)return;
+    const raw=Array.isArray(snapshot.stockSlips)?snapshot.stockSlips:[];
+    const items=raw.slice(-120).map(d=>({id:String(d.id||''),number:String(d.number||''),date:String(d.date||''),destination:String(d.destination||'Boutique'),status:String(d.status||'draft'),lines:(d.lines||[]).map(l=>({shopId:String(l.shopId||''),id:String(l.id||''),name:String(l.name||''),qty:Math.max(0,Number(l.qty)||0)})),receivedQuantities:d.receivedQuantities||{}}));
+    await setDoc(doc(db,'boutiques',currentUser.uid,'deliveries','current'),{items,updatedAt:serverTimestamp()});
+  };
+  window.JJ3DReceiptResolve=async slipId=>{
+    if(!currentUser)return;
+    try{const ref=doc(db,'boutiques',currentUser.uid,'deliveryReceipts',slipId);await updateDoc(ref,{status:'processed',resolvedAt:serverTimestamp()});}catch(e){console.warn('Réception déjà traitée :',e);}
   };
   // Portail boutique : publication distincte (aucun accès au document /workspaces).
   const bStatus=document.getElementById('boutique-admin-status');
@@ -300,6 +318,7 @@ if(!configOK){
     try{requestsUnsub=onSnapshot(query(collection(db,'boutiques',user.uid,'requests'),where('status','==','pending')),snap=>setRequestBadge(snap.size),err=>{console.warn('Badge demandes:',err);setRequestBadge(0);});}catch(err){console.warn('Badge demandes:',err);setRequestBadge(0);}
     try{ordersUnsub=onSnapshot(query(collection(db,'boutiques',user.uid,'orders'),where('status','==','pending')),snap=>setOrderBadge(snap.size),err=>{console.warn('Badge commandes:',err);setOrderBadge(0);});}catch(err){console.warn('Badge commandes:',err);setOrderBadge(0);}
     try{invoiceOrdersUnsub=onSnapshot(collection(db,'boutiques',user.uid,'orders'),snap=>{setInvoiceOrders(snap.docs.map(d=>({id:d.id,...d.data()})),true);},err=>{console.warn('Factures commandes:',err);setInvoiceOrders([],false);});}catch(err){console.warn('Factures commandes:',err);setInvoiceOrders([],false);}
+    try{deliveryReceiptsUnsub=onSnapshot(collection(db,'boutiques',user.uid,'deliveryReceipts'),snap=>{window.JJ3DDeliveryReceipts=snap.docs.map(d=>({id:d.id,...d.data()}));window.dispatchEvent(new Event('jj3d:receipts-updated'));},err=>console.warn('Rapports Boutique:',err));}catch(err){console.warn('Rapports Boutique:',err);}
    } catch(err){console.warn('Badge Messages Boutique:',err);setUnreadBadge(0);}
 
   });

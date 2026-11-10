@@ -1177,5 +1177,6 @@
   },
   closeAllDialogs(){for(const d of document.querySelectorAll('dialog[open]'))d.close();}
  };
+ window.addEventListener('jj3d:receipts-updated',()=>{if(page()==='factures')render();});
  load();loadExtras();window.JJ3DInvoices.init({read:()=>extras,save:next=>persistExtras(next),render:()=>render(),notify,esc,money});render();
 })();

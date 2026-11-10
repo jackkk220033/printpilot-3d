@@ -126,6 +126,37 @@ service cloud.firestore {
           && request.resource.data.resolvedAt == request.time;
         allow delete: if isBoutiqueOwner(ownerUid);
       }
+      // JJ3D v4.11.19 — Bons d'envoi filtrés; l'inventaire privé n'est pas exposé.
+      match /deliveries/{docId} {
+        allow get: if docId == 'current' && canViewBoutique(ownerUid);
+        allow list: if false;
+        allow create, update: if docId == 'current' && isBoutiqueOwner(ownerUid)
+          && request.resource.data.keys().hasOnly(['items','updatedAt'])
+          && request.resource.data.items is list
+          && request.resource.data.items.size() <= 120;
+        allow delete: if isBoutiqueOwner(ownerUid);
+      }
+      match /deliveryReceipts/{slipId} {
+        allow create: if canViewBoutique(ownerUid)
+          && request.auth.uid != ownerUid
+          && request.resource.data.keys().hasOnly(['slipId','number','quantities','note','senderUid','senderEmail','status','createdAt'])
+          && request.resource.data.slipId == slipId
+          && request.resource.data.slipId is string && request.resource.data.slipId.size() <= 120
+          && request.resource.data.number is string && request.resource.data.number.size() <= 80
+          && request.resource.data.quantities is map && request.resource.data.quantities.keys().size() <= 80
+          && request.resource.data.note is string && request.resource.data.note.size() <= 300
+          && request.resource.data.senderUid == request.auth.uid
+          && request.resource.data.senderEmail == request.auth.token.email
+          && request.resource.data.status == 'pending'
+          && request.resource.data.createdAt == request.time;
+        allow get: if isBoutiqueOwner(ownerUid) || (canViewBoutique(ownerUid) && resource.data.senderUid == request.auth.uid);
+        allow list: if isBoutiqueOwner(ownerUid);
+        allow update: if isBoutiqueOwner(ownerUid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','resolvedAt'])
+          && request.resource.data.status == 'processed'
+          && request.resource.data.resolvedAt == request.time;
+        allow delete: if isBoutiqueOwner(ownerUid);
+      }
       // Liste filtrée des prochaines impressions; pas d'accès au suivi privé.
       match /planning/{docId} {
         allow get: if docId == 'current' && canViewBoutique(ownerUid);

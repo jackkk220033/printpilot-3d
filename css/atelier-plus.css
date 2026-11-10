@@ -54,7 +54,7 @@ button.danger-action:hover{background:#73313e;}
 /* v4.11.5 */
 .modal-close:hover,.modal-close:focus-visible{background:#bf304b!important;color:#fff!important;}
 
-/* JJ3D v4.11.18 — Captures À imprimer sans recadrage et zoom accessible */
+/* JJ3D v4.11.19 — Captures À imprimer sans recadrage et zoom accessible */
 .queue-card{grid-template-columns:minmax(225px,340px) minmax(0,1fr);align-items:start}
 .queue-picture,.queue-picture:where(button){width:100%;height:290px;min-height:0;display:flex;align-items:center;justify-content:center;padding:8px;background:#0c1529;border:1px solid #556a97;border-radius:12px;color:#bac9e1;cursor:zoom-in;text-align:center;font:inherit;overflow:hidden}
 .queue-picture img{width:100%;height:100%;object-fit:contain;object-position:center center;display:block}
@@ -68,3 +68,14 @@ button.danger-action:hover{background:#73313e;}
 .jj-queue-zoom-close:hover{background:#b83250}
 .jj-queue-lightbox>img{display:block;width:100%;height:auto;max-height:calc(94dvh - 100px);object-fit:contain;background:#091021;border-radius:9px}
 @media(max-width:700px){.queue-card{grid-template-columns:1fr}.queue-picture,.queue-picture:where(button){height:300px}.jj-queue-lightbox{padding:10px}}
+
+/* JJ3D v4.11.19 */
+.jj-queue-eta{margin:8px 0;color:#c9b5ff;font-size:.93rem;line-height:1.5}
+.jj-queue-edit-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:22px;background:#14213a;color:white;max-width:760px}
+.jj-queue-edit{border-radius:16px;max-width:min(780px,96vw);max-height:90vh;overflow:auto;background:#14213a;color:white;border:1px solid #53648b}
+.jj-queue-edit-form label{display:flex;flex-direction:column;gap:5px;font-size:.85rem;min-width:0}
+.jj-queue-edit-form input,.jj-queue-edit-form select{padding:11px;background:#10192e;color:white;border:1px solid #526384;border-radius:8px;max-width:100%;width:100%}
+.jj-queue-edit-wide,.jj-queue-edit-top{grid-column:1/-1}.jj-queue-edit-top{display:flex;justify-content:space-between;align-items:center}
+@media(max-width:540px){.jj-queue-edit-form{grid-template-columns:1fr}}
+
+#jj-queue-edit{border:1px solid #53648b;border-radius:16px;padding:0;max-width:min(780px,96vw);max-height:90vh;overflow:auto;background:#14213a;color:white}
