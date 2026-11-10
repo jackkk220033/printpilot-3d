@@ -42,10 +42,13 @@ async function getCatalogue(user){
 }
 function openProduct(id){
  const p=products.find(x=>x.id===id);if(!p)return;selectedProductId=id;
- $('detail-name').textContent=p.name||'Produit';$('detail-price').textContent=cad(p.price);
- $('detail-meta').textContent='ID boutique #'+(p.shopId||'—')+' · ID Excel '+(p.id||'—')+' · '+(p.category||'Autre');
- $('detail-colors').textContent='Couleur(s) : '+(p.colors||'—');
- $('detail-stock').textContent=p.stock>0?p.stock+' disponible(s)':'Épuisé';
+ $('detail-name').textContent=p.name||'Produit';
+ $('detail-price').textContent=cad(p.price);
+ $('detail-stock').textContent=Number(p.stock)>0?String(p.stock):'Épuisé';
+ $('detail-shop-id').textContent='#'+(p.shopId||'—');
+ $('detail-excel-id').textContent=p.id||'—';
+ $('detail-category').textContent=p.category||'—';
+ $('detail-colors').textContent=p.colors||'—';
  const wrap=$('detail-photo');wrap.replaceChildren();
  if(images.has(id)){const im=document.createElement('img');im.src=images.get(id);im.alt='Photo de '+p.name;wrap.append(im);}else wrap.textContent='Aucune photo disponible';
  const f=$('product-note-form');f.reset();f.querySelector('.send-status').textContent='';$('product-dialog').showModal();

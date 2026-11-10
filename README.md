@@ -1,4 +1,4 @@
-# PrintPilot 3D v4.11.6 — Nouveautés, bobines vides, correction des saisies et suppressions
+# PrintPilot 3D v4.11.7 — Fiches de produits uniformes
 
 Basé sur la v4.11.3 (photos À venir). Aucun changement aux règles Firestore.
 
@@ -14,7 +14,7 @@ Basé sur la v4.11.3 (photos À venir). Aucun changement aux règles Firestore.
 1. Exporter une sauvegarde JSON de PrintPilot.
 2. Remplacer les fichiers de GitHub par le contenu du ZIP, en respectant les dossiers `css/` et `js/`.
 3. Attendre que GitHub Pages termine son déploiement; recharger avec Ctrl+Shift+R.
-4. Vérifier que l'onglet affiche v4.11.6.
+4. Vérifier que l'onglet affiche v4.11.7.
 5. Pour activer la chronologie des nouveautés, republier une fois le catalogue dans Synchronisation. Les produits historiques ne deviennent pas nouveaux; les futurs seront affichés 7 jours à partir de leur première publication.
 
 **Aucune règle Firebase à changer.** Ce ZIP ne contient aucune sauvegarde utilisateur et ne modifie pas directement le compte Firebase. Testez sur une nouvelle entrée simple avant production.
@@ -37,3 +37,11 @@ Basé sur la v4.11.3 (photos À venir). Aucun changement aux règles Firestore.
 - Profils enregistrés dans le même stockage que les produits, inclus dans export JSON complet et dans la synchronisation Firebase du gestionnaire principal.
 - Aucun accès direct au statut des imprimantes; les états sont manuels et les compteurs issus du suivi PrintPilot seulement.
 - Aucun changement de règles Firestore. Avant publication, exporter une sauvegarde JSON.
+
+## Nouveautés v4.11.7 — Fiches uniformisées
+
+- Portail Boutique : Catalogue et filtre Nouveautés ouvrent une même fiche basée sur le modèle de la page Produits (titre, grande photo, grille de six informations).
+- Portail Boutique : « À venir » reprend le même format et affiche son statut, la quantité prévue et les notes.
+- Commentaires conservés dans les fiches produits de la Boutique.
+- Aucun changement aux schémas de données ni aux règles Firebase.
+- Version de l'onglet navigateur et caches CSS/JS actualisés.

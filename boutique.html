@@ -1,6 +1,6 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b1020"><title>PrintPilot 3D v4.11.5 — Boutique</title>
-<link rel="stylesheet" href="css/boutique.css?v=4.11.5"><script defer src="js/firebase-config.js?v=4.8.1"></script><script type="module" src="js/boutique.js?v=4.11.5"></script><script defer src="js/dialog-dismiss.js?v=4.11.5"></script></head>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b1020"><title>PrintPilot 3D v4.11.7 — Boutique</title>
+<link rel="stylesheet" href="css/boutique.css?v=4.11.7"><script defer src="js/firebase-config.js?v=4.8.1"></script><script type="module" src="js/boutique.js?v=4.11.7"></script><script defer src="js/dialog-dismiss.js?v=4.11.7"></script></head>
 <body><header class="header"><div class="brand">◈ PrintPilot <span>BOUTIQUE</span></div><div class="account" id="who"></div></header>
 <main class="wrap"><section class="hero"><div><p class="eyebrow">ACCÈS BOUTIQUE · LECTURE SEULE</p><h1>Catalogue des produits</h1><p>Photos, prix, variantes et quantités disponibles.</p></div><button type="button" id="logout" hidden>Se déconnecter</button></section>
 <div id="message" role="status" aria-live="polite"></div>
@@ -16,6 +16,27 @@
  <p class="sub">Ceci est une demande de production, pas un paiement ni une vente. L’atelier confirmera la commande.</p>
 </section>
 <section id="planning-panel" hidden><div class="boutique-page-heading"><h2>🖨 Prochaines impressions</h2><p>Voici ce qui est prévu à l’atelier, avec l’avancement et les captures disponibles. La liste se met à jour automatiquement.</p></div><div id="planning-cards" class="cards"></div><p id="planning-empty" class="empty" hidden>Aucune impression planifiée pour le moment.</p></section>
-<dialog id="planning-dialog" class="detail-modal planning-detail" aria-labelledby="planning-detail-name"><button type="button" class="modal-close" id="planning-detail-close" aria-label="Fermer la fiche du projet">×</button><div class="modal-image" id="planning-detail-photo">🖨</div><div class="modal-body"><h2 id="planning-detail-name"></h2><p id="planning-detail-status" class="sub"></p><p id="planning-detail-qty" class="sub"></p><p id="planning-detail-note" class="planning-detail-note"></p></div></dialog>
-<dialog id="product-dialog" class="detail-modal"><button type="button" class="modal-close" id="detail-close" aria-label="Fermer">×</button><div class="modal-image" id="detail-photo"></div><div class="modal-body"><h2 id="detail-name"></h2><div class="price" id="detail-price"></div><p class="sub" id="detail-meta"></p><p class="sub" id="detail-colors"></p><p id="detail-stock"></p><h3>✉ Commentaire sur ce produit</h3><form id="product-note-form"><textarea name="body" required minlength="2" maxlength="1200" rows="4" placeholder="Ton commentaire ou ta question sur ce produit…"></textarea><button type="submit">Enregistrer et envoyer</button><p class="send-status" role="status" aria-live="polite"></p></form></div></dialog>
+<!-- Fiches uniformisées : même présentation que Produits > Détails du catalogue. -->
+<dialog id="planning-dialog" class="detail-modal pp-product-detail" aria-labelledby="planning-detail-name">
+ <div class="pp-detail-top"><h2 id="planning-detail-name">Projet à venir</h2><button type="button" class="modal-close" id="planning-detail-close" aria-label="Fermer la fiche du projet">×</button></div>
+ <div class="modal-image pp-detail-photo" id="planning-detail-photo">🖨</div>
+ <div class="pp-detail-grid">
+  <div class="pp-detail-field"><small>Statut</small><strong id="planning-detail-status">—</strong></div>
+  <div class="pp-detail-field"><small>Quantité prévue</small><strong id="planning-detail-qty">—</strong></div>
+  <div class="pp-detail-field pp-detail-field-wide"><small>Notes / précisions</small><strong id="planning-detail-note" class="planning-detail-note">—</strong></div>
+ </div>
+</dialog>
+<dialog id="product-dialog" class="detail-modal pp-product-detail" aria-labelledby="detail-name">
+ <div class="pp-detail-top"><h2 id="detail-name">Détails du produit</h2><button type="button" class="modal-close" id="detail-close" aria-label="Fermer">×</button></div>
+ <div class="modal-image pp-detail-photo" id="detail-photo"></div>
+ <div class="pp-detail-grid">
+  <div class="pp-detail-field"><small>Prix de vente</small><strong id="detail-price" class="pp-detail-price">—</strong></div>
+  <div class="pp-detail-field"><small>Quantité en stock</small><strong id="detail-stock">—</strong></div>
+  <div class="pp-detail-field"><small>ID stock</small><strong id="detail-shop-id">—</strong></div>
+  <div class="pp-detail-field"><small>ID Excel / référence</small><strong id="detail-excel-id">—</strong></div>
+  <div class="pp-detail-field"><small>Catégorie</small><strong id="detail-category">—</strong></div>
+  <div class="pp-detail-field"><small>Couleur(s)</small><strong id="detail-colors">—</strong></div>
+ </div>
+ <section class="pp-detail-comment"><h3>✉ Commentaire sur ce produit</h3><form id="product-note-form"><textarea name="body" required minlength="2" maxlength="1200" rows="4" placeholder="Ton commentaire ou ta question sur ce produit…"></textarea><button type="submit">Enregistrer et envoyer</button><p class="send-status" role="status" aria-live="polite"></p></form></section>
+</dialog>
 <p class="footer">Catalogue en lecture seule. Les stocks sont ceux de la dernière publication par l'atelier.</p></main></body></html>

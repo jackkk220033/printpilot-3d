@@ -94,3 +94,44 @@ textarea{background:#0f192b;color:#f3f5ff;border:1px solid #456087;border-radius
 
 /* v4.11.5 */
 .modal-close:hover,.modal-close:focus-visible{background:#bf304b!important;color:#fff!important;}
+
+/* v4.11.7 — fenêtres de détail uniformes, inspirées du Catalogue de l'atelier. */
+.pp-product-detail {
+ width:min(570px,calc(100vw - 24px));max-width:570px;max-height:calc(100dvh - 32px);
+ box-sizing:border-box;padding:20px 22px 24px;overflow:auto;
+ border:1px solid #465b84;border-radius:18px;background:#151e33;color:#edf2ff;
+ scrollbar-width:thin;scrollbar-color:#9ca0a8 transparent;
+}
+.pp-product-detail .pp-detail-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:18px}
+.pp-product-detail .pp-detail-top h2{font-size:21px;line-height:1.35;margin:0;font-weight:750;overflow-wrap:anywhere}
+.pp-product-detail .modal-close{position:static;float:none;flex:none;margin:0;background:transparent;color:#b4c7ff;border-radius:8px;width:30px;height:30px;font-size:27px;line-height:1;padding:0;font-weight:400}
+.pp-product-detail .modal-close:hover,.pp-product-detail .modal-close:focus-visible{background:#bf304b!important;color:white!important}
+.pp-product-detail .pp-detail-photo{
+ display:flex;align-items:center;justify-content:center;box-sizing:border-box;
+ width:100%;height:auto;min-height:160px;aspect-ratio:4/3;
+ overflow:hidden;border:1px solid #334461;border-radius:13px;
+ background:#10172b;color:#9cabc8;font-size:16px;margin-bottom:18px;
+}
+.pp-product-detail .pp-detail-photo img{display:block;width:100%;height:100%;max-height:52vh;object-fit:contain}
+.pp-product-detail .pp-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.pp-product-detail .pp-detail-field{display:grid;align-content:start;gap:7px;min-width:0;background:#1b2842;border:1px solid #33415e;border-radius:10px;padding:12px}
+.pp-product-detail .pp-detail-field small{color:#9eb0d0;font-size:11px;line-height:1.3}
+.pp-product-detail .pp-detail-field strong{color:#edf2ff;font-size:14px;overflow-wrap:anywhere;line-height:1.4}
+.pp-product-detail .pp-detail-field .pp-detail-price{font-size:20px;color:#c6b5ff}
+.pp-product-detail .pp-detail-field-wide{grid-column:1/-1}
+.pp-product-detail #detail-stock{color:#edf2ff}
+.pp-product-detail .pp-detail-comment{margin-top:20px;padding-top:16px;border-top:1px solid #344568}
+.pp-product-detail .pp-detail-comment h3{margin:0 0 12px;font-size:16px}
+.pp-product-detail .pp-detail-comment form{gap:10px}
+.pp-product-detail .planning-detail-note{white-space:pre-wrap;overflow-wrap:anywhere;font-weight:500}
+@media(max-width:520px){
+ .pp-product-detail{padding:15px;max-height:calc(100dvh - 16px)}
+ .pp-product-detail .pp-detail-grid{gap:9px}
+ .pp-product-detail .pp-detail-field{padding:10px}
+ .pp-product-detail .pp-detail-photo{min-height:115px}
+ .pp-product-detail .pp-detail-photo img{max-height:33vh}
+}
+/* Le style commun prévaut sur les anciennes règles spécifiques à « À venir ». */
+#planning-dialog.pp-product-detail .pp-detail-photo{width:100%;height:auto;max-height:none;min-height:160px;aspect-ratio:4/3;display:flex;margin-bottom:18px}
+#planning-dialog.pp-product-detail .pp-detail-photo img{width:100%;height:100%;max-width:100%;max-height:52vh;object-fit:contain}
+@media(max-width:520px){#planning-dialog.pp-product-detail .pp-detail-photo{min-height:115px;max-height:none}#planning-dialog.pp-product-detail .pp-detail-photo img{max-height:33vh}}
