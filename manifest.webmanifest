@@ -1,14 +1,14 @@
 {
   "id": "./index.html",
-  "name": "PrintPilot 3D",
-  "short_name": "PrintPilot",
-  "description": "Atelier et boutique — gestion des impressions 3D, produits, filaments et ventes.",
+  "name": "JJ3D",
+  "short_name": "JJ3D",
+  "description": "JJ3D — Atelier, impressions 3D, produits, inventaire et boutique.",
   "lang": "fr-CA",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#10182c",
-  "theme_color": "#10182c",
+  "background_color": "#100c1f",
+  "theme_color": "#100c1f",
   "icons": [
     {
       "src": "icons/icon-192.png",

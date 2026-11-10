@@ -21,7 +21,7 @@ function render(){
 function resetUI(){selectedProductId=null;if($('product-dialog').open)$('product-dialog').close();if($('planning-dialog').open)$('planning-dialog').close();selectedPlanningId=null;products=[];images.clear();$('catalogue-panel').hidden=true;$('login-panel').hidden=false;$('logout').hidden=true;$('who').textContent='';if(detach){detach();detach=null;}if(detachPlanning){detachPlanning();detachPlanning=null;}$('boutique-tabs').hidden=true;cart=[];planning=[];planningImages.clear();$('orders-panel').hidden=true;$('planning-panel').hidden=true;}
 function fillCategories(){const selected=$('category').value;const cats=[...new Set(products.map(p=>p.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));$('category').replaceChildren(new Option('Toutes les catégories',''),...cats.map(x=>new Option(x,x)));$('category').value=cats.includes(selected)?selected:'';}
 async function getCatalogue(user){
- if(!owner||!/^[A-Za-z0-9_-]{10,128}$/.test(owner))throw Error('Le lien de la boutique est incomplet. Demande le lien généré depuis PrintPilot.');
+ if(!owner||!/^[A-Za-z0-9_-]{10,128}$/.test(owner))throw Error('Le lien de la boutique est incomplet. Demande le lien généré depuis JJ3D.');
  const role=await api.getDoc(api.doc(db,'boutiques',owner,'members',user.uid));
  if(!role.exists()&&user.uid!==owner)throw Error('Ce compte n’est pas encore autorisé. Demande à l’administrateur de copier ton UID Firebase dans « Autoriser ce compte ».');
  const reference=api.doc(db,'boutiques',owner,'catalogue','current');

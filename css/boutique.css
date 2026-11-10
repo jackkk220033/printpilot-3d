@@ -135,3 +135,13 @@ textarea{background:#0f192b;color:#f3f5ff;border:1px solid #456087;border-radius
 #planning-dialog.pp-product-detail .pp-detail-photo{width:100%;height:auto;max-height:none;min-height:160px;aspect-ratio:4/3;display:flex;margin-bottom:18px}
 #planning-dialog.pp-product-detail .pp-detail-photo img{width:100%;height:100%;max-width:100%;max-height:52vh;object-fit:contain}
 @media(max-width:520px){#planning-dialog.pp-product-detail .pp-detail-photo{min-height:115px;max-height:none}#planning-dialog.pp-product-detail .pp-detail-photo img{max-height:33vh}}
+
+/* JJ3D 4.11.11 — informations de commande harmonisées */
+.jj-order-info{margin:18px 0 22px;padding:18px 20px;border:1px solid #7153a4;border-radius:16px;background:linear-gradient(135deg,#211b36,#161c31);color:#f4efff;box-shadow:0 6px 18px #0002}
+.jj-order-info h3{margin:0 0 14px;color:#f3e8ff;font-size:1.1rem}
+.jj-order-info-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.jj-order-info-grid>div{padding:12px;border:1px solid #554873;background:#ffffff08;border-radius:12px}
+.jj-order-info strong{color:#e7c5ff;display:block;margin-bottom:7px}
+.jj-order-info p{margin:0 0 8px;line-height:1.5;color:#eee8fb;font-size:.91rem}
+.jj-mini-conditions{margin:12px 0;padding:10px 12px;background:#211b36;border:1px solid #66518d;border-radius:10px;color:#eee6ff;font-size:.84rem;line-height:1.6}
+@media(max-width:760px){.jj-order-info-grid{grid-template-columns:1fr}.jj-order-info{padding:14px}}

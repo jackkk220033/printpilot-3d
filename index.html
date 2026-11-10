@@ -1,27 +1,48 @@
 <!doctype html>
 <html lang="fr">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b1020">
-<title>PrintPilot 3D v4.11.8</title>
-<link rel="stylesheet" href="css/style.css?v=4.11.8">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#100c1f">
+<title>JJ3D v4.11.11</title>
+<link rel="stylesheet" href="css/style.css?v=4.11.11">
 <!-- Handlebars est facultatif : si ce CDN est bloqué, les fonctions continuent de marcher. -->
 <script defer src="https://cdn.jsdelivr.net/npm/handlebars@4.7.8/dist/handlebars.min.js"></script>
 <!-- Données Excel volontairement absentes des fichiers publiables : elles viennent du stockage local ou de Firebase. -->
 <script defer src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-<script defer src="js/app.js?v=4.11.8"></script>
+<script defer src="js/app.js?v=4.11.11"></script>
 <script defer src="js/firebase-config.js?v=4.11.6"></script>
-<script type="module" src="js/cloud.js?v=4.11.8"></script>
+<script type="module" src="js/cloud.js?v=4.11.11"></script>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="PrintPilot">
+<meta name="apple-mobile-web-app-title" content="JJ3D">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<script defer src="js/pwa-install.js?v=4.11.8"></script>
-</head>
+<script defer src="js/pwa-install.js?v=4.11.11"></script>
+<style id="jj3d-brand-styles">
+/* Identité JJ3D — texte et page de démarrage (sans modifier les modules métier). */
+#jj3d-splash {position:fixed;z-index:2147483647;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:radial-gradient(circle at 50% 38%,#312052,#110d20 65%,#090b17);color:#f8f5ff;font-family:system-ui,-apple-system,Segoe UI,sans-serif;opacity:1;transition:opacity .4s ease;pointer-events:auto}
+#jj3d-splash.jj3d-hide{opacity:0;pointer-events:none}
+#jj3d-splash img{width:min(54vw,220px);height:auto;border-radius:25%;box-shadow:0 14px 65px #b24aff44}
+#jj3d-splash h1{font-size:clamp(32px,7vw,56px);letter-spacing:.08em;margin:16px 0 4px;font-weight:850}
+#jj3d-splash p{margin:0;letter-spacing:.17em;font-size:clamp(10px,2vw,13px);color:#cebbeb}
+#jj3d-splash .jj3d-loading{width:min(65vw,260px);height:6px;border-radius:10px;background:#373147;margin-top:46px;overflow:hidden}
+#jj3d-splash .jj3d-loading span{display:block;width:35%;height:100%;background:linear-gradient(90deg,#8c45ff,#dc82ff);border-radius:10px;animation:jj3d-load 1.3s ease-in-out infinite alternate}
+@keyframes jj3d-load{from{transform:translateX(-80%)}to{transform:translateX(280%)}}
+@media(prefers-reduced-motion:reduce){#jj3d-splash .jj3d-loading span{animation:none;width:100%}#jj3d-splash{transition:none}}
+</style>
+<style id="jj3d-header-logo-css">.jj3d-header-logo{width:44px;height:44px;object-fit:contain;vertical-align:middle;border-radius:11px;margin-right:10px;box-shadow:0 2px 12px #a34af555}.brand .jj3d-header-logo{flex-shrink:0}@media(max-width:600px){.jj3d-header-logo{width:36px;height:36px;margin-right:7px}}</style></head>
 <body>
+<div id="jj3d-splash" role="status" aria-label="Ouverture de JJ3D">
+<img src="icons/splash-logo.png" alt="JJ3D" width="220" height="220">
+<h1>JJ3D</h1><p>CREATE · PRINT · MANAGE</p>
+<div class="jj3d-loading" aria-hidden="true"><span></span></div>
+</div>
+<script>(function(){function removeSplash(){var s=document.getElementById('jj3d-splash');if(!s)return;s.classList.add('jj3d-hide');setTimeout(function(){s.remove()},420)}
+if(document.readyState==='complete')setTimeout(removeSplash,650);else window.addEventListener('load',function(){setTimeout(removeSplash,650)},{once:true});
+setTimeout(removeSplash,4200)})();</script>
+
 <div class="shell">
  <aside class="sidebar" id="sidebar">
- <div class="brand"><span class="logo">P<span>3</span></span><div><strong>PrintPilot</strong><small>3D STUDIO</small></div></div>
+ <div class="brand"><img class="jj3d-header-logo" src="icons/splash-logo.png" alt="Logo JJ3D"><div><strong>JJ3D</strong><small>3D STUDIO</small></div></div>
  <div class="section-label">ESPACE DE TRAVAIL</div>
  <nav id="navigation" aria-label="Navigation principale">
    <a href="#dashboard" data-page="dashboard" class="nav active"><span>▦</span> Tableau de bord</a>
@@ -59,12 +80,12 @@
      </div>
    </details>
  </nav>
- <div class="sidebar-foot"><div class="local-label" id="sidebar-storage">● &nbsp;Stockage local actif</div><p>v4.11.8 • Synchronisation Firebase</p></div>
+ <div class="sidebar-foot"><div class="local-label" id="sidebar-storage">● &nbsp;Stockage local actif</div><p>v4.11.11 • Synchronisation Firebase</p></div>
  </aside>
  <div class="workarea">
  <header class="topbar"><div><button type="button" id="menu-toggle" aria-label="Ouvrir le menu">☰</button><span>Atelier / <b id="page-name">Tableau de bord</b></span></div><div class="topright"><button type="button" class="secondary-btn cloud-open" id="open-cloud">☁ Synchronisation</button><span id="today"></span><span class="avatar">3D</span></div></header>
  <div id="pp-notification-where" class="pp-notification-where" hidden aria-live="polite"></div>
- <main id="app" class="page"><p>Chargement de PrintPilot…</p></main>
+ <main id="app" class="page"><p>Chargement de JJ3D…</p></main>
  </div>
 </div>
 <nav class="mobile-navigation" id="mobile-navigation" aria-label="Navigation mobile">
@@ -268,7 +289,7 @@
 <input id="excel-upload-file" type="file" accept=".xlsm,.xlsx,.json,application/vnd.ms-excel.sheet.macroEnabled.12,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
 <!-- Cloud : panneau hors du contenu rendu; l'utilisateur active explicitement la migration. -->
 <dialog id="cloud-dialog" class="dialog cloud-dialog" aria-labelledby="cloud-title">
- <div class="dialog-head"><h2 id="cloud-title">☁ Synchronisation PrintPilot</h2><button type="button" class="close" id="close-cloud" aria-label="Fermer">×</button></div>
+ <div class="dialog-head"><h2 id="cloud-title">☁ Synchronisation JJ3D</h2><button type="button" class="close" id="close-cloud" aria-label="Fermer">×</button></div>
  <p class="cloud-summary" id="cloud-status" role="status" aria-live="polite">Connexion Firebase non configurée.</p>
  <div id="cloud-auth-area">
   <form id="cloud-auth-form" class="cloud-auth-form">
@@ -317,7 +338,7 @@
 })();
 </script>
 
-<!-- Gestion des imprimantes : fiches synchronisées avec les autres données PrintPilot. -->
+<!-- Gestion des imprimantes : fiches synchronisées avec les autres données JJ3D. -->
 <dialog id="printer-profile-dialog" class="dialog pp-printer-dialog" aria-labelledby="printer-dialog-title">
  <form id="printer-profile-form">
   <div class="dialog-head"><h2 id="printer-dialog-title">Ajouter une imprimante</h2><button type="button" class="close" id="printer-profile-close" aria-label="Fermer">×</button></div>
@@ -343,5 +364,5 @@
  <div class="dialog-head"><h2 id="printer-history-title">Historique de l'imprimante</h2><button type="button" id="printer-history-close" class="close" aria-label="Fermer">×</button></div>
  <div id="printer-history-content"></div>
 </dialog>
-<div id="pwa-install-area" style="position:fixed;right:14px;bottom:76px;z-index:1500"><button type="button" id="pwa-install" title="Installer PrintPilot sur cet appareil" style="background:#4966d6;color:white;border:1px solid #8498ff;border-radius:12px;padding:10px 14px;box-shadow:0 3px 14px #0006;cursor:pointer">📲 Installer PrintPilot</button><div id="pwa-install-help" role="status" hidden style="max-width:300px;background:#1b2944;color:white;padding:10px;border-radius:10px;margin-top:8px;font-size:13px"></div></div></body>
+<div id="pwa-install-area" style="position:fixed;right:14px;bottom:76px;z-index:1500"><button type="button" id="pwa-install" title="Installer JJ3D sur cet appareil" style="background:#4966d6;color:white;border:1px solid #8498ff;border-radius:12px;padding:10px 14px;box-shadow:0 3px 14px #0006;cursor:pointer">📲 Installer JJ3D</button><div id="pwa-install-help" role="status" hidden style="max-width:300px;background:#1b2944;color:white;padding:10px;border-radius:10px;margin-top:8px;font-size:13px"></div></div></body>
 </html>

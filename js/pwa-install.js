@@ -1,4 +1,4 @@
-/* PrintPilot 3D — installation facultative */
+/* JJ3D — installation facultative */
 (function(){
   'use strict';
   let deferredPrompt = null;

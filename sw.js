@@ -1,14 +1,14 @@
-/* PrintPilot 3D — PWA 4.11.8
+/* JJ3D — PWA 4.11.9
    Cache uniquement les ressources locales statiques et les pages publiques.
    Les requêtes Firebase, APIs, auth et images distantes ne sont pas interceptées.
    L'installation ne garantit pas le fonctionnement hors ligne des données Firebase. */
-const CACHE = 'printpilot-static-v4.11.8';
+const CACHE = 'printpilot-static-v4.11.11';
 const STATIC = [
   './', './index.html', './boutique.html', './atelier-plus.html', './messages.html',
   './css/style.css', './css/boutique.css', './css/atelier-plus.css',
   './js/app.js', './js/boutique.js', './js/atelier-plus.js',
   './js/messages.js', './js/dialog-dismiss.js',
-  './icons/icon-192.png', './icons/icon-512.png'
+  './icons/icon-192.png', './icons/icon-512.png', './icons/splash-logo.png'
 ];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(async cache => {
