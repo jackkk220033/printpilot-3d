@@ -2,15 +2,21 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b1020">
-<title>PrintPilot 3D v4.11.7</title>
-<link rel="stylesheet" href="css/style.css?v=4.11.7">
+<title>PrintPilot 3D v4.11.8</title>
+<link rel="stylesheet" href="css/style.css?v=4.11.8">
 <!-- Handlebars est facultatif : si ce CDN est bloqué, les fonctions continuent de marcher. -->
 <script defer src="https://cdn.jsdelivr.net/npm/handlebars@4.7.8/dist/handlebars.min.js"></script>
 <!-- Données Excel volontairement absentes des fichiers publiables : elles viennent du stockage local ou de Firebase. -->
 <script defer src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-<script defer src="js/app.js?v=4.11.7"></script>
+<script defer src="js/app.js?v=4.11.8"></script>
 <script defer src="js/firebase-config.js?v=4.11.6"></script>
-<script type="module" src="js/cloud.js?v=4.11.7"></script>
+<script type="module" src="js/cloud.js?v=4.11.8"></script>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PrintPilot">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<script defer src="js/pwa-install.js?v=4.11.8"></script>
 </head>
 <body>
 <div class="shell">
@@ -53,7 +59,7 @@
      </div>
    </details>
  </nav>
- <div class="sidebar-foot"><div class="local-label" id="sidebar-storage">● &nbsp;Stockage local actif</div><p>v4.11.7 • Synchronisation Firebase</p></div>
+ <div class="sidebar-foot"><div class="local-label" id="sidebar-storage">● &nbsp;Stockage local actif</div><p>v4.11.8 • Synchronisation Firebase</p></div>
  </aside>
  <div class="workarea">
  <header class="topbar"><div><button type="button" id="menu-toggle" aria-label="Ouvrir le menu">☰</button><span>Atelier / <b id="page-name">Tableau de bord</b></span></div><div class="topright"><button type="button" class="secondary-btn cloud-open" id="open-cloud">☁ Synchronisation</button><span id="today"></span><span class="avatar">3D</span></div></header>
@@ -337,5 +343,5 @@
  <div class="dialog-head"><h2 id="printer-history-title">Historique de l'imprimante</h2><button type="button" id="printer-history-close" class="close" aria-label="Fermer">×</button></div>
  <div id="printer-history-content"></div>
 </dialog>
-</body>
+<div id="pwa-install-area" style="position:fixed;right:14px;bottom:76px;z-index:1500"><button type="button" id="pwa-install" title="Installer PrintPilot sur cet appareil" style="background:#4966d6;color:white;border:1px solid #8498ff;border-radius:12px;padding:10px 14px;box-shadow:0 3px 14px #0006;cursor:pointer">📲 Installer PrintPilot</button><div id="pwa-install-help" role="status" hidden style="max-width:300px;background:#1b2944;color:white;padding:10px;border-radius:10px;margin-top:8px;font-size:13px"></div></div></body>
 </html>
