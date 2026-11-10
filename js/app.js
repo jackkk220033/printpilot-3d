@@ -1,4 +1,4 @@
-/* JJ3D v4.10.7 — HTML/CSS/JavaScript natif, sans Node.js.
+/* JJ3D v4.11.13 — HTML/CSS/JavaScript natif, sans Node.js.
    Handlebars améliore facultativement le rendu des cartes, mais n'est pas nécessaire. */
 (() => {
  'use strict';
@@ -9,7 +9,7 @@
  let editingPrintId=null;
  let photoDraft=null;
  let photoDb=null;
- let extras={products:[],hardware:[],sales:[],nonCommercial:[],printers:[],invoices:[],invoiceSettings:{}}; // réutilise la clé des versions précédentes
+ let extras={products:[],hardware:[],sales:[],nonCommercial:[],printers:[],invoices:[],stockSlips:[],invoiceSettings:{}}; // réutilise la clé des versions précédentes
  const app = document.getElementById('app');
  const dialog = document.getElementById('roll-dialog');
  const form = document.getElementById('roll-form');
@@ -509,7 +509,7 @@
   p.stock=safeNum(p.stock)+safeNum(old.quantity);const sales=extras.sales.map(x=>x.id===id?{...x,status:'cancelled',cancelledAt:new Date().toISOString()}:x);
   if(persistExtras({...extras,products,sales})){render();notify('✓ Vente annulée et stock produit rétabli.');}
  }
- function loadExtras(){try{const raw=localStorage.getItem(EXTRA_KEY);const obj=raw?JSON.parse(raw):{};extras={products:ensureShopIds(Array.isArray(obj.products)?obj.products:[]),hardware:Array.isArray(obj.hardware)?obj.hardware:[],sales:Array.isArray(obj.sales)?obj.sales:[],nonCommercial:Array.isArray(obj.nonCommercial)?obj.nonCommercial:[],printers:Array.isArray(obj.printers)?obj.printers:[],invoices:Array.isArray(obj.invoices)?obj.invoices:[],invoiceSettings:obj.invoiceSettings&&typeof obj.invoiceSettings==='object'?obj.invoiceSettings:{}};if(JSON.stringify(extras.products)!==JSON.stringify(obj.products||[])){try{localStorage.setItem(EXTRA_KEY,JSON.stringify(extras));}catch(e){console.warn('IDs numériques non persistés:',e);}}}catch(e){console.error('Extras invalides:',e);extras={products:[],hardware:[],sales:[],nonCommercial:[],printers:[],invoices:[],invoiceSettings:{}};}}
+ function loadExtras(){try{const raw=localStorage.getItem(EXTRA_KEY);const obj=raw?JSON.parse(raw):{};extras={products:ensureShopIds(Array.isArray(obj.products)?obj.products:[]),hardware:Array.isArray(obj.hardware)?obj.hardware:[],sales:Array.isArray(obj.sales)?obj.sales:[],nonCommercial:Array.isArray(obj.nonCommercial)?obj.nonCommercial:[],printers:Array.isArray(obj.printers)?obj.printers:[],invoices:Array.isArray(obj.invoices)?obj.invoices:[],stockSlips:Array.isArray(obj.stockSlips)?obj.stockSlips:[],invoiceSettings:obj.invoiceSettings&&typeof obj.invoiceSettings==='object'?obj.invoiceSettings:{}};if(JSON.stringify(extras.products)!==JSON.stringify(obj.products||[])){try{localStorage.setItem(EXTRA_KEY,JSON.stringify(extras));}catch(e){console.warn('IDs numériques non persistés:',e);}}}catch(e){console.error('Extras invalides:',e);extras={products:[],hardware:[],sales:[],nonCommercial:[],printers:[],invoices:[],stockSlips:[],invoiceSettings:{}};}}
  // Les produits importés du classeur représentent une production historique agrégée.
  // Ces chiffres sont affichés dans les stats, JAMAIS ajoutés au journal transactionnel
  // et JAMAIS déduits à nouveau de l'inventaire des bobines.
@@ -836,7 +836,7 @@
   if(!persistExtras(next))throw Error('Échec de sauvegarde des nouveaux produits.');
   render();notify('✓ Correction appliquée. Vérifie la synchronisation Firebase et les statistiques.');
  }
- function exportFull(){const data={version:2,exportedAt:new Date().toISOString(),filaments:rolls,prints,products:extras.products,hardware:extras.hardware,sales:extras.sales,nonCommercial:extras.nonCommercial||[],printers:extras.printers||[],invoices:extras.invoices||[],invoiceSettings:extras.invoiceSettings||{}};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='printpilot-sauvegarde-complete.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);notify('Sauvegarde complète exportée.');}
+ function exportFull(){const data={version:2,exportedAt:new Date().toISOString(),filaments:rolls,prints,products:extras.products,hardware:extras.hardware,sales:extras.sales,nonCommercial:extras.nonCommercial||[],printers:extras.printers||[],invoices:extras.invoices||[],stockSlips:extras.stockSlips||[],invoiceSettings:extras.invoiceSettings||{}};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='printpilot-sauvegarde-complete.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);notify('Sauvegarde complète exportée.');}
  function financeProductRows(query=''){
   const products=commercialProducts().filter(p=>[p.shopId,p.id,p.name,p.category,p.colors].join(' ').toLowerCase().includes(String(query).toLowerCase()));
   if(!products.length)return '<p class="empty">Aucun produit correspondant.</p>';
@@ -1168,11 +1168,11 @@
    const oldState=localStorage.getItem(STATE_KEY),oldExtras=localStorage.getItem(EXTRA_KEY);
    try {
     const nextState=JSON.stringify({version:2,rolls:snapshot.rolls,prints:snapshot.prints});
-    const nextExtras=JSON.stringify({products:ensureShopIds(snapshot.products),hardware:snapshot.hardware,sales:snapshot.sales,nonCommercial:Array.isArray(snapshot.nonCommercial)?snapshot.nonCommercial:[],printers:Array.isArray(snapshot.printers)?snapshot.printers:[],invoices:Array.isArray(snapshot.invoices)?snapshot.invoices:[],invoiceSettings:snapshot.invoiceSettings&&typeof snapshot.invoiceSettings==='object'?snapshot.invoiceSettings:{}});
+    const nextExtras=JSON.stringify({products:ensureShopIds(snapshot.products),hardware:snapshot.hardware,sales:snapshot.sales,nonCommercial:Array.isArray(snapshot.nonCommercial)?snapshot.nonCommercial:[],printers:Array.isArray(snapshot.printers)?snapshot.printers:[],invoices:Array.isArray(snapshot.invoices)?snapshot.invoices:[],stockSlips:Array.isArray(snapshot.stockSlips)?snapshot.stockSlips:[],invoiceSettings:snapshot.invoiceSettings&&typeof snapshot.invoiceSettings==='object'?snapshot.invoiceSettings:{}});
     localStorage.setItem(STATE_KEY,nextState);localStorage.setItem(EXTRA_KEY,nextExtras);
     if(localStorage.getItem(STATE_KEY)!==nextState || localStorage.getItem(EXTRA_KEY)!==nextExtras)throw Error('Écriture locale non confirmée');
    }catch(e){try{if(oldState===null)localStorage.removeItem(STATE_KEY);else localStorage.setItem(STATE_KEY,oldState);if(oldExtras===null)localStorage.removeItem(EXTRA_KEY);else localStorage.setItem(EXTRA_KEY,oldExtras);}catch(_){}throw e;}
-   rolls=snapshot.rolls.map(x=>({...x}));prints=snapshot.prints.map(x=>({...x}));extras={products:ensureShopIds(snapshot.products),hardware:snapshot.hardware,sales:snapshot.sales,nonCommercial:Array.isArray(snapshot.nonCommercial)?snapshot.nonCommercial:[],printers:Array.isArray(snapshot.printers)?snapshot.printers:[],invoices:Array.isArray(snapshot.invoices)?snapshot.invoices:[],invoiceSettings:snapshot.invoiceSettings&&typeof snapshot.invoiceSettings==='object'?snapshot.invoiceSettings:{}};
+   rolls=snapshot.rolls.map(x=>({...x}));prints=snapshot.prints.map(x=>({...x}));extras={products:ensureShopIds(snapshot.products),hardware:snapshot.hardware,sales:snapshot.sales,nonCommercial:Array.isArray(snapshot.nonCommercial)?snapshot.nonCommercial:[],printers:Array.isArray(snapshot.printers)?snapshot.printers:[],invoices:Array.isArray(snapshot.invoices)?snapshot.invoices:[],stockSlips:Array.isArray(snapshot.stockSlips)?snapshot.stockSlips:[],invoiceSettings:snapshot.invoiceSettings&&typeof snapshot.invoiceSettings==='object'?snapshot.invoiceSettings:{}};
    search='';render();return true;
   },
   closeAllDialogs(){for(const d of document.querySelectorAll('dialog[open]'))d.close();}
