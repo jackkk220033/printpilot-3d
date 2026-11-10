@@ -371,3 +371,10 @@ select[data-choice]{width:100%;min-width:0}
 .jj-order-info p{margin:0 0 8px;line-height:1.5;color:#eee8fb;font-size:.91rem}
 .jj-mini-conditions{margin:12px 0;padding:10px 12px;background:#211b36;border:1px solid #66518d;border-radius:10px;color:#eee6ff;font-size:.84rem;line-height:1.6}
 @media(max-width:760px){.jj-order-info-grid{grid-template-columns:1fr}.jj-order-info{padding:14px}}
+
+/* JJ3D v4.11.25 : confirmation de publication visible, sans ouvrir le panneau cloud */
+.jj3d-sync-pill{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;background:#22304b;color:#c9d8ff;font-size:11px;font-weight:650;white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis}
+.jj3d-sync-pill[data-state="success"]{background:#183b35;color:#98efcb}
+.jj3d-sync-pill[data-state="error"]{background:#4d2435;color:#ffc0c7}
+.jj3d-sync-pill[data-state="pending"]{background:#483820;color:#ffe1a4}
+@media(max-width:640px){.jj3d-sync-pill{font-size:10px;max-width:130px;white-space:normal;line-height:1.1}}
