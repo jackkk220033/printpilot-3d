@@ -14,7 +14,9 @@ const adapter = window.PrintPilotCloudAdapter;
 const photoStatus=document.getElementById('photo-cloud-status');
 const photoMigrateButton=document.getElementById('cloud-migrate-photos');
 let photoUnsub=null,photoReady=false;
-let unreadUnsub=null,requestsUnsub=null,ordersUnsub=null;
+let unreadUnsub=null,requestsUnsub=null,ordersUnsub=null,invoiceOrdersUnsub=null;
+window.JJ3DClientOrders={ready:false,records:[]};
+function setInvoiceOrders(records,ready){window.JJ3DClientOrders={ready,records};window.dispatchEvent(new Event("jj3d:orders-updated"));}
 let ppRequestCount=0,ppOrderCount=0,ppUnreadCount=0;
 function showNotificationLocations(){
  const area=document.getElementById('pp-notification-where');if(!area)return;
@@ -32,7 +34,7 @@ function setUnreadBadge(count){ppUnreadCount=count;showNotificationLocations();
   el.setAttribute('aria-label', count+' message(s) non lu(s)');
  });
 }
-function stopUnreadBadge(){if(unreadUnsub){unreadUnsub();unreadUnsub=null;}if(requestsUnsub){requestsUnsub();requestsUnsub=null;}if(ordersUnsub){ordersUnsub();ordersUnsub=null;}setUnreadBadge(0);setRequestBadge(0);setOrderBadge(0);}
+function stopUnreadBadge(){if(invoiceOrdersUnsub){invoiceOrdersUnsub();invoiceOrdersUnsub=null;}setInvoiceOrders([],false);if(unreadUnsub){unreadUnsub();unreadUnsub=null;}if(requestsUnsub){requestsUnsub();requestsUnsub=null;}if(ordersUnsub){ordersUnsub();ordersUnsub=null;}setUnreadBadge(0);setRequestBadge(0);setOrderBadge(0);}
 
 let photoCache=new Map();
 const photoId=key=>Array.from(new TextEncoder().encode(key),b=>b.toString(16).padStart(2,'0')).join('');
@@ -297,6 +299,7 @@ if(!configOK){
     },err=>{console.warn('Badge Messages Boutique:',err);setUnreadBadge(0);});
     try{requestsUnsub=onSnapshot(query(collection(db,'boutiques',user.uid,'requests'),where('status','==','pending')),snap=>setRequestBadge(snap.size),err=>{console.warn('Badge demandes:',err);setRequestBadge(0);});}catch(err){console.warn('Badge demandes:',err);setRequestBadge(0);}
     try{ordersUnsub=onSnapshot(query(collection(db,'boutiques',user.uid,'orders'),where('status','==','pending')),snap=>setOrderBadge(snap.size),err=>{console.warn('Badge commandes:',err);setOrderBadge(0);});}catch(err){console.warn('Badge commandes:',err);setOrderBadge(0);}
+    try{invoiceOrdersUnsub=onSnapshot(collection(db,'boutiques',user.uid,'orders'),snap=>{setInvoiceOrders(snap.docs.map(d=>({id:d.id,...d.data()})),true);},err=>{console.warn('Factures commandes:',err);setInvoiceOrders([],false);});}catch(err){console.warn('Factures commandes:',err);setInvoiceOrders([],false);}
    } catch(err){console.warn('Badge Messages Boutique:',err);setUnreadBadge(0);}
 
   });
