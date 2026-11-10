@@ -16,3 +16,18 @@
 .jj-invoice-total{text-align:right;margin:12px 0;font-weight:700;font-size:1.2rem}
 .jj-invoice-empty{color:#9eb0cd}
 @media(max-width:600px){.jj-invoice-form{grid-template-columns:1fr}.jj-invoice-wide{grid-column:auto}.jj-invoice-table{font-size:.78rem}.jj-invoice-table input{padding:5px}.jj-invoice-modal{padding:12px}}
+
+/* v4.11.15 — Résumé facture lisible à toutes les tailles */
+.jj-invoice-total{margin:12px 0;text-align:initial;font-size:initial;font-weight:initial;min-width:0}
+.jj-bill-summary{width:100%;max-width:100%;overflow:hidden;background:#101a30;border:1px solid #465a81;border-radius:16px;color:#f6f8ff;box-shadow:0 5px 22px #0002}
+.jj-bill-title{margin:0;padding:15px 18px;font-size:1rem;font-weight:750;color:#f6f8ff;border-bottom:1px solid #344562;letter-spacing:.01em}
+.jj-bill-detail{padding:12px 18px}
+.jj-total-row{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:7px 0;font-size:.95rem;line-height:1.4}
+.jj-total-row span{color:#b4c6e7;font-weight:450;min-width:0}
+.jj-total-row strong{white-space:nowrap;text-align:right;font-weight:650;font-variant-numeric:tabular-nums}
+.jj-bill-discount strong{color:#91e1bf}
+.jj-bill-grand{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:17px 18px;background:linear-gradient(110deg,#31215b,#51299b);border-top:1px solid #996efa}
+.jj-bill-grand>span{font-size:1rem;font-weight:750;line-height:1.25}
+.jj-bill-grand small{display:block;color:#d7c6ff;margin-top:4px;font-size:.68rem;letter-spacing:.09em}
+.jj-bill-grand strong{font-size:clamp(1.35rem,4vw,2rem);line-height:1.25;white-space:nowrap;font-variant-numeric:tabular-nums}
+@media(max-width:500px){.jj-bill-title{padding:13px 14px}.jj-bill-detail{padding:10px 14px}.jj-bill-grand{padding:14px}.jj-total-row{font-size:.9rem}.jj-bill-grand strong{font-size:1.4rem}}
