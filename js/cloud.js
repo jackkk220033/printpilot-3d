@@ -16,6 +16,7 @@ const photoMigrateButton=document.getElementById('cloud-migrate-photos');
 let photoUnsub=null,photoReady=false;
 let boutiqueAutoRequested=false, boutiqueAutoTimer=null, boutiqueAutoRunning=false, boutiqueAutoRetry=false;
 let cataloguePublishedKnown=false, lastPhotoPublication=new Map();
+let boutiqueLastSignature=null, boutiqueForcePublication=false;
 let unreadUnsub=null,requestsUnsub=null,ordersUnsub=null,invoiceOrdersUnsub=null,deliveryReceiptsUnsub=null;
 window.JJ3DClientOrders={ready:false,records:[]};
 function setInvoiceOrders(records,ready){window.JJ3DClientOrders={ready,records};window.dispatchEvent(new Event("jj3d:orders-updated"));}
@@ -57,7 +58,7 @@ function boutiqueSyncState(message,kind='idle'){
  if(el){el.textContent=message;el.dataset.state=kind;el.title='État de publication du catalogue Boutique';}
 }
 function showError(e){console.error('PrintPilot cloud:',e); const message=e?.code ==='auth/invalid-credential'?'Courriel ou mot de passe incorrect.': e?.code==='auth/email-already-in-use'?'Ce courriel possède déjà un compte.':e?.code==='auth/weak-password'?'Mot de passe trop faible.':e?.code==='permission-denied'?'Permission refusée : vérifie les règles Firestore et le projet Firebase.':String(e?.message||e);errorEl.textContent=message;setStatus('Synchronisation interrompue — données locales conservées.',true);}
-function resetCloud(){window.JJ3DAutoPublishCatalogue=null;window.JJ3DPublishCatalogueAfterSave=null;boutiqueSyncState('Boutique : hors ligne','idle');jj3dLastPublishedRevision=null;clearTimeout(boutiqueAutoTimer);boutiqueAutoRequested=false;boutiqueAutoRunning=false;boutiqueAutoRetry=false;cataloguePublishedKnown=false;lastPhotoPublication.clear();stopUnreadBadge();if(photoUnsub){photoUnsub();photoUnsub=null;}photoCache.clear();photoReady=false;photoNotice('Connecte-toi pour synchroniser les photos.');window.dispatchEvent(new Event('printpilot:photos-changed'));active=false;pending=false;conflict=false;busy=false;remote=null;baseRevision=null;observedOnce=false;clearTimeout(timer);if(unsubscribe){unsubscribe();unsubscribe=null;}setStatus('Connecte-toi pour retrouver tes données.');}
+function resetCloud(){window.JJ3DAutoPublishCatalogue=null;window.JJ3DPublishCatalogueAfterSave=null;boutiqueSyncState('Boutique : hors ligne','idle');jj3dLastPublishedRevision=null;clearTimeout(boutiqueAutoTimer);boutiqueAutoRequested=false;boutiqueAutoRunning=false;boutiqueAutoRetry=false;cataloguePublishedKnown=false;boutiqueLastSignature=null;boutiqueForcePublication=false;lastPhotoPublication.clear();stopUnreadBadge();if(photoUnsub){photoUnsub();photoUnsub=null;}photoCache.clear();photoReady=false;photoNotice('Connecte-toi pour synchroniser les photos.');window.dispatchEvent(new Event('printpilot:photos-changed'));active=false;pending=false;conflict=false;busy=false;remote=null;baseRevision=null;observedOnce=false;clearTimeout(timer);if(unsubscribe){unsubscribe();unsubscribe=null;}setStatus('Connecte-toi pour retrouver tes données.');}
 function setRemoteData(record){remote=record;remoteInfo.textContent=describe(record);document.getElementById('cloud-download').disabled=!record;}
 function rememberSynced(){localStorage.setItem(LINK_UID,currentUser.uid);localStorage.setItem(DIGEST_KEY,localJSON());}
 function safeSyncRemote(record){
@@ -127,14 +128,8 @@ async function uploadSnapshot(){
  }finally{
   busy=false;pending=false;
   const noMoreLocalEdits=localJSON()===serialized;
-  if(active && !conflict && noMoreLocalEdits && localStorage.getItem(DIGEST_KEY)===serialized){
-    // Publication directe et vérifiable, avec le cliché réellement sauvegardé.
-    // Une erreur de publication Boutique ne désactive PAS la synchronisation privée.
-    try{await window.JJ3DPublishCatalogueAfterSave?.(snapshot);}catch(e){
-      console.error('JJ3D : publication Boutique après sauvegarde :',e);
-      boutiqueSyncState('Boutique : échec de publication','error');
-    }
-  }
+  // La Boutique possède désormais sa propre file de publication indépendante.
+  // Ne pas attendre la fin du stockage privé pour la mettre à jour.
   if(active && localJSON()!==localStorage.getItem(DIGEST_KEY))scheduleUpload();
  }
 }
@@ -143,7 +138,12 @@ function scheduleUpload(){
  pending=true;setStatus('☁ Modifications locales en attente de synchronisation…');boutiqueSyncState('Boutique : mise à jour en attente','pending');
  clearTimeout(timer);timer=setTimeout(()=>{if(busy){scheduleUpload();return;}uploadSnapshot();},1100);
 }
-window.addEventListener('printpilot:changed',()=>{if(active)scheduleUpload();else if(currentUser)setStatus('Données modifiées localement. Active le cloud pour les synchroniser.');});
+window.addEventListener('printpilot:changed',()=>{
+ if(active)scheduleUpload();else if(currentUser)setStatus('Modifications locales enregistrées. Synchronisation privée à activer séparément.');
+ // Événement émis uniquement APRÈS que l'enregistrement local est confirmé.
+ // La publication Boutique n'attend pas la transaction /workspaces.
+ if(currentUser && !conflict)window.JJ3DAutoPublishCatalogue?.();
+});
 openBtn.addEventListener('click',()=>modal.showModal());
 closeBtn.addEventListener('click',()=>modal.close());
 if(!configOK){
@@ -170,7 +170,7 @@ if(!configOK){
       const ref=doc(db,'workspaces',currentUser.uid,'photos',photoId(key));
       await setDoc(ref,{key,image,updatedAt:serverTimestamp()});
       photoCache.set(key,image);
-      window.JJ3DAutoPublishCatalogue?.();
+      window.JJ3DAutoPublishCatalogue?.(true);
       window.dispatchEvent(new Event('printpilot:photos-changed'));
     }
   };
@@ -232,9 +232,12 @@ if(!configOK){
   let didLoadExistingCatalogue=false;
   async function publishBoutique(auto=false, snapshotOverride=null){
     if(boutiqueBusy){boutiqueAutoRequested=true;return;}
-    ownerRequired();
-    if(auto && (pending||busy)){boutiqueAutoRequested=true;return;}
-    if(!auto && (pending||busy))throw Error('Attends la fin de la synchronisation avant de publier.');
+    if(auto){
+      if(!currentUser || conflict)throw Error('Compte administrateur non connecté ou conflit Firebase.');
+    }else{
+      ownerRequired();
+      if(pending||busy)throw Error('Attends la fin de la synchronisation avant de publier.');
+    }
     // Les prix et le stock doivent se publier même si le stockage photo est indisponible.
     if(!auto && !photoReady)boutiqueNotice('Photos cloud indisponibles : publication des informations produit uniquement.');
     if(!auto && !confirm('Publier les noms, photos, prix et stocks des produits commerciaux vers le portail Boutique?'))return;
@@ -244,7 +247,7 @@ if(!configOK){
       const entries=(state.products||[]).filter(p=>Number(p.stock)>0 && p.hiddenOffProduction!==true && p.commercialHidden!==true && p.hiddenFromCatalog!==true);
       const existingSnap=await getDoc(doc(db,'boutiques',currentUser.uid,'catalogue','current'));
       const prior=existingSnap.exists()&&Array.isArray(existingSnap.data().products)?existingSnap.data().products:null;
-      if(auto&&prior===null){cataloguePublishedKnown=false;boutiqueSyncState('Boutique : première publication nécessaire','pending');return;}
+      // Un nouveau catalogue peut aussi être créé sans action manuelle.
       const priorById=new Map((prior||[]).map(p=>[String(p.shopId||p.id),p]));
       const firstPublication=new Date().toISOString();
       const products=entries.map(p=>({
@@ -274,39 +277,43 @@ if(!configOK){
         }catch(e){failed++;console.warn('Publication photo Boutique:',key,e);}
       }
       boutiqueNotice(`✓ Catalogue Boutique à jour • ${products.length} produits${uploaded?' • '+uploaded+' photo(s) mise(s) à jour':''}${failed?' • '+failed+' erreur(s) de photo':''} • ${stamp()}`,failed>0);
+      boutiqueLastSignature=JSON.stringify(state.products||[]);
+      if(!boutiqueAutoRequested)boutiqueForcePublication=false;
       boutiqueSyncState(failed?'Boutique : données à jour, photo(s) à vérifier':'Boutique : à jour ✓',failed?'error':'success');
       if(failed)boutiqueAutoRetry=true;
     }finally{
       boutiqueBusy=false;catalogButton.disabled=false;
-      if(boutiqueAutoRequested){boutiqueAutoRequested=false;requestAutoBoutiquePublication();}
+      if(boutiqueAutoRequested){requestAutoBoutiquePublication();}
     }
   }
-  function requestAutoBoutiquePublication(){
-    if(!currentUser||!active||conflict)return;
+  // Publication Boutique AUTONOME : jamais bloquée par pending/busy du cloud privé.
+  // Chaque sauvegarde de produit déclenche ce planificateur, même si le panneau
+  // Synchronisation n'a jamais été ouvert. Une écriture en cours est sérialisée.
+  function requestAutoBoutiquePublication(force=false){
+    if(!currentUser)return;
+    if(conflict){boutiqueSyncState('Boutique : conflit Firebase — vérifier les données','error');return;}
+    if(force)boutiqueForcePublication=true;
     boutiqueAutoRequested=true;
+    boutiqueSyncState('Boutique : publication automatique prévue…','pending');
     clearTimeout(boutiqueAutoTimer);
     boutiqueAutoTimer=setTimeout(async()=>{
-      if(!boutiqueAutoRequested)return;
-      if(!active||conflict||!currentUser)return;
-      if(pending||busy||boutiqueBusy){requestAutoBoutiquePublication();return;}
+      if(!boutiqueAutoRequested||!currentUser||conflict)return;
+      if(boutiqueBusy)return; // finally publiera les changements plus récents.
       boutiqueAutoRequested=false;
+      const signature=JSON.stringify(adapter.exportState().products||[]);
+      if(!boutiqueForcePublication && signature===boutiqueLastSignature){
+        boutiqueSyncState('Boutique : à jour ✓','success');return;
+      }
       try{await publishBoutique(true);}catch(e){
         console.error('Publication automatique JJ3D:',e);
-        boutiqueNotice('⚠ Catalogue non actualisé automatiquement : '+e.message+' — utilise « Publier / actualiser » pour réessayer.',true);boutiqueSyncState('Boutique : erreur — ouvrir Synchronisation','error');
+        boutiqueNotice('⚠ Boutique non mise à jour : '+e.message+' — vérifie Firebase ou réessaie manuellement.',true);
+        boutiqueSyncState('Boutique : erreur de publication — '+String(e.code||e.message).slice(0,90),'error');
       }
-    },1500);
+    },650);
   }
-  // Appelé explicitement après que la sauvegarde privée est CONFIRMÉE.
-  // Le même snapshot est utilisé : aucune lecture de données non sauvegardées.
-  window.JJ3DPublishCatalogueAfterSave=async snapshot=>{
-    if(!currentUser||!active||conflict)return;
-    try{await publishBoutique(true,snapshot);}catch(e){
-      boutiqueNotice('⚠ Publication automatique en échec : '+e.message,true);
-      boutiqueSyncState('Boutique : erreur de publication','error');
-      throw e;
-    }
-  };
+  // Compatibilité avec les autres modules qui publient des photos / commandes.
   window.JJ3DAutoPublishCatalogue=requestAutoBoutiquePublication;
+  window.JJ3DPublishCatalogueAfterSave=async()=>{requestAutoBoutiquePublication();};
   catalogButton.addEventListener('click',async()=>{
     try{await publishBoutique(false);}catch(e){console.error('Publication boutique:',e);boutiqueNotice('Publication impossible : '+e.message,true);}
   });
@@ -319,8 +326,8 @@ if(!configOK){
       cataloguePublishedKnown=snap.exists();didLoadExistingCatalogue=true;if(!cataloguePublishedKnown)boutiqueSyncState('Boutique : publication initiale requise','pending');
       if(cataloguePublishedKnown){
         boutiqueNotice('✓ Publication automatique activée. Les sauvegardes Firebase actualiseront le catalogue Boutique.');boutiqueSyncState('Boutique : publication automatique active','success');
-        // Relance une publication après la détection. Le mécanisme attend la fin de la sauvegarde cloud.
-        requestAutoBoutiquePublication();
+        // Ne pas republier au simple chargement de la page : les données locales
+        // peuvent être plus anciennes que la sauvegarde Firebase privée.
       }
     }catch(e){console.warn('Détection catalogue:',e);boutiqueSyncState('Boutique : détection impossible','error');}
   }
@@ -336,7 +343,9 @@ if(!configOK){
       photoReady=true;
       photoNotice(`${photoCache.size} photo(s) cloud disponibles. Les nouvelles photos sont synchronisées avec ton compte.`);
       window.dispatchEvent(new Event('printpilot:photos-changed'));
-      if(initialPhotoSnapshot){initialPhotoSnapshot=false;}else{requestAutoBoutiquePublication();}
+      if(initialPhotoSnapshot)initialPhotoSnapshot=false;
+      // Le déclenchement des photos enregistrées localement est fait dans savePhoto.
+      // Une mise à jour externe de cache ne doit pas publier un catalogue local périmé.
       if(boutiqueAutoRequested)requestAutoBoutiquePublication();
     },err=>{photoReady=false;photoNotice('Erreur photos cloud : '+(err.code||err.message)+'. Vérifie les règles Firestore.');console.error('Photos cloud:',err);});
   }
