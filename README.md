@@ -26,3 +26,6 @@ Le formulaire Modifier s’ouvre dans la partie visible de la page intégrée, p
 
 ## v4.11.21
 Champs heures/minutes de À imprimer vides par défaut avec exemples de saisie; durées déjà renseignées conservées en modification.
+
+## v4.11.22 — Tarification horaire correcte
+Le tarif d'impression en $/h est un montant facturé, non un coût. Chaque produit peut avoir un tarif distinct. Le simulateur affiche le montant du temps facturé, les coûts réels, un prix suggéré pour couvrir le tarif désiré après la commission Boutique, et le montant restant après coûts et commission. Les produits enregistrés sous l'ancienne logique sont normalisés sans toucher aux ventes historiques. Les prix de vente déjà saisis ne changent pas.

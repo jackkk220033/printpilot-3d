@@ -130,6 +130,16 @@
  window.PrintPilotLocalPhotos={migrateLocalPhotos};
  window.addEventListener('printpilot:photos-changed',()=>hydratePhotos());
  // ID externe numérique : unique par variante, indépendant de l’ID descriptif Excel.
+ // v4.11.22 : le tarif machine est une partie du prix facturé, pas un coût.
+ // Corrige seulement les fiches issues de l'ancien calcul horaire; jamais les ventes déjà enregistrées.
+ function normalizeProductPricing(p){
+  if(!p || p.pricingModel==='hourly-revenue-v1')return p;
+  if(p.hourlyRate===undefined || p.hourlyRate===null || p.printTimeCost===undefined)return p;
+  const timeCharge=Math.max(0,safeNum(p.printTimeCost));
+  const correctedCost=Math.max(0,safeNum(p.unitCost)-timeCharge);
+  const price=safeNum(p.price),rate=safeNum(p.commissionRate);
+  return {...p,unitCost:correctedCost,unitProfit:price-correctedCost-price*rate,pricingModel:'hourly-revenue-v1'};
+ }
  function ensureShopIds(products){
   // Migration v1.4 : IDs 1001, 1002... -> 1, 2... une seule fois.
   // Ne jamais changer les autres IDs valides, même si une variante change de nom.
@@ -144,7 +154,7 @@
     id=String(next++);
    }
    used.add(id);
-   return {...product,shopId:id};
+   return normalizeProductPricing({...product,shopId:id});
   });
  }
  function catalogCsv(){
@@ -294,7 +304,7 @@
   render();notify('✓ '+changes.length+' variantes corrigées. Réattribue leurs photos individuellement.');
  }
  function productPage(){const p=commercialProducts();return header('CATALOGUE','Mes produits','Tes modèles et leurs prix. Pour fabriquer un nouveau modèle, utilise « Impressions » : la fiche se crée automatiquement.',`<div class="header-actions"><button type="button" class="secondary-btn" id="repair-variant-ids">🔧 Réparer ID variantes</button><button type="button" class="primary-btn" id="add-product">＋ Ajouter un produit</button>${importButton()}</div>`)+warning()+(p.length?'':excelNotice())+`<div class="stats-grid three">${statCard('⬡',number(p.length),'Produits / variantes')}${statCard('▣',number(p.reduce((s,r)=>s+safeNum(r.stock),0)),'Unités en stock')}${statCard('$',money(p.reduce((s,r)=>s+safeNum(r.stock)*safeNum(r.price),0)),'Valeur stock au prix de vente')}</div><section class="panel"><div class="panel-head"><div><h2>Tous mes produits</h2><p>Produits Excel et produits créés dans PrintPilot.</p></div><input class="table-filter" id="product-search" placeholder="Rechercher un produit…" type="search"></div>${filterToolbar('produits')}<div id="product-results">${productRows('')}</div></section>`;}
- function productRows(searchTerm){const p=filteredProducts('produits',searchTerm);return p.length?`<div class="inventory-card-grid">${p.map(r=>`<article class="inventory-card"><button type="button" class="admin-product-preview" data-view-admin-product="${esc(r.shopId)}" aria-label="Agrandir ${esc(r.name)}">${productThumb(r,'product-card-image')}</button><div class="inventory-card-head"><div><h3>${esc(r.name)}</h3><small>ID stock #${esc(r.shopId)} · ${esc(r.id)}</small></div><strong>${money(r.price)}</strong></div><div class="detail-grid"><div><small>Catégorie</small><strong>${esc(r.category||'—')}</strong></div><div><small>Couleurs</small><strong>${esc(r.colors||'—')}</strong></div><div><small>En stock</small><strong>${number(r.stock)}</strong></div><div><small>Temps d’impression</small><strong>${esc(excelPrintDuration(r))}</strong></div><div><small>Coût / unité</small><strong>${money(r.unitCost)}</strong></div><div><small>Temps facturé (${money(r.hourlyRate??2)}/h)</small><strong>${money(r.printTimeCost??safeNum(r.timeDays)*24*2)}</strong></div><div><small>Profit estimé</small><strong>${money(r.unitProfit)}</strong></div></div><div class="actions"><button type="button" class="secondary-btn" data-edit-product="${esc(r.shopId)}">✎ Modifier</button><button type="button" class="secondary-btn" data-new-print-product="${esc(r.id)}">＋ Impression</button><button type="button" class="secondary-btn" data-new-sale-product="${esc(r.id)}">＄ Vente</button>${safeNum(r.stock)>0&&safeNum(r.printed)>0?`<button type="button" class="secondary-btn" data-open-move-off="${esc(r.id)}">⚠ Classer hors production</button>`:""}<button type="button" class="secondary-btn" data-upload-product="${esc(r.shopId)}">🖼 Importer photo</button><button type="button" class="secondary-btn" data-camera-product="${esc(r.shopId)}">📸 Prendre photo</button></div></article>`).join('')}</div>`:'<p class="empty">Aucun produit à afficher.</p>';}
+ function productRows(searchTerm){const p=filteredProducts('produits',searchTerm);return p.length?`<div class="inventory-card-grid">${p.map(r=>`<article class="inventory-card"><button type="button" class="admin-product-preview" data-view-admin-product="${esc(r.shopId)}" aria-label="Agrandir ${esc(r.name)}">${productThumb(r,'product-card-image')}</button><div class="inventory-card-head"><div><h3>${esc(r.name)}</h3><small>ID stock #${esc(r.shopId)} · ${esc(r.id)}</small></div><strong>${money(r.price)}</strong></div><div class="detail-grid"><div><small>Catégorie</small><strong>${esc(r.category||'—')}</strong></div><div><small>Couleurs</small><strong>${esc(r.colors||'—')}</strong></div><div><small>En stock</small><strong>${number(r.stock)}</strong></div><div><small>Temps d’impression</small><strong>${esc(excelPrintDuration(r))}</strong></div><div><small>Coût / unité</small><strong>${money(r.unitCost)}</strong></div><div><small>Montant du temps facturé (${money(r.hourlyRate??2)}/h)</small><strong>${money(r.printTimeCost??safeNum(r.timeDays)*24*2)}</strong></div><div><small>Profit estimé</small><strong>${money(r.unitProfit)}</strong></div></div><div class="actions"><button type="button" class="secondary-btn" data-edit-product="${esc(r.shopId)}">✎ Modifier</button><button type="button" class="secondary-btn" data-new-print-product="${esc(r.id)}">＋ Impression</button><button type="button" class="secondary-btn" data-new-sale-product="${esc(r.id)}">＄ Vente</button>${safeNum(r.stock)>0&&safeNum(r.printed)>0?`<button type="button" class="secondary-btn" data-open-move-off="${esc(r.id)}">⚠ Classer hors production</button>`:""}<button type="button" class="secondary-btn" data-upload-product="${esc(r.shopId)}">🖼 Importer photo</button><button type="button" class="secondary-btn" data-camera-product="${esc(r.shopId)}">📸 Prendre photo</button></div></article>`).join('')}</div>`:'<p class="empty">Aucun produit à afficher.</p>';}
 
  function fixChristmasColors(){
   const expected=[['20','Bleu'],['21','Blanc'],['22','Or / Mauve']];
@@ -335,9 +345,11 @@
   const f=document.getElementById('product-form');const lines=productMaterialLines().filter(m=>m.id&&m.raw!==''&&m.grams>0);
   const filamentCost=productMaterialCost(lines),hardwarePerUnit=hardwareCost(getHardwareLines('product-hardware-lines').filter(x=>x.id&&x.raw)),otherCost=Number(f.elements.namedItem('otherCost').value)||0,price=Number(f.elements.namedItem('price').value)||0,rate=Number(f.elements.namedItem('commissionRate').value)||0;
   const hours=Number(f.elements.namedItem('hours').value)||0,mins=Number(f.elements.namedItem('mins').value)||0,hourlyRate=Number(f.elements.namedItem('hourlyRate').value)||0;
-  const printingCost=Math.max(0,hours+mins/60)*Math.max(0,hourlyRate);
-  const total=filamentCost+hardwarePerUnit+otherCost+printingCost,profit=price-total-price*rate/100;
-  document.getElementById('product-cost-preview').innerHTML=`<div><small>Filament / unité</small><strong>${money(filamentCost)}</strong></div><div><small>Hardware / unité</small><strong>${money(hardwarePerUnit)}</strong></div><div><small>Autres coûts / unité</small><strong>${money(otherCost)}</strong></div><div><small>Temps (${number(hours+mins/60,2)} h × ${money(hourlyRate)}/h)</small><strong>${money(printingCost)}</strong></div><div><small>Coût total estimé / unité</small><strong>${money(total)}</strong></div><div><small>Prix de vente (modifiable)</small><strong>${money(price)}</strong></div><div><small>Profit estimé après commission</small><strong>${money(profit)}</strong></div>`;
+  const timeCharge=Math.max(0,hours+mins/60)*Math.max(0,hourlyRate);
+  const realCosts=filamentCost+hardwarePerUnit+otherCost;
+  const commission=price*rate/100,profit=price-realCosts-commission;
+  const proposedPrice=rate<100?(realCosts+timeCharge)/(1-rate/100):0;
+  document.getElementById('product-cost-preview').innerHTML=`<div><small>Filament / unité</small><strong>${money(filamentCost)}</strong></div><div><small>Hardware / unité</small><strong>${money(hardwarePerUnit)}</strong></div><div><small>Autres coûts / unité</small><strong>${money(otherCost)}</strong></div><div><small>Tarif facturé (${number(hours+mins/60,2)} h × ${money(hourlyRate)}/h)</small><strong>${money(timeCharge)}</strong></div><div><small>Coûts réels / unité (sans tarif horaire)</small><strong>${money(realCosts)}</strong></div><div><small>Prix suggéré incluant le tarif horaire et la commission</small><strong>${rate<100?money(proposedPrice):'Commission à vérifier'}</strong></div><div><small>Prix de vente (modifiable)</small><strong>${money(price)}</strong></div><div><small>Commission estimée</small><strong>${money(commission)}</strong></div><div><small>Montant restant après coûts et commission</small><strong>${money(profit)}</strong></div>`;
  }
  // Menus intelligents : valeurs importées d'Excel + celles ajoutées dans PrintPilot.
  const CHOICE_OTHER='__other__';
@@ -430,8 +442,8 @@
   if(materialsRaw.some(m=>(m.id&&!m.raw)||(!m.id&&m.raw)||(m.id&&(!Number.isFinite(m.grams)||m.grams<=0)))){err.textContent='Sélectionne une bobine et des grammes positifs pour chaque ligne utilisée.';return;}
   const hardwareRaw=getHardwareLines('product-hardware-lines');if(!hardwareLinesValid(hardwareRaw)){err.textContent='Vérifie le composant et sa quantité entière par unité.';return;}const hardware=hardwareRaw.filter(h=>h.id).map(h=>({id:h.id,quantity:h.quantity}));
   const materials=materialsRaw.filter(m=>m.id&&m.grams>0).map(m=>({id:rolls.find(r=>r.id===m.id)?.code||m.id,grams:m.grams}));
-  const unchangedMaterials=prev&&JSON.stringify(materials)===JSON.stringify(prev.materials||[]);const filamentCost=unchangedMaterials?safeNum(prev.filamentCost):productMaterialCost(materials),printTimeCost=(hours+mins/60)*hourlyRate,unitCost=filamentCost+hardwareCost(hardware)+other+printTimeCost;
-  const row={...prev,id,legacyPhotoId:prev?.legacyPhotoId||prev?.id||id,name,category:choiceValue(f,'category'),colors:choiceValue(f,'colors'),printer:choiceValue(f,'printer'),materials,hardware,grams:materials.reduce((a,m)=>a+m.grams,0),timeDays:(hours*60+mins)/1440,hourlyRate,printTimeCost,filamentCost,otherCost:other,unitCost,stock,price,commissionRate:rate/100,unitProfit:price-unitCost-price*rate/100,notes:String(raw.notes||'').trim(),printed:prev?.printed??0,sold:prev?.sold??0,shopId:prev?.shopId||'',source:prev?.source||'PrintPilot'};
+  const unchangedMaterials=prev&&JSON.stringify(materials)===JSON.stringify(prev.materials||[]);const filamentCost=unchangedMaterials?safeNum(prev.filamentCost):productMaterialCost(materials),printTimeCost=(hours+mins/60)*hourlyRate,unitCost=filamentCost+hardwareCost(hardware)+other;
+  const row={...prev,id,legacyPhotoId:prev?.legacyPhotoId||prev?.id||id,name,category:choiceValue(f,'category'),colors:choiceValue(f,'colors'),printer:choiceValue(f,'printer'),materials,hardware,grams:materials.reduce((a,m)=>a+m.grams,0),timeDays:(hours*60+mins)/1440,hourlyRate,printTimeCost,pricingModel:'hourly-revenue-v1',filamentCost,otherCost:other,unitCost,stock,price,commissionRate:rate/100,unitProfit:price-unitCost-price*rate/100,notes:String(raw.notes||'').trim(),printed:prev?.printed??0,sold:prev?.sold??0,shopId:prev?.shopId||'',source:prev?.source||'PrintPilot'};
   // Commission en modèle Excel : fraction 0..1. Existing XLSM uses e.g. 0.30.
   const next={...extras,products:ensureShopIds(prev?extras.products.map(p=>String(p.shopId)===originalShopId?row:p):[...extras.products,row])};
   if(convertingPrintId){
@@ -730,7 +742,7 @@
   const materials=printUsage.map(u=>({id:rolls.find(r=>r.id===u.rollId)?.code||u.rollId,grams:Math.round(u.grams/qty*1000)/1000}));
   const filamentCost=printUsage.reduce((sum,u)=>{const r=rolls.find(x=>x.id===u.rollId);return sum+(r?safeNum(r.price)*u.grams/Number(r.initial):0);},0)/qty;
   const hardware=(entry.hardwareUsage||[]).map(h=>({id:h.id,quantity:h.quantity/qty}));
-  const rate=Number(raw.newRate)/100,other=Number(raw.newOther),price=Number(raw.newPrice),printTimeCost=(hours+mins/60)*hourlyRate,unitCost=filamentCost+hardwareCost(hardware)+other+printTimeCost;
+  const rate=Number(raw.newRate)/100,other=Number(raw.newOther),price=Number(raw.newPrice),unitCost=filamentCost+hardwareCost(hardware)+other;
   return {id,name:entry.product,category:choiceValue(document.getElementById('print-form'),'newCategory'),colors:choiceValue(document.getElementById('print-form'),'newColors'),printer:entry.printer,materials,hardware,grams:materials.reduce((a,m)=>a+m.grams,0),timeDays:entry.minutes/1440,filamentCost,otherCost:other,unitCost,price,commissionRate:rate,unitProfit:price-unitCost-price*rate,stock:qty,printed:qty,sold:0,shopId:'',source:'PrintPilot',notes:entry.notes};
  }
  function savePrint(event){event.preventDefault();const f=event.currentTarget;const error=document.getElementById('print-form-error');error.textContent='';const usages=[...document.querySelectorAll('#usage-lines .usage-line')].map(line=>({rollId:line.querySelector('.usage-roll').value,grams:Number(line.querySelector('.usage-grams').value),raw:line.querySelector('.usage-grams').value}));if(!usages.length||usages.some(u=>!u.rollId||!Number.isFinite(u.grams)||u.grams<=0||u.raw==='')){error.textContent='Sélectionne une bobine et une quantité positive pour chaque ligne.';return;}
