@@ -14,6 +14,8 @@ const adapter = window.PrintPilotCloudAdapter;
 const photoStatus=document.getElementById('photo-cloud-status');
 const photoMigrateButton=document.getElementById('cloud-migrate-photos');
 let photoUnsub=null,photoReady=false;
+let boutiqueAutoRequested=false, boutiqueAutoTimer=null, boutiqueAutoRunning=false, boutiqueAutoRetry=false;
+let cataloguePublishedKnown=false, lastPhotoPublication=new Map();
 let unreadUnsub=null,requestsUnsub=null,ordersUnsub=null,invoiceOrdersUnsub=null,deliveryReceiptsUnsub=null;
 window.JJ3DClientOrders={ready:false,records:[]};
 function setInvoiceOrders(records,ready){window.JJ3DClientOrders={ready,records};window.dispatchEvent(new Event("jj3d:orders-updated"));}
@@ -50,7 +52,7 @@ const stamp=()=>new Date().toLocaleString('fr-CA');
 const describe=doc=> doc ? `Version cloud ${doc.revision || 0} • ${doc.savedAt?.toDate?.()?.toLocaleString('fr-CA') || 'date indisponible'} • ${doc.data?.rolls?.length ?? 0} bobines, ${doc.data?.products?.length ?? 0} produits` : 'Aucune sauvegarde cloud pour ce compte.';
 function setStatus(message,isError=false){status.textContent=message;status.style.borderColor=isError?'#b45366':'#3b4e77';document.getElementById('sidebar-storage').textContent=active&&!conflict?'☁ Synchronisation active': '● Stockage local actif';}
 function showError(e){console.error('PrintPilot cloud:',e); const message=e?.code ==='auth/invalid-credential'?'Courriel ou mot de passe incorrect.': e?.code==='auth/email-already-in-use'?'Ce courriel possède déjà un compte.':e?.code==='auth/weak-password'?'Mot de passe trop faible.':e?.code==='permission-denied'?'Permission refusée : vérifie les règles Firestore et le projet Firebase.':String(e?.message||e);errorEl.textContent=message;setStatus('Synchronisation interrompue — données locales conservées.',true);}
-function resetCloud(){stopUnreadBadge();if(photoUnsub){photoUnsub();photoUnsub=null;}photoCache.clear();photoReady=false;photoNotice('Connecte-toi pour synchroniser les photos.');window.dispatchEvent(new Event('printpilot:photos-changed'));active=false;pending=false;conflict=false;busy=false;remote=null;baseRevision=null;observedOnce=false;clearTimeout(timer);if(unsubscribe){unsubscribe();unsubscribe=null;}setStatus('Connecte-toi pour retrouver tes données.');}
+function resetCloud(){window.JJ3DAutoPublishCatalogue=null;clearTimeout(boutiqueAutoTimer);boutiqueAutoRequested=false;boutiqueAutoRunning=false;boutiqueAutoRetry=false;cataloguePublishedKnown=false;lastPhotoPublication.clear();stopUnreadBadge();if(photoUnsub){photoUnsub();photoUnsub=null;}photoCache.clear();photoReady=false;photoNotice('Connecte-toi pour synchroniser les photos.');window.dispatchEvent(new Event('printpilot:photos-changed'));active=false;pending=false;conflict=false;busy=false;remote=null;baseRevision=null;observedOnce=false;clearTimeout(timer);if(unsubscribe){unsubscribe();unsubscribe=null;}setStatus('Connecte-toi pour retrouver tes données.');}
 function setRemoteData(record){remote=record;remoteInfo.textContent=describe(record);document.getElementById('cloud-download').disabled=!record;}
 function rememberSynced(){localStorage.setItem(LINK_UID,currentUser.uid);localStorage.setItem(DIGEST_KEY,localJSON());}
 function safeSyncRemote(record){
@@ -109,6 +111,7 @@ async function uploadSnapshot(){
   }
   // Publie une copie filtrée des bons Boutique, sans facture ni données privées.
   try{await window.JJ3DPublishDeliveries?.(snapshot);}catch(e){console.warn('Publication livraisons Boutique :',e);}
+  window.JJ3DAutoPublishCatalogue?.();
   // Another edit may have happened while awaiting network; don't mark those changes synced.
   localStorage.setItem(LINK_UID,currentUser.uid);
   localStorage.setItem(DIGEST_KEY,serialized);
@@ -153,6 +156,7 @@ if(!configOK){
       const ref=doc(db,'workspaces',currentUser.uid,'photos',photoId(key));
       await setDoc(ref,{key,image,updatedAt:serverTimestamp()});
       photoCache.set(key,image);
+      window.JJ3DAutoPublishCatalogue?.();
       window.dispatchEvent(new Event('printpilot:photos-changed'));
     }
   };
@@ -207,49 +211,93 @@ if(!configOK){
     try{const link=boutiqueLink();if(!link)throw Error('Connecte-toi en admin.');await navigator.clipboard.writeText(link);boutiqueNotice('✓ Lien Boutique copié.');}
     catch(e){boutiqueNotice('Copie manuellement le lien affiché dans le champ.',true);}
   });
-  document.getElementById('boutique-publish').addEventListener('click',async()=>{
-    if(boutiqueBusy)return;
+  // Synchronisation du catalogue Boutique. Les données privées ne sont jamais publiées.
+  // La publication automatique ne démarre qu'après une publication manuelle initiale.
+  const catalogButton=document.getElementById('boutique-publish');
+  let lastCatalogueRevision=null;
+  let didLoadExistingCatalogue=false;
+  async function publishBoutique(auto=false){
+    if(boutiqueBusy){boutiqueAutoRequested=true;return;}
+    ownerRequired();
+    if(auto && !cataloguePublishedKnown)return;
+    if(auto && (pending||busy)){boutiqueAutoRequested=true;return;}
+    if(!auto && (pending||busy))throw Error('Attends la fin de la synchronisation avant de publier.');
+    if(!photoReady){if(auto){boutiqueAutoRequested=true;return;}throw Error('Attends le chargement des photos cloud avant de publier.');}
+    if(!auto && !confirm('Publier les noms, photos, prix et stocks des produits commerciaux vers le portail Boutique?'))return;
+    boutiqueBusy=true;catalogButton.disabled=true;
     try{
-      ownerRequired();
-      if(pending||busy)throw Error('Attends la fin de la synchronisation avant de publier.');
-      if(!photoReady)throw Error('Attends le chargement des photos cloud avant de publier.');
-      if(!confirm('Publier les noms, photos, prix et stocks des produits commerciaux vers le portail Boutique?'))return;
-      boutiqueBusy=true;document.getElementById('boutique-publish').disabled=true;
       const state=adapter.exportState();
-      const entries=state.products.filter(p=>Number(p.stock)>0 && p.hiddenOffProduction!==true && p.commercialHidden!==true && p.hiddenFromCatalog!==true);
-      // Liste blanche stricte : NE JAMAIS copier les objets Produit entiers.
+      const entries=(state.products||[]).filter(p=>Number(p.stock)>0 && p.hiddenOffProduction!==true && p.commercialHidden!==true && p.hiddenFromCatalog!==true);
       const existingSnap=await getDoc(doc(db,'boutiques',currentUser.uid,'catalogue','current'));
       const prior=existingSnap.exists()&&Array.isArray(existingSnap.data().products)?existingSnap.data().products:null;
+      if(auto&&prior===null){cataloguePublishedKnown=false;return;}
       const priorById=new Map((prior||[]).map(p=>[String(p.shopId||p.id),p]));
       const firstPublication=new Date().toISOString();
       const products=entries.map(p=>({
-        firstPublishedAt: prior===null ? null : (priorById.has(String(p.shopId||p.id)) ? (priorById.get(String(p.shopId||p.id)).firstPublishedAt||null) : firstPublication),
+        firstPublishedAt:prior===null?null:(priorById.has(String(p.shopId||p.id))?(priorById.get(String(p.shopId||p.id)).firstPublishedAt||null):firstPublication),
         id:String(p.id||'').slice(0,160),shopId:String(p.shopId||'').slice(0,32),
         name:String(p.name||'Sans nom').slice(0,160),category:String(p.category||'').slice(0,90),
         colors:String(p.colors||'').slice(0,140),price:Math.max(0,Number(p.price)||0),
         stock:Math.max(0,Math.floor(Number(p.stock)||0))
       }));
       if(products.length>450)throw Error('Catalogue trop grand : maximum 450 variantes dans cette version.');
-      boutiqueNotice('Publication de '+products.length+' fiches et de leurs photos…');
-      // L’index d’abord; photos en documents distincts pour respecter la taille Firestore.
-      await setDoc(doc(db,'boutiques',currentUser.uid,'catalogue','current'),{
-        version:1,products,publishedAt:serverTimestamp()
-      });
+      boutiqueNotice(auto?'☁ Mise à jour automatique du catalogue Boutique…':'Publication du catalogue Boutique…');
+      // Index publié même lorsque des produits sont retirés du stock.
+      await setDoc(doc(db,'boutiques',currentUser.uid,'catalogue','current'),{version:1,products,publishedAt:serverTimestamp()});
+      cataloguePublishedKnown=true;
       let uploaded=0,missing=0,failed=0;
-      for(let i=0;i<products.length;i++){
-        const p=products[i];const original=entries.find(x=>String(x.shopId)===String(p.shopId));const photo=photoCache.get('print:product-shop:'+p.shopId)||photoCache.get('print:product:'+(original?.legacyPhotoId||p.id));
+      for(const product of products){
+        const original=entries.find(p=>String(p.shopId)===String(product.shopId));
+        const photo=photoCache.get('print:product-shop:'+product.shopId)||photoCache.get('print:product:'+(original?.legacyPhotoId||product.id));
         if(!photo||!photo.startsWith('data:image/jpeg;base64,')){missing++;continue;}
         if(photo.length>285000){failed++;continue;}
+        const key=String(product.shopId);
+        // Avoid writing every photo after every simple stock or price change.
+        if(lastPhotoPublication.get(key)===photo)continue;
         try{
-          await setDoc(doc(db,'boutiques',currentUser.uid,'photos',photoId('shop:'+p.shopId)),{image:photo,updatedAt:serverTimestamp()});
-          uploaded++;
-        }catch(e){failed++;console.error('Boutique photo',p.id,e);}
-        if(i%10===0)boutiqueNotice(`Publication : ${i+1}/${products.length} fiches vérifiées…`);
+          await setDoc(doc(db,'boutiques',currentUser.uid,'photos',photoId('shop:'+key)),{image:photo,updatedAt:serverTimestamp()});
+          lastPhotoPublication.set(key,photo);uploaded++;
+        }catch(e){failed++;console.warn('Publication photo Boutique:',key,e);}
       }
-      boutiqueNotice(`✓ Catalogue publié : ${products.length} produits, ${uploaded} photos; ${missing} sans photo cloud, ${failed} erreurs. À republier après chaque modification de stock/prix/photo.`);
-    }catch(e){console.error('Publication boutique:',e);boutiqueNotice('Publication impossible : '+e.message,true);}
-    finally{boutiqueBusy=false;document.getElementById('boutique-publish').disabled=false;}
+      boutiqueNotice(`✓ Catalogue Boutique à jour • ${products.length} produits${uploaded?' • '+uploaded+' photo(s) mise(s) à jour':''}${failed?' • '+failed+' erreur(s) de photo':''} • ${stamp()}`,failed>0);
+      if(failed)boutiqueAutoRetry=true;
+    }finally{
+      boutiqueBusy=false;catalogButton.disabled=false;
+      if(boutiqueAutoRequested){boutiqueAutoRequested=false;requestAutoBoutiquePublication();}
+    }
+  }
+  function requestAutoBoutiquePublication(){
+    if(!currentUser||!active||conflict||!cataloguePublishedKnown)return;
+    boutiqueAutoRequested=true;
+    clearTimeout(boutiqueAutoTimer);
+    boutiqueAutoTimer=setTimeout(async()=>{
+      if(!boutiqueAutoRequested)return;
+      if(!active||conflict||!currentUser)return;
+      if(pending||busy||boutiqueBusy||!photoReady){requestAutoBoutiquePublication();return;}
+      boutiqueAutoRequested=false;
+      try{await publishBoutique(true);}catch(e){
+        console.error('Publication automatique JJ3D:',e);
+        boutiqueNotice('⚠ Catalogue non actualisé automatiquement : '+e.message+' — utilise « Publier / actualiser » pour réessayer.',true);
+      }
+    },1500);
+  }
+  window.JJ3DAutoPublishCatalogue=requestAutoBoutiquePublication;
+  catalogButton.addEventListener('click',async()=>{
+    try{await publishBoutique(false);}catch(e){console.error('Publication boutique:',e);boutiqueNotice('Publication impossible : '+e.message,true);}
   });
+  // Une seule première publication manuelle est nécessaire; ensuite le bouton Enregistrer suffit.
+  async function detectPublishedCatalogue(){
+    if(!currentUser)return;
+    const uid=currentUser.uid;
+    try{const snap=await getDoc(doc(db,'boutiques',uid,'catalogue','current'));
+      if(currentUser?.uid!==uid)return;
+      cataloguePublishedKnown=snap.exists();didLoadExistingCatalogue=true;
+      if(cataloguePublishedKnown)boutiqueNotice('✓ Publication automatique activée. Les sauvegardes Firebase actualiseront le catalogue Boutique.');
+    }catch(e){console.warn('Détection catalogue:',e);}
+  }
+  // Lorsqu'une photo cloud est changée, publier la photo vers Boutique sans bouton manuel.
+  // Premier chargement traité séparément pour éviter une publication prématurée.
+  let initialPhotoSnapshot=true;
   function watchPhotos(){
     if(photoUnsub)photoUnsub();photoReady=false;photoCache.clear();
     photoNotice('Chargement des photos depuis Firebase…');
@@ -259,6 +307,8 @@ if(!configOK){
       photoReady=true;
       photoNotice(`${photoCache.size} photo(s) cloud disponibles. Les nouvelles photos sont synchronisées avec ton compte.`);
       window.dispatchEvent(new Event('printpilot:photos-changed'));
+      if(initialPhotoSnapshot){initialPhotoSnapshot=false;}else{requestAutoBoutiquePublication();}
+      if(boutiqueAutoRequested)requestAutoBoutiquePublication();
     },err=>{photoReady=false;photoNotice('Erreur photos cloud : '+(err.code||err.message)+'. Vérifie les règles Firestore.');console.error('Photos cloud:',err);});
   }
   photoMigrateButton?.addEventListener('click',async()=>{
