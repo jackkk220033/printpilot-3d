@@ -347,3 +347,17 @@ select[data-choice]{width:100%;min-width:0}
 
 /* v4.11.5 — fermeture intuitive des dialogues */
 .dialog .close:hover, dialog .close:hover, dialog .close:focus-visible {color:#fff;background:#bf304b;border-radius:8px;transition:background .15s,color .15s;}
+
+/* v4.11.6 — tableau de bord du parc d'imprimantes */
+.pp-printer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:20px}
+.pp-printer-card{border:1px solid #354565;border-radius:16px;padding:22px;min-width:0;background:#121d33;box-shadow:0 8px 28px #0002}
+.pp-printer-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px}
+.pp-printer-heading h2{font-size:18px;margin:5px 0}.pp-printer-heading p{margin:0;font-size:12px;color:#99aacb}.pp-printer-icon{font-size:25px}
+.pp-printer-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:18px}
+.pp-printer-metrics>div{padding:12px;background:#1b2942;border:1px solid #354565;border-radius:10px;min-width:0}
+.pp-printer-metrics small{display:block;color:#a0b0cd;font-size:11px;margin-bottom:7px}.pp-printer-metrics strong{font-size:18px;overflow-wrap:anywhere}
+.pp-printer-info{border-top:1px solid #34445f;padding-top:12px}.pp-printer-info p{font-size:12px;color:#bdc9e0;line-height:1.5;overflow-wrap:anywhere}.pp-printer-info b{color:#e6edfc}.pp-printer-info small{color:#99aac5}
+.pp-service-due{color:#ffb9b3;font-weight:700}.pp-printer-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px}.pp-printer-actions button{font-size:12px}
+.pp-printer-dialog{width:min(780px,calc(100% - 24px))}.pp-printer-notes-label{display:grid;gap:8px;color:#b8c7e0;font-size:12px;margin-top:16px}.pp-printer-notes-label textarea{width:100%;border:1px solid #42516f;background:#101829;color:#eef4ff;border-radius:10px;padding:12px;font:inherit;resize:vertical}
+.pp-printer-history-row{display:flex;justify-content:space-between;gap:10px;padding:13px 0;border-bottom:1px solid #33435d;font-size:12px}.pp-printer-history-row small{display:block;color:#a2b2d1;margin-top:5px}.pp-printer-history-row>span{text-align:right;white-space:nowrap;color:#d3c8ff}
+@media(max-width:1000px){.pp-printer-grid{grid-template-columns:1fr}}@media(max-width:500px){.pp-printer-card{padding:15px}.pp-printer-actions{flex-direction:column}.pp-printer-actions button{width:100%}.pp-printer-heading{flex-wrap:wrap}}

@@ -1,4 +1,4 @@
-# PrintPilot 3D v4.11.5 — Nouveautés, bobines vides, correction des saisies et suppressions
+# PrintPilot 3D v4.11.6 — Nouveautés, bobines vides, correction des saisies et suppressions
 
 Basé sur la v4.11.3 (photos À venir). Aucun changement aux règles Firestore.
 
@@ -14,7 +14,7 @@ Basé sur la v4.11.3 (photos À venir). Aucun changement aux règles Firestore.
 1. Exporter une sauvegarde JSON de PrintPilot.
 2. Remplacer les fichiers de GitHub par le contenu du ZIP, en respectant les dossiers `css/` et `js/`.
 3. Attendre que GitHub Pages termine son déploiement; recharger avec Ctrl+Shift+R.
-4. Vérifier que l'onglet affiche v4.11.5.
+4. Vérifier que l'onglet affiche v4.11.6.
 5. Pour activer la chronologie des nouveautés, republier une fois le catalogue dans Synchronisation. Les produits historiques ne deviennent pas nouveaux; les futurs seront affichés 7 jours à partir de leur première publication.
 
 **Aucune règle Firebase à changer.** Ce ZIP ne contient aucune sauvegarde utilisateur et ne modifie pas directement le compte Firebase. Testez sur une nouvelle entrée simple avant production.
@@ -26,3 +26,14 @@ Basé sur la v4.11.3 (photos À venir). Aucun changement aux règles Firestore.
 - Les boutons X deviennent rouges au survol; cliquer sur l'arrière-plan des dialogues natifs les ferme.
 - Attention : une fiche ancienne ne voit pas son coût réécrit tant que vous ne l'avez pas enregistrée à nouveau.
 - Déploiement : publier **tout le contenu** de ce dossier; données Firestore conservées.
+
+
+## Nouveautés v4.11.6 — Gestion des imprimantes
+
+- La section Imprimantes n'affiche plus « À venir » : vraie fiche pour chaque imprimante (3 noms de référence existants + noms utilisés dans les journaux + nouvelles fiches).
+- Ajouter et modifier des fiches : modèle, état déclaré, emplacement, volume, matériaux, compteur antérieur, intervalle d'entretien et notes.
+- Compteurs calculés depuis les impressions enregistrées et Personnel/Échecs/Tests (minutes, grammes, activités et échecs). Les impressions antérieures importées qui n'ont pas de journal ne sont pas estimées.
+- Historique par imprimante et raccourci vers la section Entretien existante. L'entretien est enregistré dans Atelier+ / Firebase et reste distinct du compteur/rappel estimatif.
+- Profils enregistrés dans le même stockage que les produits, inclus dans export JSON complet et dans la synchronisation Firebase du gestionnaire principal.
+- Aucun accès direct au statut des imprimantes; les états sont manuels et les compteurs issus du suivi PrintPilot seulement.
+- Aucun changement de règles Firestore. Avant publication, exporter une sauvegarde JSON.

@@ -2,15 +2,15 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b1020">
-<title>PrintPilot 3D v4.11.5</title>
-<link rel="stylesheet" href="css/style.css?v=4.11.5">
+<title>PrintPilot 3D v4.11.6</title>
+<link rel="stylesheet" href="css/style.css?v=4.11.6">
 <!-- Handlebars est facultatif : si ce CDN est bloqué, les fonctions continuent de marcher. -->
 <script defer src="https://cdn.jsdelivr.net/npm/handlebars@4.7.8/dist/handlebars.min.js"></script>
 <!-- Données Excel volontairement absentes des fichiers publiables : elles viennent du stockage local ou de Firebase. -->
 <script defer src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-<script defer src="js/app.js?v=4.11.5"></script>
-<script defer src="js/firebase-config.js?v=4.11.5"></script>
-<script type="module" src="js/cloud.js?v=4.11.5"></script>
+<script defer src="js/app.js?v=4.11.6"></script>
+<script defer src="js/firebase-config.js?v=4.11.6"></script>
+<script type="module" src="js/cloud.js?v=4.11.6"></script>
 </head>
 <body>
 <div class="shell">
@@ -53,7 +53,7 @@
      </div>
    </details>
  </nav>
- <div class="sidebar-foot"><div class="local-label" id="sidebar-storage">● &nbsp;Stockage local actif</div><p>v4.11 • Synchronisation Firebase</p></div>
+ <div class="sidebar-foot"><div class="local-label" id="sidebar-storage">● &nbsp;Stockage local actif</div><p>v4.11.6 • Synchronisation Firebase</p></div>
  </aside>
  <div class="workarea">
  <header class="topbar"><div><button type="button" id="menu-toggle" aria-label="Ouvrir le menu">☰</button><span>Atelier / <b id="page-name">Tableau de bord</b></span></div><div class="topright"><button type="button" class="secondary-btn cloud-open" id="open-cloud">☁ Synchronisation</button><span id="today"></span><span class="avatar">3D</span></div></header>
@@ -310,5 +310,32 @@
   else revealCurrent();
 })();
 </script>
+
+<!-- Gestion des imprimantes : fiches synchronisées avec les autres données PrintPilot. -->
+<dialog id="printer-profile-dialog" class="dialog pp-printer-dialog" aria-labelledby="printer-dialog-title">
+ <form id="printer-profile-form">
+  <div class="dialog-head"><h2 id="printer-dialog-title">Ajouter une imprimante</h2><button type="button" class="close" id="printer-profile-close" aria-label="Fermer">×</button></div>
+  <input type="hidden" name="originalName">
+  <div class="form-grid">
+   <label>Nom de l'imprimante<input name="name" required maxlength="100" placeholder="Ex. Anycubic Kobra X"></label>
+   <label>Modèle / configuration<input name="model" maxlength="100" placeholder="Ex. Multicolore ACE 2 Pro"></label>
+   <label>État déclaré<select name="status"><option value="Non renseigné">Non renseigné</option><option value="Fonctionnelle">Fonctionnelle</option><option value="En entretien">En entretien</option><option value="En panne">En panne</option><option value="En réserve">En réserve / inactive</option><option value="Vendue">Vendue / retirée</option></select></label>
+   <label>Emplacement<input name="location" maxlength="100" placeholder="Ex. Atelier"></label>
+   <label>Volume d'impression<input name="volume" maxlength="80" placeholder="Ex. 260 × 260 × 260 mm"></label>
+   <label>Matériaux compatibles<input name="materials" maxlength="150" placeholder="Ex. PLA, PETG, TPU"></label>
+   <label>Heures antérieures non enregistrées<input name="priorHours" type="number" min="0" max="1000000" step="0.1" placeholder="0"></label>
+   <label>Compteur au dernier entretien (h)<input name="lastServiceHours" type="number" min="0" max="1000000" step="0.1" placeholder="0"></label>
+   <label>Intervalle de rappel entretien (h)<input name="serviceInterval" type="number" min="0" max="1000000" step="1" placeholder="Ex. 100"></label>
+  </div>
+  <label class="pp-printer-notes-label">Notes<textarea name="notes" rows="3" maxlength="600" placeholder="Réparations, pièces à prévoir, observations…"></textarea></label>
+  <p class="small-hint">Le nom d'une imprimante existante reste fixe pour préserver son lien aux historiques. Heures et états sont déclaratifs : aucun état en direct.</p>
+  <p class="form-error" id="printer-profile-error" role="alert"></p>
+  <div class="dialog-actions"><button type="button" id="printer-profile-cancel" class="secondary-btn">Annuler</button><button type="submit" class="primary-btn">Enregistrer la fiche</button></div>
+ </form>
+</dialog>
+<dialog id="printer-history-dialog" class="dialog pp-printer-dialog" aria-labelledby="printer-history-title">
+ <div class="dialog-head"><h2 id="printer-history-title">Historique de l'imprimante</h2><button type="button" id="printer-history-close" class="close" aria-label="Fermer">×</button></div>
+ <div id="printer-history-content"></div>
+</dialog>
 </body>
 </html>
