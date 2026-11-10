@@ -344,3 +344,6 @@ select[data-choice]{width:100%;min-width:0}
 @media(max-width:600px){
   .inventory-card .admin-product-preview .product-card-image {height:230px;min-height:230px;}
 }
+
+/* v4.11.5 — fermeture intuitive des dialogues */
+.dialog .close:hover, dialog .close:hover, dialog .close:focus-visible {color:#fff;background:#bf304b;border-radius:8px;transition:background .15s,color .15s;}

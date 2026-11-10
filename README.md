@@ -1,22 +1,4 @@
-PRINTPILOT 3D — CORRECTIF POPUPS
-
-Ce correctif apporte :
-1. Le X devient rouge au survol (ou au focus clavier).
-2. Cliquer à l'extérieur d'un popup <dialog> le ferme, sans fermer au clic dans le formulaire.
-
-Pour installer sur ta DERNIÈRE version sans perdre les changements :
-1. Copie js/popup-behavior.js dans le dossier js/ de ton site.
-2. Dans index.html, juste AVANT </body>, ajoute :
-   <script defer src="js/popup-behavior.js?v=1"></script>
-3. Republie les fichiers du site comme d'habitude.
-
-Il n'est pas nécessaire de modifier les données ni les paramètres Firebase.
-
-ATTENTION : ce correctif prend en charge les fenêtres natives <dialog> de PrintPilot.
-Certaines fenêtres créées autrement nécessiteraient un traitement spécifique.
-
-
-# PrintPilot 3D v4.11.4 — Nouveautés, bobines vides, correction des saisies et suppressions
+# PrintPilot 3D v4.11.5 — Nouveautés, bobines vides, correction des saisies et suppressions
 
 Basé sur la v4.11.3 (photos À venir). Aucun changement aux règles Firestore.
 
@@ -32,7 +14,15 @@ Basé sur la v4.11.3 (photos À venir). Aucun changement aux règles Firestore.
 1. Exporter une sauvegarde JSON de PrintPilot.
 2. Remplacer les fichiers de GitHub par le contenu du ZIP, en respectant les dossiers `css/` et `js/`.
 3. Attendre que GitHub Pages termine son déploiement; recharger avec Ctrl+Shift+R.
-4. Vérifier que l'onglet affiche v4.11.4.
+4. Vérifier que l'onglet affiche v4.11.5.
 5. Pour activer la chronologie des nouveautés, republier une fois le catalogue dans Synchronisation. Les produits historiques ne deviennent pas nouveaux; les futurs seront affichés 7 jours à partir de leur première publication.
 
 **Aucune règle Firebase à changer.** Ce ZIP ne contient aucune sauvegarde utilisateur et ne modifie pas directement le compte Firebase. Testez sur une nouvelle entrée simple avant production.
+
+## Nouveautés v4.11.5 — Tarif horaire et fenêtres
+- Dans Ajouter / Modifier un produit : champ « Tarif d’impression ($/h) » (2 $/h par défaut).
+- Montant calculé à partir du nombre d'heures et de minutes déjà saisi. Le coût total estimé et le profit incluent le tarif horaire; le prix de vente reste librement modifiable.
+- Tarif sauvegardé **par produit** (`hourlyRate`) et coût du temps sauvegardé (`printTimeCost`); anciennes fiches: 2 $/h suggérés à leur prochaine modification.
+- Les boutons X deviennent rouges au survol; cliquer sur l'arrière-plan des dialogues natifs les ferme.
+- Attention : une fiche ancienne ne voit pas son coût réécrit tant que vous ne l'avez pas enregistrée à nouveau.
+- Déploiement : publier **tout le contenu** de ce dossier; données Firestore conservées.
