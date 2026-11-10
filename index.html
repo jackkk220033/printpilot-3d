@@ -2,22 +2,22 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#100c1f">
-<title>JJ3D v4.11.23</title>
-<link rel="stylesheet" href="css/style.css?v=4.11.23">
+<title>JJ3D v4.11.24</title>
+<link rel="stylesheet" href="css/style.css?v=4.11.24">
 <!-- Handlebars est facultatif : si ce CDN est bloqué, les fonctions continuent de marcher. -->
 <script defer src="https://cdn.jsdelivr.net/npm/handlebars@4.7.8/dist/handlebars.min.js"></script>
 <!-- Données Excel volontairement absentes des fichiers publiables : elles viennent du stockage local ou de Firebase. -->
 <script defer src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-<script defer src="js/invoices.js?v=4.11.23"></script>
-<script defer src="js/app.js?v=4.11.23"></script>
-<script defer src="js/firebase-config.js?v=4.11.23"></script>
-<script type="module" src="js/cloud.js?v=4.11.23"></script>
+<script defer src="js/invoices.js?v=4.11.24"></script>
+<script defer src="js/app.js?v=4.11.24"></script>
+<script defer src="js/firebase-config.js?v=4.11.24"></script>
+<script type="module" src="js/cloud.js?v=4.11.24"></script>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="JJ3D">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<script defer src="js/pwa-install.js?v=4.11.23"></script>
+<script defer src="js/pwa-install.js?v=4.11.24"></script>
 <style id="jj3d-brand-styles">
 /* Identité JJ3D — texte et page de démarrage (sans modifier les modules métier). */
 #jj3d-splash {position:fixed;z-index:2147483647;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:radial-gradient(circle at 50% 38%,#312052,#110d20 65%,#090b17);color:#f8f5ff;font-family:system-ui,-apple-system,Segoe UI,sans-serif;opacity:1;transition:opacity .4s ease;pointer-events:auto}
@@ -30,7 +30,7 @@
 @keyframes jj3d-load{from{transform:translateX(-80%)}to{transform:translateX(280%)}}
 @media(prefers-reduced-motion:reduce){#jj3d-splash .jj3d-loading span{animation:none;width:100%}#jj3d-splash{transition:none}}
 </style>
-<style id="jj3d-header-logo-css">.jj3d-header-logo{width:44px;height:44px;object-fit:contain;vertical-align:middle;border-radius:11px;margin-right:10px;box-shadow:0 2px 12px #a34af555}.brand .jj3d-header-logo{flex-shrink:0}@media(max-width:600px){.jj3d-header-logo{width:36px;height:36px;margin-right:7px}}</style><link rel="stylesheet" href="css/invoices.css?v=4.11.23">
+<style id="jj3d-header-logo-css">.jj3d-header-logo{width:44px;height:44px;object-fit:contain;vertical-align:middle;border-radius:11px;margin-right:10px;box-shadow:0 2px 12px #a34af555}.brand .jj3d-header-logo{flex-shrink:0}@media(max-width:600px){.jj3d-header-logo{width:36px;height:36px;margin-right:7px}}</style><link rel="stylesheet" href="css/invoices.css?v=4.11.24">
 </head>
 <body>
 <div id="jj3d-splash" role="status" aria-label="Ouverture de JJ3D">
@@ -83,7 +83,7 @@ setTimeout(removeSplash,4200)})();</script>
      </div>
    </details>
  </nav>
- <div class="sidebar-foot"><div class="local-label" id="sidebar-storage">● &nbsp;Stockage local actif</div><p>v4.11.23 • Synchronisation Firebase</p></div>
+ <div class="sidebar-foot"><div class="local-label" id="sidebar-storage">● &nbsp;Stockage local actif</div><p>v4.11.24 • Synchronisation Firebase</p></div>
  </aside>
  <div class="workarea">
  <header class="topbar"><div><button type="button" id="menu-toggle" aria-label="Ouvrir le menu">☰</button><span>Atelier / <b id="page-name">Tableau de bord</b></span></div><div class="topright"><button type="button" class="secondary-btn cloud-open" id="open-cloud">☁ Synchronisation</button><span id="today"></span><span class="avatar">3D</span></div></header>

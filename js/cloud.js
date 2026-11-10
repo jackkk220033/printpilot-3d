@@ -292,7 +292,11 @@ if(!configOK){
     try{const snap=await getDoc(doc(db,'boutiques',uid,'catalogue','current'));
       if(currentUser?.uid!==uid)return;
       cataloguePublishedKnown=snap.exists();didLoadExistingCatalogue=true;
-      if(cataloguePublishedKnown)boutiqueNotice('✓ Publication automatique activée. Les sauvegardes Firebase actualiseront le catalogue Boutique.');
+      if(cataloguePublishedKnown){
+        boutiqueNotice('✓ Publication automatique activée. Les sauvegardes Firebase actualiseront le catalogue Boutique.');
+        // Relance une publication après la détection. Le mécanisme attend la fin de la sauvegarde cloud.
+        requestAutoBoutiquePublication();
+      }
     }catch(e){console.warn('Détection catalogue:',e);}
   }
   // Lorsqu'une photo cloud est changée, publier la photo vers Boutique sans bouton manuel.
@@ -360,6 +364,9 @@ if(!configOK){
    accountLabel.textContent=`Compte privé : ${user.email || user.uid}`;
    setStatus('☁ Connecté : choisis une copie locale ou cloud.');
    beginListener();watchPhotos();
+   // Indispensable : détecter l'index Boutique déjà publié sur ce compte.
+   // Sans cet appel, cataloguePublishedKnown reste false et l'auto-publication ne démarre jamais.
+   detectPublishedCatalogue();
    // Badge live : lit uniquement les messages non lus de l'atelier du propriétaire.
    try {
     unreadUnsub=onSnapshot(query(collection(db,'boutiques',user.uid,'messages'),where('read','==',false)),snapshot=>{
