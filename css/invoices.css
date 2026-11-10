@@ -1,0 +1,18 @@
+/* JJ3D Factures */
+.jj-invoice-actions{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+.jj-invoice-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;margin:16px 0}
+.jj-invoice-card{background:#16223b;border:1px solid #364769;border-radius:14px;padding:16px}
+.jj-invoice-card h3{margin:0 0 8px;font-size:1rem}
+.jj-invoice-card small{color:#a3b8dd}
+.jj-invoice-status{display:inline-block;background:#243758;padding:4px 9px;border-radius:25px;color:#d8e6ff;font-size:.8rem}
+.jj-invoice-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.jj-invoice-form label{display:flex;flex-direction:column;gap:5px;color:#ccd9f3;font-size:.88rem}
+.jj-invoice-form input,.jj-invoice-form textarea,.jj-invoice-form select{width:100%;min-width:0;background:#0d182d;color:white;border:1px solid #405477;border-radius:9px;padding:10px;font:inherit}
+.jj-invoice-wide{grid-column:1/-1}
+.jj-invoice-table{width:100%;border-collapse:collapse}.jj-invoice-table th,.jj-invoice-table td{padding:8px 4px;border-bottom:1px solid #384869;text-align:left}
+.jj-invoice-table input{min-width:0;width:100%;background:#101b33;color:white;border:1px solid #405477;padding:8px;border-radius:7px}
+.jj-invoice-modal{max-width:800px;width:min(94vw,800px);max-height:88vh;overflow:auto;background:#141f35;color:#f6f8ff;border:1px solid #536687;border-radius:18px;padding:22px}
+.jj-invoice-modal::backdrop{background:#000b}
+.jj-invoice-total{text-align:right;margin:12px 0;font-weight:700;font-size:1.2rem}
+.jj-invoice-empty{color:#9eb0cd}
+@media(max-width:600px){.jj-invoice-form{grid-template-columns:1fr}.jj-invoice-wide{grid-column:auto}.jj-invoice-table{font-size:.78rem}.jj-invoice-table input{padding:5px}.jj-invoice-modal{padding:12px}}
