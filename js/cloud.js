@@ -58,7 +58,10 @@ function boutiqueSyncState(message,kind='idle'){
  if(el){el.textContent=message;el.dataset.state=kind;el.title='État de publication du catalogue Boutique';}
 }
 function showError(e){console.error('PrintPilot cloud:',e); const message=e?.code ==='auth/invalid-credential'?'Courriel ou mot de passe incorrect.': e?.code==='auth/email-already-in-use'?'Ce courriel possède déjà un compte.':e?.code==='auth/weak-password'?'Mot de passe trop faible.':e?.code==='permission-denied'?'Permission refusée : vérifie les règles Firestore et le projet Firebase.':String(e?.message||e);errorEl.textContent=message;setStatus('Synchronisation interrompue — données locales conservées.',true);}
-function resetCloud(){window.JJ3DAutoPublishCatalogue=null;window.JJ3DPublishCatalogueAfterSave=null;boutiqueSyncState('Boutique : hors ligne','idle');jj3dLastPublishedRevision=null;clearTimeout(boutiqueAutoTimer);boutiqueAutoRequested=false;boutiqueAutoRunning=false;boutiqueAutoRetry=false;cataloguePublishedKnown=false;boutiqueLastSignature=null;boutiqueForcePublication=false;lastPhotoPublication.clear();stopUnreadBadge();if(photoUnsub){photoUnsub();photoUnsub=null;}photoCache.clear();photoReady=false;photoNotice('Connecte-toi pour synchroniser les photos.');window.dispatchEvent(new Event('printpilot:photos-changed'));active=false;pending=false;conflict=false;busy=false;remote=null;baseRevision=null;observedOnce=false;clearTimeout(timer);if(unsubscribe){unsubscribe();unsubscribe=null;}setStatus('Connecte-toi pour retrouver tes données.');}
+// Réinitialiser l'état d'une session Firebase sans supprimer les fonctions de
+// publication installées une seule fois au chargement de ce module. Au premier
+// onAuthStateChanged, les supprimer débranchait définitivement Enregistrer -> Boutique.
+function resetCloud(){boutiqueSyncState('Boutique : hors ligne','idle');jj3dLastPublishedRevision=null;clearTimeout(boutiqueAutoTimer);boutiqueAutoRequested=false;boutiqueAutoRunning=false;boutiqueAutoRetry=false;cataloguePublishedKnown=false;boutiqueLastSignature=null;boutiqueForcePublication=false;lastPhotoPublication.clear();stopUnreadBadge();if(photoUnsub){photoUnsub();photoUnsub=null;}photoCache.clear();photoReady=false;photoNotice('Connecte-toi pour synchroniser les photos.');window.dispatchEvent(new Event('printpilot:photos-changed'));active=false;pending=false;conflict=false;busy=false;remote=null;baseRevision=null;observedOnce=false;clearTimeout(timer);if(unsubscribe){unsubscribe();unsubscribe=null;}setStatus('Connecte-toi pour retrouver tes données.');}
 function setRemoteData(record){remote=record;remoteInfo.textContent=describe(record);document.getElementById('cloud-download').disabled=!record;}
 function rememberSynced(){localStorage.setItem(LINK_UID,currentUser.uid);localStorage.setItem(DIGEST_KEY,localJSON());}
 function safeSyncRemote(record){
@@ -325,7 +328,7 @@ if(!configOK){
       if(currentUser?.uid!==uid)return;
       cataloguePublishedKnown=snap.exists();didLoadExistingCatalogue=true;if(!cataloguePublishedKnown)boutiqueSyncState('Boutique : publication initiale requise','pending');
       if(cataloguePublishedKnown){
-        boutiqueNotice('✓ Publication automatique activée. Les sauvegardes Firebase actualiseront le catalogue Boutique.');boutiqueSyncState('Boutique : publication automatique active','success');
+        boutiqueNotice('✓ Publication automatique prête. Les enregistrements actualiseront le catalogue Boutique.');boutiqueSyncState(window.JJ3DAutoPublishCatalogue?'Boutique : publication automatique prête':'Boutique : erreur — publication indisponible',window.JJ3DAutoPublishCatalogue?'success':'error');
         // Ne pas republier au simple chargement de la page : les données locales
         // peuvent être plus anciennes que la sauvegarde Firebase privée.
       }

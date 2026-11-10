@@ -372,7 +372,7 @@ select[data-choice]{width:100%;min-width:0}
 .jj-mini-conditions{margin:12px 0;padding:10px 12px;background:#211b36;border:1px solid #66518d;border-radius:10px;color:#eee6ff;font-size:.84rem;line-height:1.6}
 @media(max-width:760px){.jj-order-info-grid{grid-template-columns:1fr}.jj-order-info{padding:14px}}
 
-/* JJ3D v4.11.26 : confirmation de publication visible, sans ouvrir le panneau cloud */
+/* JJ3D v4.11.27 : confirmation de publication visible, sans ouvrir le panneau cloud */
 .jj3d-sync-pill{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;background:#22304b;color:#c9d8ff;font-size:11px;font-weight:650;white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis}
 .jj3d-sync-pill[data-state="success"]{background:#183b35;color:#98efcb}
 .jj3d-sync-pill[data-state="error"]{background:#4d2435;color:#ffc0c7}
