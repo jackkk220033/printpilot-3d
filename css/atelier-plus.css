@@ -79,3 +79,11 @@ button.danger-action:hover{background:#73313e;}
 @media(max-width:540px){.jj-queue-edit-form{grid-template-columns:1fr}}
 
 #jj-queue-edit{border:1px solid #53648b;border-radius:16px;padding:0;max-width:min(780px,96vw);max-height:90vh;overflow:auto;background:#14213a;color:white}
+
+/* JJ3D v4.11.21 — position visible de la fenêtre Modifier dans iframe */
+#jj-queue-edit{box-sizing:border-box;width:min(760px,calc(100% - 24px));max-width:calc(100% - 24px);overflow-y:auto;overscroll-behavior:contain;box-shadow:0 22px 70px #000b}
+#jj-queue-edit::backdrop{background:rgba(4,8,20,.58)}
+#jj-queue-edit .jj-queue-edit-top{position:sticky;top:-1px;z-index:1;background:#14213a;padding:4px 0 8px}
+#jj-queue-edit .jj-queue-edit-top button{background:#263655;color:white;border:1px solid #58698d;border-radius:8px;padding:7px 11px}
+#jj-queue-edit .jj-queue-edit-top button:hover{background:#bc344a}
+@media(max-width:540px){#jj-queue-edit .jj-queue-edit-form{padding:16px}}

@@ -49,22 +49,56 @@ function scheduledQueue(){
  return out;
 }
 const estimateLabel=(item,entry)=>entry?.kind==='estimated'?`🕒 ${hhmm(entry.start)} → ${hhmm(entry.end)} · ${Math.round(entry.duration)} min (${entry.printer})`:entry?.kind==='finished'?'Impression terminée':entry?.kind==='paused'?'En pause : horaire à recalculer':entry?.kind==='blocked'?'Horaire à préciser (tâche précédente non planifiée)':'Durée à préciser';
-function editQueueItem(id){
+/* Keep the modal near the selected task in the visible parent viewport.
+   Atelier+ is embedded in a tall iframe; native dialog centering otherwise
+   uses the entire iframe height, not the visible part of JJ3D. */
+function showQueueEditInView(dialog, trigger){
+ const embeddedView=embedded&&window.parent!==window;
+ if(!embeddedView){ dialog.showModal(); return; }
+ try{
+  const frame=window.frameElement;
+  const host=window.parent;
+  if(!frame||!host)throw Error('No hosting frame');
+  const frameRect=frame.getBoundingClientRect();
+  const height=host.innerHeight;
+  const btnRect=trigger?.getBoundingClientRect();
+  const buttonTop=frameRect.top+(btnRect?.top??height/3);
+  const scrollBefore=host.scrollY;
+  // Explicit position before showing, preventing an initial jump to the
+  // iframe's (very distant) vertical center.
+  dialog.style.position='fixed';
+  dialog.style.margin='0';
+  dialog.style.left='50%';
+  dialog.style.transform='translateX(-50%)';
+  dialog.style.maxHeight=Math.max(220,height-28)+'px';
+  dialog.style.top=(Math.max(12,Math.min(buttonTop-24,height-230))-frameRect.top)+'px';
+  dialog.showModal();
+  const actualHeight=Math.min(dialog.getBoundingClientRect().height,height-28);
+  const screenTop=Math.max(12,Math.min(buttonTop-24,height-actualHeight-14));
+  dialog.style.top=(screenTop-frameRect.top)+'px';
+  // Preserve the user's place in the long list on opening and after closing.
+  if(Math.abs(host.scrollY-scrollBefore)>2)host.scrollTo({top:scrollBefore,behavior:'instant'});
+ }catch(error){
+  console.warn('Atelier: fallback for edit dialog position',error);
+  if(!dialog.open)dialog.showModal();
+ }
+}
+function editQueueItem(id,trigger){
  const item=(manage.queue||[]).find(x=>x.id===id);if(!item)return;
  let dialog=$('jj-queue-edit');if(!dialog){dialog=document.createElement('dialog');dialog.id='jj-queue-edit';document.body.append(dialog);dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close();});}
  const duration=Math.max(0,Math.round(Number(item.minutes)||0));
  dialog.innerHTML=`<form id="jj-queue-edit-form" class="jj-queue-edit-form"><div class="jj-queue-edit-top"><h2>Modifier une impression</h2><button type="button" id="jj-edit-close">✕</button></div>
  <label>Nom du projet<input name="name" maxlength="120" required value="${esc(item.name)}"></label><label>Imprimante<select name="printer">${printerOptions(item.printer||'Anycubic Kobra X')}</select></label><label>Quantité<input type="number" name="quantity" min="1" max="500" step="1" value="${Number(item.quantity)||1}" required></label>
- <label>Durée totale prévue — heures<input type="number" name="hours" min="0" max="999" value="${Math.floor(duration/60)}"></label><label>Minutes<input type="number" name="mins" min="0" max="59" value="${duration%60}"></label>
+ <label>Durée totale prévue — heures<input type="number" name="hours" min="0" max="999" placeholder="Ex. 3" value="${duration>0?Math.floor(duration/60):''}"></label><label>Minutes<input type="number" name="mins" min="0" max="59" placeholder="Ex. 25" value="${duration>0&&duration%60?duration%60:''}"></label>
  <label>Début au plus tôt (facultatif)<input type="datetime-local" name="startAt" value="${esc(item.startAt||'')}"></label><label>Priorité<select name="priority"><option value="normal" ${item.priority!=='urgent'?'selected':''}>Normale</option><option value="urgent" ${item.priority==='urgent'?'selected':''}>Urgente</option></select></label>
  <label class="jj-queue-edit-wide">Note visible par la boutique<input name="note" maxlength="200" value="${esc(item.note||'')}"></label><div class="jj-queue-edit-wide"><button type="submit">Enregistrer les modifications</button> <button type="button" id="jj-edit-cancel">Annuler</button></div></form>`;
- dialog.showModal();dialog.querySelector('#jj-edit-close').onclick=()=>dialog.close();dialog.querySelector('#jj-edit-cancel').onclick=()=>dialog.close();
+ showQueueEditInView(dialog,trigger);dialog.querySelector('#jj-edit-close').onclick=()=>dialog.close();dialog.querySelector('#jj-edit-cancel').onclick=()=>dialog.close();
  dialog.querySelector('form').onsubmit=async e=>{e.preventDefault();const f=e.currentTarget,h=Number(f.elements.hours.value)||0,m=Number(f.elements.mins.value)||0,qty=Number(f.elements.quantity.value);if(!Number.isInteger(qty)||qty<1||qty>500||h<0||h>999||m<0||m>59){notice('Vérifie la durée et la quantité.',true);return;}
  try{await saveEdit(d=>{const it=d.queue.find(x=>x.id===id);if(!it)throw Error('Tâche introuvable');Object.assign(it,{name:f.elements.name.value.trim(),printer:f.elements.printer.value,quantity:qty,minutes:h*60+m,startAt:f.elements.startAt.value,priority:f.elements.priority.value,note:f.elements.note.value});});dialog.close();render();}catch(err){notice(err.message,true);}};
 }
 function renderQueue(){const queue=Array.isArray(manage.queue)?manage.queue:[];const states={todo:'En attente',doing:'En impression',paused:'En pause',done:'Terminé',failed:'Échec'};const estimates=scheduledQueue();
 return tiles([['En attente',queue.filter(x=>x.status==='todo').length],['En impression',queue.filter(x=>x.status==='doing').length],['En pause',queue.filter(x=>x.status==='paused').length],['Terminé',queue.filter(x=>x.status==='done').length]])+
-panel('Planifier un prochain print',`<p>Tu peux ajouter un modèle pas encore présent dans Produits, par exemple en te basant sur ta capture du slicer. La liste sera visible dans la boutique dès l’enregistrement.</p><form id="queue-form" class="toolbar"><label>Nom du projet<input name="name" maxlength="120" placeholder="Ex. Dragon multicolore" required></label><label>Produit existant (facultatif)<select name="productId"><option value="">Nouveau projet / pas encore au catalogue</option>${productOptions()}</select></label><label>Quantité<input name="quantity" type="number" min="1" max="500" value="1" required></label><label>Imprimante<select name="printer">${printerOptions()}</select></label><label>Durée prévue — heures<input name="hours" type="number" min="0" max="999" value="0"></label><label>Minutes<input name="mins" type="number" min="0" max="59" value="0"></label><label>Début au plus tôt (facultatif)<input name="startAt" type="datetime-local"></label><label>Priorité<select name="priority"><option value="normal">Normale</option><option value="urgent">Urgente</option></select></label><label>Note visible par la boutique<input name="note" maxlength="200" placeholder="Ex. Prochainement en bleu"></label><button type="submit">＋ Ajouter à la file</button></form>`)+
+panel('Planifier un prochain print',`<p>Tu peux ajouter un modèle pas encore présent dans Produits, par exemple en te basant sur ta capture du slicer. La liste sera visible dans la boutique dès l’enregistrement.</p><form id="queue-form" class="toolbar"><label>Nom du projet<input name="name" maxlength="120" placeholder="Ex. Dragon multicolore" required></label><label>Produit existant (facultatif)<select name="productId"><option value="">Nouveau projet / pas encore au catalogue</option>${productOptions()}</select></label><label>Quantité<input name="quantity" type="number" min="1" max="500" value="1" required></label><label>Imprimante<select name="printer">${printerOptions()}</select></label><label>Durée prévue — heures<input name="hours" type="number" min="0" max="999" placeholder="Ex. 3"></label><label>Minutes<input name="mins" type="number" min="0" max="59" placeholder="Ex. 25"></label><label>Début au plus tôt (facultatif)<input name="startAt" type="datetime-local"></label><label>Priorité<select name="priority"><option value="normal">Normale</option><option value="urgent">Urgente</option></select></label><label>Note visible par la boutique<input name="note" maxlength="200" placeholder="Ex. Prochainement en bleu"></label><button type="submit">＋ Ajouter à la file</button></form>`)+
 panel('Suivi des prochaines impressions',queue.map(x=>`<article class="item queue-card"><button type="button" class="queue-picture" data-admin-plan-photo="${esc(x.id)}" data-action="queue-zoom" data-id="${esc(x.id)}" aria-label="Agrandir la photo de ${esc(x.name)}" title="Cliquer pour agrandir">${x.hasPhoto?'Chargement…':'📷 Aucune capture'}</button><div class="queue-detail"><strong>${esc(x.name)}</strong> × ${Number(x.quantity)||1} <span class="status">${states[x.status]||esc(x.status)}</span> ${x.priority==='urgent'?'<span class="warn">URGENT</span>':''}<p>${esc(x.note||'')} </p><p class="jj-queue-eta">${esc(estimateLabel(x,estimates.get(x.id)))}</p><label class="photo-button">📷 Ajouter / changer la capture du slicer<input class="queue-photo-file" type="file" accept="image/*" data-id="${esc(x.id)}" hidden></label><div class="action"><button data-action="queue-edit" data-id="${esc(x.id)}">✏ Modifier</button>${Object.entries(states).map(([k,v])=>`<button data-action="queue-status" data-id="${esc(x.id)}" data-status="${k}" ${x.status===k?'disabled':''}>${v}</button>`).join('')}<button class="danger-action" data-action="queue-remove" data-id="${esc(x.id)}">Supprimer</button></div></div></article>`).join('')||'<p>La file est vide.</p>');
 }
 function openQueueZoom(id){
@@ -134,7 +168,7 @@ $('view').addEventListener('click',async e=>{const b=e.target.closest('[data-act
   await api.deleteDoc(api.doc(db,'boutiques',user.uid,'requests',r.id));
   notice('✓ Demande supprimée');
 }
-if(action==='queue-edit'){editQueueItem(b.dataset.id);return;}if(action==='queue-status'){await saveEdit(d=>{const x=d.queue.find(x=>x.id===b.dataset.id);if(x){x.status=b.dataset.status;if(b.dataset.status==='doing'&&!x.startedAt)x.startedAt=new Date().toISOString();}});}if(action==='queue-remove'){if(!confirm('Supprimer cette tâche?'))return;await saveEdit(d=>d.queue=d.queue.filter(x=>x.id!==b.dataset.id));}if(action==='maintenance-remove'){if(!confirm('Supprimer cet entretien?'))return;await saveEdit(d=>d.maintenance=d.maintenance.filter(x=>x.id!==b.dataset.id));}if(action==='labels-generate'){
+if(action==='queue-edit'){editQueueItem(b.dataset.id,b);return;}if(action==='queue-status'){await saveEdit(d=>{const x=d.queue.find(x=>x.id===b.dataset.id);if(x){x.status=b.dataset.status;if(b.dataset.status==='doing'&&!x.startedAt)x.startedAt=new Date().toISOString();}});}if(action==='queue-remove'){if(!confirm('Supprimer cette tâche?'))return;await saveEdit(d=>d.queue=d.queue.filter(x=>x.id!==b.dataset.id));}if(action==='maintenance-remove'){if(!confirm('Supprimer cet entretien?'))return;await saveEdit(d=>d.maintenance=d.maintenance.filter(x=>x.id!==b.dataset.id));}if(action==='labels-generate'){
  const p=productMap().get($('label-product').value),q=Number($('label-count').value);
  if(!p||!Number.isInteger(q)||q<1||q>60)throw Error('Nombre d’étiquettes incorrect');
  const url=new URL('boutique.html',location.href);

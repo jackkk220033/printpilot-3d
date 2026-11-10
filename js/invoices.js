@@ -83,7 +83,7 @@ function deleteSlip(id){
  else api.notify('Suppression impossible. Réessaie.',true);
 }
 
-// JJ3D 4.11.19 — Documents, réception, corrections et mouvements contrôlés.
+// JJ3D 4.11.21 — Documents, réception, corrections et mouvements contrôlés.
 const packing=()=>store().packingSlips||[];
 const timestamp=()=>new Date().toISOString();
 const asInt=n=>Number.isInteger(Number(n))&&Number(n)>0?Number(n):0;

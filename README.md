@@ -1,4 +1,4 @@
-# JJ3D v4.11.19 — Calendrier d’impression et livraisons Boutique
+# JJ3D v4.11.21 — Calendrier d’impression et livraisons Boutique
 
 ## À imprimer (administration)
 - Ajout/modification des durées **totales prévues** (heures/minutes), imprimante, quantité, priorité, nom, note et début minimal optionnel.
@@ -19,3 +19,10 @@
 Publier les fichiers du ZIP sur GitHub Pages **ET** publier les nouvelles règles `firestore.rules` dans Firebase Console → Firestore Database → Rules. Sans les nouvelles règles, le suivi des livraisons ne pourra pas fonctionner.
 
 Conserver les versions précédentes et exporter une sauvegarde JSON avant de tester les transferts.
+
+## v4.11.21 — Positionnement Modifier dans « À imprimer »
+Le formulaire Modifier s’ouvre dans la partie visible de la page intégrée, près de la tâche sélectionnée. Le défilement n’est pas remis en haut. Les formulaires, l’inventaire, le calendrier et Firebase sont inchangés.
+
+
+## v4.11.21
+Champs heures/minutes de À imprimer vides par défaut avec exemples de saisie; durées déjà renseignées conservées en modification.
