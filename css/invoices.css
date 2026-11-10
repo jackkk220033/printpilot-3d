@@ -31,3 +31,7 @@
 .jj-bill-grand small{display:block;color:#d7c6ff;margin-top:4px;font-size:.68rem;letter-spacing:.09em}
 .jj-bill-grand strong{font-size:clamp(1.35rem,4vw,2rem);line-height:1.25;white-space:nowrap;font-variant-numeric:tabular-nums}
 @media(max-width:500px){.jj-bill-title{padding:13px 14px}.jj-bill-detail{padding:10px 14px}.jj-bill-grand{padding:14px}.jj-total-row{font-size:.9rem}.jj-bill-grand strong{font-size:1.4rem}}
+
+/* v4.11.16 — Actions de suppression */
+.jj-delete-btn{border-color:#8a4557!important;color:#ffbfc9!important}
+.jj-delete-btn:hover,.jj-delete-btn:focus-visible{background:#a82843!important;color:#fff!important;border-color:#dd4964!important}

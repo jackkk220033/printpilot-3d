@@ -14,3 +14,9 @@
 
 ## v4.11.15 — Résumé des montants de facture
 Le texte compact des totaux du formulaire de facture est remplacé par une carte à lignes séparées (sous-total, rabais, expédition, taxes) et un total violet bien visible. Les mêmes calculs qu'auparavant sont conservés.
+
+## v4.11.16 — Correctifs
+- Correction du bon d’envoi bloqué sur « Chargement » (erreur de syntaxe JavaScript dans bon-boutique.html).
+- Ajout de **Supprimer** avec confirmation dans les listes Factures et Bons d’envoi.
+- La suppression retire seulement le document, sans toucher aux produits, ventes ou stocks.
+- Rafraîchir les pages après publication pour mettre à jour le cache de l’application.
