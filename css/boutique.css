@@ -149,13 +149,13 @@ textarea{background:#0f192b;color:#f3f5ff;border:1px solid #456087;border-radius
 /* JJ3D v4.11.19 — Boutique livraisons */
 .jj-delivery-summary{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:14px;border:1px solid #536485;border-radius:12px;margin:14px 0}.jj-delivery-card{background:#15213a;border:1px solid #465777;border-radius:12px;padding:16px;margin:12px 0}.jj-delivery-card>div:first-child{display:flex;justify-content:space-between;gap:10px}.jj-delivery-table{max-width:100%;overflow-x:auto;margin:12px 0}.jj-delivery-table table{width:100%;border-collapse:collapse}.jj-delivery-table td,.jj-delivery-table th{padding:8px;border-bottom:1px solid #465777;text-align:left}.jj-delivery-confirm{background:#8652e5;color:white;border:0;border-radius:10px;padding:11px}.jj-delivery-dialog{max-width:min(620px,95vw);max-height:90vh;overflow:auto;padding:22px;border-radius:14px;background:#142039;color:white;border:1px solid #586990}.jj-delivery-dialog label{display:flex;flex-direction:column;gap:7px;margin:12px 0}.jj-delivery-dialog input,.jj-delivery-dialog textarea{padding:10px;border-radius:8px;background:#10182d;color:white;border:1px solid #6c7ca0}.jj-planning-dates{color:#cebbff!important;font-size:.85rem!important}
 
-/* JJ3D v4.11.42 : demandes spéciales et avis boutique */
+/* JJ3D v4.11.43 : demandes spéciales et avis boutique */
 .jj-boutique-custom-request form{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px}.jj-boutique-custom-request label{display:grid;gap:5px}.jj-boutique-custom-request textarea{min-height:80px}.jj-boutique-custom-request button,.jj-boutique-custom-request .send-status{grid-column:1/-1}.jj-boutique-alerts{background:rgba(157,115,241,.15);border:1px solid rgba(184,144,250,.35);padding:12px 16px;border-radius:12px;margin:16px 0;font-weight:650}
 
-/* JJ3D 4.11.42 - suivi des commandes personnalisées par la Boutique */
+/* JJ3D 4.11.43 - suivi des commandes personnalisées par la Boutique */
 .jj-boutique-custom-followup{margin-top:20px}.jj-boutique-request-card{border:1px solid #405477;border-radius:14px;padding:16px;margin:12px 0;display:grid;gap:10px}.jj-boutique-state{display:inline-block;color:#c3abff;font-weight:700}.jj-boutique-request-card form{display:grid;gap:10px}.jj-boutique-request-card p{margin:0}
 
-/* v4.11.42 — formulaire de demandes Boutique et calendrier */
+/* v4.11.43 — formulaire de demandes Boutique et calendrier */
 .jj-boutique-custom-request .jj-boutique-confirmation{display:flex!important;align-items:flex-start;gap:12px;grid-column:1/-1;padding:13px 15px;border:1px solid #40537d;border-radius:12px;background:#202c4a;cursor:pointer;line-height:1.5}
 .jj-boutique-confirmation input[type=checkbox]{width:20px!important;height:20px!important;min-width:20px;flex:none;margin:3px 0 0;accent-color:#8b61ef;cursor:pointer}
 .jj-boutique-confirmation span{display:block;flex:1;font-size:14px}
@@ -165,7 +165,7 @@ textarea{background:#0f192b;color:#f3f5ff;border:1px solid #456087;border-radius
 .jj-boutique-custom-request .jj-date-field button[data-jj-date-picker]:hover{background:#6e52cb}
 #custom-request-status.error{color:#ffb5b5;font-weight:700}
 
-/* v4.11.42 — Deux files Boutique, présentation identique et adaptative. */
+/* v4.11.43 — Deux files Boutique, présentation identique et adaptative. */
 #special-planning-cards .photo{width:100%;aspect-ratio:4/3;height:auto;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,#212d4d,#161e33);overflow:hidden}
 #special-planning-cards .photo img{width:100%;height:100%;object-fit:contain}
 #special-planning-cards .details{padding:15px}
@@ -173,3 +173,6 @@ textarea{background:#0f192b;color:#f3f5ff;border:1px solid #456087;border-radius
 #special-planning-cards .planning-card-status{color:#b3a0ff;font-weight:700}
 #special-panel .jj-boutique-custom-followup{margin-top:24px}
 @media(max-width:650px){#special-planning-cards .details{padding:10px}#special-planning-cards .details h3{font-size:14px}}
+
+/* JJ3D v4.11.43 — alerts and deletion */
+.jj-shop-tools{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:12px;border:1px solid #50426d;background:#1e233c;border-radius:12px;margin:15px 0}.jj-shop-tools small{color:#b6bfd7;flex-basis:100%}.jj-request-delete{margin-top:10px;background:#4d2737!important;color:#ffc3cf!important;border:1px solid #ac586a!important;cursor:pointer}.jj-boutique-request-card{margin-bottom:14px}

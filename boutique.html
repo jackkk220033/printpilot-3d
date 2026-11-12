@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#100c1f"><title>JJ3D v4.11.42 — Boutique</title>
-<link rel="stylesheet" href="css/boutique.css?v=4.11.42"><script defer src="js/firebase-config.js?v=4.8.1"></script><script type="module" src="js/boutique.js?v=4.11.42"></script><script defer src="js/dialog-dismiss.js?v=4.11.42"></script><link rel="manifest" href="manifest.webmanifest">
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#100c1f"><title>JJ3D v4.11.43 — Boutique</title>
+<link rel="stylesheet" href="css/boutique.css?v=4.11.43"><script defer src="js/firebase-config.js?v=4.8.1"></script><script type="module" src="js/boutique.js?v=4.11.43"></script><script defer src="js/dialog-dismiss.js?v=4.11.43"></script><link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="JJ3D">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<script defer src="js/pwa-install.js?v=4.11.42"></script>
+<script defer src="js/pwa-install.js?v=4.11.43"></script>
 <style id="jj3d-brand-styles">
 /* Identité JJ3D — texte et page de démarrage (sans modifier les modules métier). */
 #jj3d-splash {position:fixed;z-index:2147483647;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:radial-gradient(circle at 50% 38%,#312052,#110d20 65%,#090b17);color:#f8f5ff;font-family:system-ui,-apple-system,Segoe UI,sans-serif;opacity:1;transition:opacity .4s ease;pointer-events:auto}
@@ -59,7 +59,7 @@ setTimeout(removeSplash,4200)})();</script>
  <p class="sub">Ceci est une demande de production, pas un paiement ni une vente. L’atelier confirmera la commande.</p>
 </section>
 <section id="planning-panel" hidden><div class="boutique-page-heading"><h2>🖨 Productions pour la Boutique</h2><p>Impressions destinées au stock ou aux commandes du catalogue Boutique uniquement. Les projets personnels ne sont pas partagés.</p></div><div id="planning-cards" class="cards"></div><p id="planning-empty" class="empty" hidden>Aucune impression planifiée pour le moment.</p></section>
-<section id="special-panel" hidden><div class="boutique-page-heading"><h2>✨ Commandes personnalisées</h2><p>Suivi des demandes spéciales envoyées par la Boutique et des impressions correspondantes, séparément des productions du catalogue.</p></div><div id="special-planning-cards" class="cards"></div><p id="special-planning-empty" class="empty" hidden>Aucune commande spéciale en production pour le moment.</p><div id="boutique-custom-followup" class="jj-boutique-custom-followup"><h3>📋 Mes demandes personnalisées</h3><p class="sub">Suivi des demandes envoyées, approbations et paiements à confirmer.</p><div id="boutique-custom-request-list">Chargement…</div></div></section>
+<section id="special-panel" hidden><div class="jj-shop-tools"><span id="jj-shop-request-count" aria-live="polite">✓ Demandes synchronisées</span><button type="button" id="jj-shop-enable-notifications">🔔 Activer les alertes navigateur</button><small>Alertes lorsque JJ3D est ouvert. Notifications téléphone app fermée : configuration push requise.</small></div><div class="boutique-page-heading"><h2>✨ Commandes personnalisées</h2><p>Suivi des demandes spéciales envoyées par la Boutique et des impressions correspondantes, séparément des productions du catalogue.</p></div><div id="special-planning-cards" class="cards"></div><p id="special-planning-empty" class="empty" hidden>Aucune commande spéciale en production pour le moment.</p><div id="boutique-custom-followup" class="jj-boutique-custom-followup"><h3>📋 Mes demandes personnalisées</h3><p class="sub">Suivi des demandes envoyées, approbations et paiements à confirmer.</p><div id="boutique-custom-request-list">Chargement…</div></div></section>
 <section id="deliveries-panel" hidden><div class="boutique-page-heading"><h2>📦 Livraisons et réceptions JJ3D</h2><p>Voir les bons d’envoi, confirmer les quantités reçues et consulter leur historique.</p></div><div id="deliveries-list">Chargement des livraisons…</div></section>
 <!-- Fiches uniformisées : même présentation que Produits > Détails du catalogue. -->
 <dialog id="planning-dialog" class="detail-modal pp-product-detail" aria-labelledby="planning-detail-name">

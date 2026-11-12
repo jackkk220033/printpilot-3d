@@ -137,7 +137,9 @@ service cloud.firestore {
           && request.resource.data.paymentMethod is string && request.resource.data.paymentMethod in ['Espèces','Virement Interac','Carte','Autre']
           && request.resource.data.paymentDate is string && request.resource.data.paymentDate.size() == 10
           && request.resource.data.paymentReportedAt == request.time;
-        allow delete: if isBoutiqueOwner(ownerUid);
+        // v4.11.43: both portals may delete an unpaid request; paid history is protected.
+        allow delete: if isBoutiqueOwner(ownerUid) ||
+          (canViewBoutique(ownerUid) && resource.data.senderUid == request.auth.uid && resource.data.status != 'paid');
       }
       // v4.11 — Commandes en une seule étape : boutique écrit, administrateur traite.
       match /orders/{orderId} {

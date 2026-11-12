@@ -1,23 +1,20 @@
-# JJ3D v4.11.42 — Demandes Boutique / dates / règlement
+# JJ3D v4.11.43 — Demandes Boutique synchronisées et alertes
 
-Version complète à publier sur GitHub Pages, issue de v4.11.40.
+Site complet, basé sur v4.11.42.
 
-- Correctif d’envoi des demandes personnalisées Boutique : `f.elements.item` désignait la méthode `item()` du navigateur au lieu du champ « Projet à fabriquer ». Utilise `namedItem('item')`.
-- Messages visibles en cas d’échec; ne vide pas le formulaire si l’envoi échoue.
-- Bouton calendrier à côté de « Date souhaitée » dans le formulaire Boutique; calendrier natif du navigateur.
-- Case de confirmation Boutique mieux alignée.
-- Commandes administrateur : la case « J’ai reçu ma part de la Boutique » est maintenant expliquée et n’apparaît que si l’encaissement est effectué par la Boutique. Elle ne signifie **pas** que le client a payé.
-- Dates administrateur : ouverture du sélecteur natif lors du clic, lorsque le navigateur le prend en charge.
+- Supprimer une demande personnalisée non payée depuis **Boutique** ou **Administration**, avec retrait en temps réel dans les deux interfaces. Une facture déjà créée est conservée : la suppression n'efface pas la comptabilité.
+- Les demandes payées ne peuvent pas être supprimées depuis le formulaire (protection de l’historique).
+- Les deux portails utilisent Firestore `onSnapshot` pour refléter immédiatement les changements de statut et la suppression lorsque l'application est connectée.
+- Nouveau badge et alertes visibles dans les deux applications lors de nouvelles demandes ou changements de statut.
+- Bouton optionnel d'autorisation des notifications **du navigateur pendant que l'application est ouverte**.
+- **IMPORTANT : les notifications push lorsque le téléphone est verrouillé ou lorsque l'app est fermée ne sont PAS encore implémentées.** Elles demandent un serveur de confiance, Firebase Cloud Messaging, un service worker de réception et une gestion des jetons appareils. Les permissions navigateur seules ne suffisent pas.
+- Le flux approbation → attente de paiement → paiement déclaré → validation admin utilise toujours le document partagé `customRequests` et ses états existants.
 
-Aucun changement aux règles Firestore. Conserve la synchronisation automatique catalogue et le filigrane PAYÉ corrigé. Faire une sauvegarde JSON avant déploiement. Vérifier avec les comptes réels après publication.
+## INSTALLATION OBLIGATOIRE
+1. Exporter une sauvegarde JSON de JJ3D.
+2. Déployer **tous** les fichiers sur GitHub Pages.
+3. Dans Firebase Console → Firestore Database → Rules, publier le fichier `firestore.rules` de cette version. Nécessaire pour permettre à la Boutique de supprimer ses demandes non payées.
+4. Recharger les deux applications.
+5. Tester une demande fictive, le changement de statut et la suppression sur les deux comptes.
 
-
-## v4.11.42 — Boutique : impressions séparées
-- Onglet À venir · Boutique : impressions du stock et commandes du catalogue, plus tâches libres explicitement marquées « Pour la Boutique ».
-- Onglet Commandes spéciales : tâches de demandes personnalisées provenant de la Boutique et historique des demandes envoyé par son compte.
-- Projets personnels et commandes personnalisées privées non publiés dans le document de planification Boutique. Par défaut, toute nouvelle impression libre est **Personnel / atelier**.
-- Sur la page administrateur À imprimer, le champ Destination peut être modifié pour les impressions libres.
-- Les changements sont publiés par les deux chemins Firebase : Atelier+ et synchronisation commande.
-- Aucune modification aux règles Firestore nécessaire.
-
-Attention : les anciennes tâches libres sont considérées personnelles par défaut; pour les afficher à la Boutique, ouvrir Modifier puis choisir « Pour la Boutique ».
+Attention : les interactions réelles avec Firestore ne peuvent pas être testées hors de votre projet Firebase. Les commandes et factures déjà payées doivent rester archivées.

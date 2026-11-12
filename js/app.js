@@ -1088,7 +1088,7 @@
   if(!inv||inv.status==='cancelled'){jjBoutiqueFlowReply(r.id,'','Prépare une facture brouillon valide avant paiement.');return;}
   jjBoutiqueFlowReply(r.id,'awaiting_payment','',{quoteTotal:jjCustomOrderTotal(o),quoteInvoiceNumber:inv.number||'',quotePreviewUrl:o.previewUrl||''});notify('✓ Prix et lien d’aperçu disponibles côté Boutique. Le client doit payer là-bas.');
  }
- // v4.11.42 — import privé d'une demande Boutique, sans création anticipée d'impression ni de vente.
+ // v4.11.43 — import privé d'une demande Boutique, sans création anticipée d'impression ni de vente.
  async function jjImportBoutiqueRequest(r){
   if(!r||!r.id||!r.customer||!r.item){notify('Demande Boutique incomplète.',true);return;}
   const existing=customOrders().find(x=>x.boutiqueRequestId===r.id);
