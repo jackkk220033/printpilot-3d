@@ -1,20 +1,10 @@
-# JJ3D v4.11.43 — Demandes Boutique synchronisées et alertes
+# JJ3D v4.11.44 — suivi Boutique / facture / À imprimer
 
-Site complet, basé sur v4.11.42.
-
-- Supprimer une demande personnalisée non payée depuis **Boutique** ou **Administration**, avec retrait en temps réel dans les deux interfaces. Une facture déjà créée est conservée : la suppression n'efface pas la comptabilité.
-- Les demandes payées ne peuvent pas être supprimées depuis le formulaire (protection de l’historique).
-- Les deux portails utilisent Firestore `onSnapshot` pour refléter immédiatement les changements de statut et la suppression lorsque l'application est connectée.
-- Nouveau badge et alertes visibles dans les deux applications lors de nouvelles demandes ou changements de statut.
-- Bouton optionnel d'autorisation des notifications **du navigateur pendant que l'application est ouverte**.
-- **IMPORTANT : les notifications push lorsque le téléphone est verrouillé ou lorsque l'app est fermée ne sont PAS encore implémentées.** Elles demandent un serveur de confiance, Firebase Cloud Messaging, un service worker de réception et une gestion des jetons appareils. Les permissions navigateur seules ne suffisent pas.
-- Le flux approbation → attente de paiement → paiement déclaré → validation admin utilise toujours le document partagé `customRequests` et ses états existants.
-
-## INSTALLATION OBLIGATOIRE
-1. Exporter une sauvegarde JSON de JJ3D.
-2. Déployer **tous** les fichiers sur GitHub Pages.
-3. Dans Firebase Console → Firestore Database → Rules, publier le fichier `firestore.rules` de cette version. Nécessaire pour permettre à la Boutique de supprimer ses demandes non payées.
-4. Recharger les deux applications.
-5. Tester une demande fictive, le changement de statut et la suppression sur les deux comptes.
-
-Attention : les interactions réelles avec Firestore ne peuvent pas être testées hors de votre projet Firebase. Les commandes et factures déjà payées doivent rester archivées.
+- Les fiches de demandes Boutique affichent le résumé de facture partagé (prix, lignes, statut, référence), sans les données comptables privées.
+- Lorsqu’une commande provenant de la Boutique est enregistrée dans l’administration, les données de facture partageables sont envoyées dans `customRequests` sur Firebase.
+- À l’arrivée d’une demande, le compte administrateur connecté crée une tâche de préproduction `🔒 En attente de validation` dans À imprimer ; elle est liée par ID et son démarrage est bloqué jusqu’au paiement confirmé. L’automatisation nécessite qu’au moins un espace administrateur soit ouvert/connecté. Si l’administration est fermée, la demande est conservée dans Firestore et la tâche sera créée lors de la prochaine connexion.
+- Lorsque la commande est importée, l’ancienne tâche de demande est réutilisée plutôt que dupliquée ; la validation du paiement libère la tâche.
+- Le formulaire Boutique et les notifications dans le navigateur restent disponibles. Les notifications push téléphone quand JJ3D est fermé requièrent encore Firebase Cloud Messaging et un service d’envoi serveur : elles ne sont PAS installées dans cette version.
+- IMPORTANT : publier `firestore.rules` dans Firebase Console > Firestore Database > Rules pour les nouveaux champs de résumé de facture.
+- Sauvegarder les données JSON avant mise à jour. Après publication GitHub Pages, faire Ctrl+Shift+R.
+- Les factures originales privées ne sont pas directement exposées ; l'aperçu Boutique n'est pas le PDF juridique complet.

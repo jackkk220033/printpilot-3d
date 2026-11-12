@@ -17,7 +17,7 @@ let photoUnsub=null,photoReady=false;
 let boutiqueAutoRequested=false, boutiqueAutoTimer=null, boutiqueAutoRunning=false, boutiqueAutoRetry=false;
 let cataloguePublishedKnown=false, lastPhotoPublication=new Map();
 let boutiqueLastSignature=null, boutiqueForcePublication=false;
-let unreadUnsub=null,requestsUnsub=null,ordersUnsub=null,invoiceOrdersUnsub=null,deliveryReceiptsUnsub=null;
+let unreadUnsub=null,requestsUnsub=null,ordersUnsub=null,invoiceOrdersUnsub=null,deliveryReceiptsUnsub=null,specialRequestsUnsub=null;let jj3dNotificationSeen=null;
 window.JJ3DClientOrders={ready:false,records:[]};
 function setInvoiceOrders(records,ready){window.JJ3DClientOrders={ready,records};window.dispatchEvent(new Event("jj3d:orders-updated"));}
 let ppRequestCount=0,ppOrderCount=0,ppUnreadCount=0;
@@ -37,7 +37,7 @@ function setUnreadBadge(count){ppUnreadCount=count;showNotificationLocations();
   el.setAttribute('aria-label', count+' message(s) non lu(s)');
  });
 }
-function stopUnreadBadge(){if(deliveryReceiptsUnsub){deliveryReceiptsUnsub();deliveryReceiptsUnsub=null;}window.JJ3DDeliveryReceipts=[];if(invoiceOrdersUnsub){invoiceOrdersUnsub();invoiceOrdersUnsub=null;}setInvoiceOrders([],false);if(unreadUnsub){unreadUnsub();unreadUnsub=null;}if(requestsUnsub){requestsUnsub();requestsUnsub=null;}if(ordersUnsub){ordersUnsub();ordersUnsub=null;}setUnreadBadge(0);setRequestBadge(0);setOrderBadge(0);}
+function stopUnreadBadge(){if(specialRequestsUnsub){specialRequestsUnsub();specialRequestsUnsub=null;}jj3dNotificationSeen=null;if(deliveryReceiptsUnsub){deliveryReceiptsUnsub();deliveryReceiptsUnsub=null;}window.JJ3DDeliveryReceipts=[];if(invoiceOrdersUnsub){invoiceOrdersUnsub();invoiceOrdersUnsub=null;}setInvoiceOrders([],false);if(unreadUnsub){unreadUnsub();unreadUnsub=null;}if(requestsUnsub){requestsUnsub();requestsUnsub=null;}if(ordersUnsub){ordersUnsub();ordersUnsub=null;}setUnreadBadge(0);setRequestBadge(0);setOrderBadge(0);}
 
 let photoCache=new Map();
 const photoId=key=>Array.from(new TextEncoder().encode(key),b=>b.toString(16).padStart(2,'0')).join('');
@@ -179,7 +179,7 @@ if(!configOK){
       window.dispatchEvent(new Event('printpilot:photos-changed'));
     }
   };
-  // 4.11.43 — Commandes personnalisées ↔ file Atelier+ (même document Firebase).
+  // 4.11.44 — Commandes personnalisées ↔ file Atelier+ (même document Firebase).
   // Identifiant stable : enregistrer plusieurs fois la commande ne crée jamais un deuxième print.
   const orderQueueRef=()=>doc(db,'boutiques',currentUser.uid,'management','current');
   const queueTaskForOrder=(order,previous)=>{
@@ -188,6 +188,19 @@ if(!configOK){
    const note=['Commande personnalisée '+String(order.number||''),String(order.colors||''),String(order.filamentType||'')].filter(Boolean).join(' · ').slice(0,200);
    return {...previous,id:previous?.id||('order-'+order.id),customOrderId:order.id,boutiqueOrigin:order.source==='boutique'||!!order.boutiqueRequestId,audience:order.source==='boutique'||!!order.boutiqueRequestId?'boutique':'private',customOrderNumber:String(order.number||''),productId:String(order.productId||''),name:String(order.item||'Commande personnalisée').slice(0,120),quantity:Math.max(1,Math.min(500,Number(order.quantity)||1)),printer:previous?.printer||'Anycubic Kobra X',minutes:Number(previous?.minutes)||0,startAt:previous?.startAt||'',priority:previous?.priority||'normal',note,status:cancelled&&!finished?'failed':previous?.cancelledByOrder?'todo':previous?.status||'todo',cancelledByOrder:!!(cancelled&&!finished),date:previous?.date||String(order.orderedAt||'').slice(0,10)||new Date().toISOString().slice(0,10),hasPhoto:!!previous?.hasPhoto,orderDueAt:String(order.dueAt||'')};
   };
+  // Sync a SHAREABLE invoice snapshot, never the private invoice or supplier costs.
+  window.JJ3DShareBoutiqueQuote=async(order,invoice)=>{
+   if(!order?.boutiqueRequestId)return;
+   if(!currentUser||!db)throw Error('Connecte Firebase avant de partager la soumission');
+   const lines=(invoice?.lines||[]).slice(0,8).map(l=>({name:String(l.name||'').slice(0,160),qty:Math.max(1,Math.min(999,Number(l.qty)||1)),price:Math.max(0,Math.min(100000,Number(l.price)||0))}));
+   const subtotal=lines.reduce((sum,l)=>sum+l.qty*l.price,0);
+   const discount=Math.min(subtotal,Math.max(0,Number(invoice?.discount)||0));
+   const base=subtotal-discount+Math.max(0,Number(invoice?.shipping)||0);
+   const tax=base*Math.max(0,Math.min(100,Number(invoice?.taxRate)||0))/100;
+   const total=Math.round((base+tax)*100)/100;
+   const ref=doc(db,'boutiques',currentUser.uid,'customRequests',order.boutiqueRequestId);
+   await updateDoc(ref,{quoteTotal:total,quoteInvoiceNumber:String(invoice?.number||'').slice(0,60),quotePreviewUrl:String(order.previewUrl||'').slice(0,600),quoteLines:lines,quoteInvoiceStatus:String(invoice?.status||'draft'),quoteDiscount:discount,quoteShipping:Math.max(0,Number(invoice?.shipping)||0),quoteTax:Math.round(tax*100)/100});
+  };
   window.JJ3DSyncOrderQueue=async order=>{
    if(!currentUser||!db)throw Error('Firebase non connecté');
    if(!order?.id)throw Error('Identifiant de commande manquant');
@@ -195,19 +208,20 @@ if(!configOK){
    await runTransaction(db,async tx=>{
     const snap=await tx.get(ref),existing=snap.exists()?snap.data():{};
     const queue=Array.isArray(existing.queue)?[...existing.queue]:[];
-    const at=queue.findIndex(q=>q.customOrderId===order.id||q.id==='order-'+order.id);
+    const at=queue.findIndex(q=>q.customOrderId===order.id||q.id==='order-'+order.id||(order.boutiqueRequestId&&q.customRequestId===order.boutiqueRequestId));
     const prev=at>=0?queue[at]:null;
     const cancel=order.deleted||order.status==='cancelled';
     // Demandes Boutique restent hors production jusqu'au paiement vérifié par l'admin.
-    if(order.productionHold&&!cancel){if(at>=0){queue.splice(at,1);tx.set(ref,{...existing,queue,updatedAt:serverTimestamp()});}return;}
+    // Held requests remain visible for planning, but cannot be started until payment is verified.
+    if(order.productionHold&&!cancel&&at>=0&&prev?.customRequestId&&!prev?.customOrderId){/* preserve existing request task */}
     if(at<0&&cancel)return; // Ne pas recréer une commande annulée.
     if(at<0&&queue.length>=80)throw Error('File À imprimer pleine (80 tâches). Archive des impressions avant de continuer.');
-    const next=queueTaskForOrder(order,prev);
+    const next=queueTaskForOrder(order,prev); next.productionHold=!!order.productionHold; next.customRequestId=order.boutiqueRequestId||prev?.customRequestId||''; next.id=prev?.id||next.id;
     if(at<0)queue.unshift(next);else queue[at]=next;
     tx.set(ref,{...existing,queue,updatedAt:serverTimestamp()});
     const perPrinter=new Map(),blocked=new Set(),anchor=Math.max(Date.now(),Date.parse(existing.planStart||'')||0),estimated=new Map();
     for(const item of [...queue].reverse()){
-     if(['done','failed'].includes(item.status))continue;
+     if(item.productionHold||['done','failed'].includes(item.status))continue;
      const machine=item.printer||'Anycubic Kobra X';
      if(blocked.has(machine))continue;
      if(item.status==='paused'||!(Number(item.minutes)>0)){blocked.add(machine);continue;}
@@ -219,7 +233,7 @@ if(!configOK){
      const end=start+remaining;estimated.set(item.id,{start:new Date(start).toISOString(),end:new Date(end).toISOString()});perPrinter.set(machine,end);
     }
     // Mise à jour immédiate de la vue Boutique sans attendre une ouverture d'Atelier+.
-    const items=queue.filter(x=>!x.cancelledByOrder&&(x.orderId||x.requestId||x.customRequestId||(x.customOrderId&&x.boutiqueOrigin===true)||(!x.customOrderId&&x.audience==='boutique'))).slice(0,80).map(x=>({kind:x.customRequestId||(x.customOrderId&&x.boutiqueOrigin===true)?'custom':'boutique',id:String(x.id||''),name:String(x.name||''),quantity:Number(x.quantity)||1,printer:String(x.printer||'Anycubic Kobra X'),minutes:Number(x.minutes)||0,startAt:String(x.startAt||''),status:String(x.status||'todo'),note:(x.customOrderId||x.customRequestId?'':String(x.note||'')),hasPhoto:!!x.hasPhoto,estimatedStart:estimated.get(x.id)?.start||'',estimatedEnd:estimated.get(x.id)?.end||''}));
+    const items=queue.filter(x=>!x.cancelledByOrder&&!x.productionHold&&(x.orderId||x.requestId||x.customRequestId||(x.customOrderId&&x.boutiqueOrigin===true)||(!x.customOrderId&&x.audience==='boutique'))).slice(0,80).map(x=>({kind:x.customRequestId||(x.customOrderId&&x.boutiqueOrigin===true)?'custom':'boutique',id:String(x.id||''),name:String(x.name||''),quantity:Number(x.quantity)||1,printer:String(x.printer||'Anycubic Kobra X'),minutes:Number(x.minutes)||0,startAt:String(x.startAt||''),status:String(x.status||'todo'),note:(x.customOrderId||x.customRequestId?'':String(x.note||'')),hasPhoto:!!x.hasPhoto,estimatedStart:estimated.get(x.id)?.start||'',estimatedEnd:estimated.get(x.id)?.end||''}));
     tx.set(doc(db,'boutiques',currentUser.uid,'planning','current'),{items,updatedAt:serverTimestamp()});
    });
   };
@@ -483,6 +497,20 @@ if(!configOK){
     },err=>{console.warn('Badge Messages Boutique:',err);setUnreadBadge(0);});
     try{requestsUnsub=onSnapshot(query(collection(db,'boutiques',user.uid,'requests'),where('status','==','pending')),snap=>setRequestBadge(snap.size),err=>{console.warn('Badge demandes:',err);setRequestBadge(0);});}catch(err){console.warn('Badge demandes:',err);setRequestBadge(0);}
     try{ordersUnsub=onSnapshot(query(collection(db,'boutiques',user.uid,'orders'),where('status','==','pending')),snap=>setOrderBadge(snap.size),err=>{console.warn('Badge commandes:',err);setOrderBadge(0);});}catch(err){console.warn('Badge commandes:',err);setOrderBadge(0);}
+    try{specialRequestsUnsub=onSnapshot(collection(db,'boutiques',user.uid,'customRequests'),snapshot=>{
+      const list=snapshot.docs.map(d=>({id:d.id,...d.data()}));
+      const seen=new Map(list.map(r=>[r.id,String(r.status||'')]));
+      const count=list.filter(r=>['pending','payment_reported'].includes(r.status)).length;
+      const bell=document.getElementById('jj3d-live-bell-count');if(bell)bell.textContent=String(count);
+      const link=document.getElementById('jj3d-live-bell');if(link){link.classList.toggle('is-alert',count>0);link.title=count?`${count} demande(s) spéciale(s) à traiter`:'Aucune demande spéciale en attente';}
+      if(jj3dNotificationSeen){const fresh=list.filter(r=>!jj3dNotificationSeen.has(r.id));const changed=list.filter(r=>jj3dNotificationSeen.has(r.id)&&jj3dNotificationSeen.get(r.id)!==r.status);
+        if(fresh.length||changed.length){const msg=fresh.length?`🔔 ${fresh.length} nouvelle(s) demande(s) spéciale(s) reçue(s)`:`🔔 Mise à jour Boutique : ${changed[0].item||'Projet'} (${changed[0].status})`;
+          const a=document.getElementById('pp-notification-where');if(a){a.hidden=false;a.innerHTML=`<a href="#atelier-demandes">${msg.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</a>`;}
+          if(document.hidden&&window.Notification?.permission==='granted')try{new Notification('JJ3D',{body:msg,icon:'icons/icon-192.png'});}catch(_){}
+        }
+      }
+      jj3dNotificationSeen=seen;
+    },err=>console.warn('Alertes demandes spéciales:',err));}catch(err){console.warn('Alertes demandes spéciales:',err);}
     try{invoiceOrdersUnsub=onSnapshot(collection(db,'boutiques',user.uid,'orders'),snap=>{setInvoiceOrders(snap.docs.map(d=>({id:d.id,...d.data()})),true);},err=>{console.warn('Factures commandes:',err);setInvoiceOrders([],false);});}catch(err){console.warn('Factures commandes:',err);setInvoiceOrders([],false);}
     try{deliveryReceiptsUnsub=onSnapshot(collection(db,'boutiques',user.uid,'deliveryReceipts'),snap=>{window.JJ3DDeliveryReceipts=snap.docs.map(d=>({id:d.id,...d.data()}));window.dispatchEvent(new Event('jj3d:receipts-updated'));},err=>console.warn('Rapports Boutique:',err));}catch(err){console.warn('Rapports Boutique:',err);}
    } catch(err){console.warn('Badge Messages Boutique:',err);setUnreadBadge(0);}

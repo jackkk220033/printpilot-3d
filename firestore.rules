@@ -121,12 +121,24 @@ service cloud.firestore {
           && request.resource.data.createdAt == request.time;
         allow get, list: if isBoutiqueOwner(ownerUid) || (canViewBoutique(ownerUid) && resource.data.senderUid == request.auth.uid);
         allow update: if isBoutiqueOwner(ownerUid)
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','resolvedAt','quoteTotal','quoteInvoiceNumber','quotePreviewUrl'])
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','resolvedAt','quoteTotal','quoteInvoiceNumber','quotePreviewUrl','quoteLines','quoteInvoiceStatus'])
           && request.resource.data.status in ['accepted','rejected','reviewed','awaiting_payment','paid']
           && (!('quoteTotal' in request.resource.data) || (request.resource.data.quoteTotal is number && request.resource.data.quoteTotal >= 0 && request.resource.data.quoteTotal <= 100000))
           && (!('quoteInvoiceNumber' in request.resource.data) || (request.resource.data.quoteInvoiceNumber is string && request.resource.data.quoteInvoiceNumber.size() <= 60))
           && (!('quotePreviewUrl' in request.resource.data) || (request.resource.data.quotePreviewUrl is string && request.resource.data.quotePreviewUrl.size() <= 600))
           && request.resource.data.resolvedAt == request.time;
+        // Admin may refresh the Boutique-visible quote/invoice summary while retaining the status.
+        // Supplier costs, private invoice notes, and workspace data are never published.
+        allow update: if isBoutiqueOwner(ownerUid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quoteTotal','quoteInvoiceNumber','quotePreviewUrl','quoteLines','quoteInvoiceStatus','quoteDiscount','quoteShipping','quoteTax'])
+          && request.resource.data.quoteTotal is number && request.resource.data.quoteTotal >= 0 && request.resource.data.quoteTotal <= 100000
+          && request.resource.data.quoteInvoiceNumber is string && request.resource.data.quoteInvoiceNumber.size() <= 60
+          && request.resource.data.quotePreviewUrl is string && request.resource.data.quotePreviewUrl.size() <= 600
+          && request.resource.data.quoteInvoiceStatus in ['draft','sent','paid','cancelled']
+          && request.resource.data.quoteLines is list && request.resource.data.quoteLines.size() <= 8
+          && request.resource.data.quoteDiscount is number && request.resource.data.quoteDiscount >= 0
+          && request.resource.data.quoteShipping is number && request.resource.data.quoteShipping >= 0
+          && request.resource.data.quoteTax is number && request.resource.data.quoteTax >= 0;
         // Un membre autorisé peut uniquement déclarer le paiement de sa propre demande,
         // sans pouvoir valider celui-ci ni changer le prix ou le client.
         allow update: if canViewBoutique(ownerUid) && resource.data.senderUid == request.auth.uid

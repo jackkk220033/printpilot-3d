@@ -1086,9 +1086,9 @@
   if(!(jjCustomOrderTotal(o)>0)){jjBoutiqueFlowReply(r.id,'','Indique un prix convenu supérieur à zéro dans la commande.');return;}
   const inv=(extras.invoices||[]).find(i=>i.customOrderId===o.id);
   if(!inv||inv.status==='cancelled'){jjBoutiqueFlowReply(r.id,'','Prépare une facture brouillon valide avant paiement.');return;}
-  jjBoutiqueFlowReply(r.id,'awaiting_payment','',{quoteTotal:jjCustomOrderTotal(o),quoteInvoiceNumber:inv.number||'',quotePreviewUrl:o.previewUrl||''});notify('✓ Prix et lien d’aperçu disponibles côté Boutique. Le client doit payer là-bas.');
+  jjBoutiqueFlowReply(r.id,'awaiting_payment','',{quoteTotal:jjCustomOrderTotal(o),quoteInvoiceNumber:inv.number||'',quotePreviewUrl:o.previewUrl||'',quoteLines:(inv.lines||[]).slice(0,8).map(l=>({name:String(l.name||'').slice(0,160),qty:Math.max(1,Number(l.qty)||1),price:Math.max(0,Number(l.price)||0)})),quoteInvoiceStatus:inv.status||'draft'});notify('✓ Prix et lien d’aperçu disponibles côté Boutique. Le client doit payer là-bas.');
  }
- // v4.11.43 — import privé d'une demande Boutique, sans création anticipée d'impression ni de vente.
+ // v4.11.44 — import privé d'une demande Boutique, sans création anticipée d'impression ni de vente.
  async function jjImportBoutiqueRequest(r){
   if(!r||!r.id||!r.customer||!r.item){notify('Demande Boutique incomplète.',true);return;}
   const existing=customOrders().find(x=>x.boutiqueRequestId===r.id);
@@ -1116,6 +1116,7 @@
   const updatedInvoice={...inv,status:'paid',paidDate:date,paymentMethod:'Boutique — '+String(r.paymentMethod||'non précisé'),updatedAt:when,history:[...(inv.history||[]),{at:when,action:'Paiement Boutique vérifié par administrateur',status:'paid'}]};
   const updatedOrder={...o,productionHold:false,paymentValidatedAt:when,status:'approved',updatedAt:when};
   if(!persistExtras({...extras,invoices:(extras.invoices||[]).map(x=>x.id===inv.id?updatedInvoice:x),customOrders:customOrders().map(x=>x.id===o.id?updatedOrder:x)})){notify('Impossible de valider le paiement.',true);return;}
+  try{await window.JJ3DShareBoutiqueQuote?.(updatedOrder,updatedInvoice);}catch(e){notify('Paiement validé, mais facture Boutique non actualisée : '+e.message,true);}
   try{await window.JJ3DSyncOrderQueue?.(updatedOrder);}catch(e){notify('Facture payée, mais la tâche À imprimer doit être vérifiée : '+e.message,true);}
   jjBoutiqueFlowReply(r.id,'paid');notify('✓ Paiement Boutique vérifié, facture PAYÉE et impression autorisée. Consulte À imprimer.');
  }
@@ -1382,6 +1383,8 @@
    const linkedInvoice=jjInvoiceForOrder(row,existingInvoice);
    const nextInvoices=existingInvoice?(extras.invoices||[]).map(i=>i.id===existingInvoice.id?linkedInvoice:i):[...(extras.invoices||[]),linkedInvoice];
    if(!persistExtras({...extras,customOrders:next,invoices:nextInvoices}))return fail('La commande et sa facture ne peuvent pas être sauvegardées. Vérifie l’espace disponible.');
+   let quoteWarning='';
+   if(row.boutiqueRequestId){try{await window.JJ3DShareBoutiqueQuote?.(row,linkedInvoice);}catch(e){quoteWarning=' ⚠ Prix enregistré chez toi, mais non transmis à la Boutique : '+(e.message||e);}}
    let queueWarning='';try{if(window.JJ3DSyncOrderQueue){await window.JJ3DSyncOrderQueue(row);}else{queueWarning=' La tâche À imprimer sera liée après la connexion Firebase.';}}catch(queueErr){console.error('Liaison commande → À imprimer',queueErr);queueWarning=' ⚠ La commande est sauvée, mais la tâche À imprimer n’a pas été synchronisée : '+String(queueErr.message||queueErr)+'.';}
    const photo=f.elements.namedItem('photo')?.files?.[0];
    const colorPhoto=f.elements.namedItem('colorPhoto')?.files?.[0];
@@ -1395,7 +1398,7 @@
     catch(err){console.error('Photo de commande',label,err);photoWarning+=' La photo '+label+' n’a pas pu être sauvegardée.';}
    }
    editingCustomOrderId=null;render();
-   notify('✓ Commande et facture brouillon enregistrées!'+(existingInvoice&&existingInvoice.status!=='draft'?' La facture déjà envoyée/payée n’a pas été modifiée.':'')+photoWarning+queueWarning,!!(photoWarning||queueWarning));
+   notify('✓ Commande et facture brouillon enregistrées!'+(existingInvoice&&existingInvoice.status!=='draft'?' La facture déjà envoyée/payée n’a pas été modifiée.':'')+photoWarning+queueWarning+quoteWarning,!!(photoWarning||queueWarning||quoteWarning));
    document.querySelector(`[data-custom-order-id="${CSS.escape(id)}"]`)?.scrollIntoView({behavior:'smooth',block:'center'});
    return true;
   }catch(err){console.error('Enregistrement commande personnalisée:',err);return fail('Une erreur inattendue est survenue : '+(err?.message||'inconnue')+'. Aucune modification supplémentaire ne sera faite.');}
