@@ -179,14 +179,14 @@ if(!configOK){
       window.dispatchEvent(new Event('printpilot:photos-changed'));
     }
   };
-  // 4.11.41 — Commandes personnalisées ↔ file Atelier+ (même document Firebase).
+  // 4.11.42 — Commandes personnalisées ↔ file Atelier+ (même document Firebase).
   // Identifiant stable : enregistrer plusieurs fois la commande ne crée jamais un deuxième print.
   const orderQueueRef=()=>doc(db,'boutiques',currentUser.uid,'management','current');
   const queueTaskForOrder=(order,previous)=>{
    const finished=previous&&['done','failed'].includes(previous.status);
    const cancelled=order.status==='cancelled'||order.deleted;
    const note=['Commande personnalisée '+String(order.number||''),String(order.colors||''),String(order.filamentType||'')].filter(Boolean).join(' · ').slice(0,200);
-   return {...previous,id:previous?.id||('order-'+order.id),customOrderId:order.id,customOrderNumber:String(order.number||''),productId:String(order.productId||''),name:String(order.item||'Commande personnalisée').slice(0,120),quantity:Math.max(1,Math.min(500,Number(order.quantity)||1)),printer:previous?.printer||'Anycubic Kobra X',minutes:Number(previous?.minutes)||0,startAt:previous?.startAt||'',priority:previous?.priority||'normal',note,status:cancelled&&!finished?'failed':previous?.cancelledByOrder?'todo':previous?.status||'todo',cancelledByOrder:!!(cancelled&&!finished),date:previous?.date||String(order.orderedAt||'').slice(0,10)||new Date().toISOString().slice(0,10),hasPhoto:!!previous?.hasPhoto,orderDueAt:String(order.dueAt||'')};
+   return {...previous,id:previous?.id||('order-'+order.id),customOrderId:order.id,boutiqueOrigin:order.source==='boutique'||!!order.boutiqueRequestId,audience:order.source==='boutique'||!!order.boutiqueRequestId?'boutique':'private',customOrderNumber:String(order.number||''),productId:String(order.productId||''),name:String(order.item||'Commande personnalisée').slice(0,120),quantity:Math.max(1,Math.min(500,Number(order.quantity)||1)),printer:previous?.printer||'Anycubic Kobra X',minutes:Number(previous?.minutes)||0,startAt:previous?.startAt||'',priority:previous?.priority||'normal',note,status:cancelled&&!finished?'failed':previous?.cancelledByOrder?'todo':previous?.status||'todo',cancelledByOrder:!!(cancelled&&!finished),date:previous?.date||String(order.orderedAt||'').slice(0,10)||new Date().toISOString().slice(0,10),hasPhoto:!!previous?.hasPhoto,orderDueAt:String(order.dueAt||'')};
   };
   window.JJ3DSyncOrderQueue=async order=>{
    if(!currentUser||!db)throw Error('Firebase non connecté');
@@ -219,7 +219,7 @@ if(!configOK){
      const end=start+remaining;estimated.set(item.id,{start:new Date(start).toISOString(),end:new Date(end).toISOString()});perPrinter.set(machine,end);
     }
     // Mise à jour immédiate de la vue Boutique sans attendre une ouverture d'Atelier+.
-    const items=queue.slice(0,80).map(x=>({id:String(x.id||''),name:String(x.name||''),quantity:Number(x.quantity)||1,printer:String(x.printer||'Anycubic Kobra X'),minutes:Number(x.minutes)||0,startAt:String(x.startAt||''),status:String(x.status||'todo'),note:String(x.note||''),hasPhoto:!!x.hasPhoto,estimatedStart:estimated.get(x.id)?.start||'',estimatedEnd:estimated.get(x.id)?.end||''}));
+    const items=queue.filter(x=>!x.cancelledByOrder&&(x.orderId||x.requestId||x.customRequestId||(x.customOrderId&&x.boutiqueOrigin===true)||(!x.customOrderId&&x.audience==='boutique'))).slice(0,80).map(x=>({kind:x.customRequestId||(x.customOrderId&&x.boutiqueOrigin===true)?'custom':'boutique',id:String(x.id||''),name:String(x.name||''),quantity:Number(x.quantity)||1,printer:String(x.printer||'Anycubic Kobra X'),minutes:Number(x.minutes)||0,startAt:String(x.startAt||''),status:String(x.status||'todo'),note:(x.customOrderId||x.customRequestId?'':String(x.note||'')),hasPhoto:!!x.hasPhoto,estimatedStart:estimated.get(x.id)?.start||'',estimatedEnd:estimated.get(x.id)?.end||''}));
     tx.set(doc(db,'boutiques',currentUser.uid,'planning','current'),{items,updatedAt:serverTimestamp()});
    });
   };
