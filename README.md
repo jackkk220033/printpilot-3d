@@ -1,16 +1,14 @@
-# JJ3D v4.11.50 — Commandes et factures Boutique automatiques
+# JJ3D v4.11.51 — Photo directe dans les demandes Boutique
 
-## Changements
-- Les tickets reçus de la Boutique sont rapprochés automatiquement du registre Commandes personnalisées.
-- Une facture brouillon liée est créée une seule fois par ticket.
-- Après ajout du prix, la facture est partagée automatiquement dans le suivi Boutique (également pour les anciens tickets approuvés).
-- Une fois le paiement **vérifié**, les statuts de la facture et de la commande sont rapprochés et la copie Boutique affiche un gros tampon PAYÉ à l'impression.
-- Un bouton `Synchroniser commandes et factures` dans Atelier > Demandes permet de relancer la mise en correspondance.
-- Aucun effacement ou reconstruction des autres commandes existantes.
+## Nouveauté
+- Dans Boutique → Commandes spéciales → Nouvelle demande personnalisée, **Prendre une photo** ouvre la caméra du téléphone compatible (caméra arrière privilégiée); **Choisir une photo** ouvre les images existantes.
+- Aperçu instantané et option Retirer; une seule photo par demande. La photo est compressée puis envoyée dans le champ `photo` **existant** de `boutiques/{owner}/customRequests`. JJ3D lira donc la photo comme avant.
+- La caméra dépend du navigateur et du système du téléphone; certains navigateurs peuvent afficher un choix caméra/galerie à la place. Sur ordinateur, elle peut ouvrir le sélecteur de fichiers.
+- Le formulaire ne crée aucune commande ni facture en cas d'échec de l'envoi photo.
 
-## Important
-Avant de déployer, faire une sauvegarde JSON complète. Déployer tout le dossier (y compris js, sw.js et boutique.html), puis forcer une actualisation des deux portails. Cette mise à jour ne nécessite pas de nouvelles règles Firestore.
+## Installation
+1. Sauvegarder/exporter les données JSON avant toute mise à jour.
+2. Publier le dossier complet sur Firebase Hosting; rafraîchir Boutique sur le téléphone.
+3. Tester avec une **nouvelle demande test**, vérifier la photo côté Boutique et JJ3D, puis supprimer ce test seulement une fois confirmé.
 
-**Condition :** l'administrateur doit ouvrir JJ3D avec sa session Firebase active afin que les nouveaux tickets soient enregistrés dans l'espace privé. Le portail Boutique peut continuer à collecter les tickets quand JJ3D est fermé. La synchronisation privée se fait à la prochaine connexion administrateur.
-
-La facturation réelle, les taxes et la validité d'un paiement restent à vérifier par l'administrateur. Les notifications push en arrière-plan ne sont pas incluses ici.
+Aucun changement aux règles Firestore n'est nécessaire pour cette fonctionnalité. Le parcours complet Firebase doit être validé sur vos comptes réels.
