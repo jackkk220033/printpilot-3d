@@ -491,3 +491,6 @@ select[data-choice]{width:100%;min-width:0}
 
 /* v4.11.47 — notification bell in admin header */
 .jj3d-live-bell{display:inline-flex;align-items:center;gap:5px;border:1px solid #4c527d;background:#212d4a;border-radius:12px;color:#eae5ff;padding:8px 12px;text-decoration:none;font-weight:700;white-space:nowrap}.jj3d-live-bell.is-alert{background:#3b2559;border-color:#a277fb;color:#fff}.jj3d-live-bell:hover{background:#4b3676}
+
+/* Collage de captures dans les commandes personnalisées */
+.jj-paste-photo-btn{display:block;width:100%;margin:9px 0;padding:10px;border:1px solid #9874ef;border-radius:10px;background:#322653;color:#fff;cursor:pointer;font-weight:700}.jj-paste-photo-btn:hover,.jj-paste-photo-btn:focus-visible,.jj-paste-photo-btn.jj-paste-target-active{background:#6743c2;outline:2px solid #a88aff;outline-offset:2px}

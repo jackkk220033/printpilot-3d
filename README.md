@@ -1,4 +1,4 @@
-# JJ3D v4.11.48 — Récupération sécurisée des commandes
+# JJ3D v4.11.49 — Récupération sécurisée des commandes
 
 ## Récupérer la commande de Lucie
 1. Publier ce dossier complet sur Firebase Hosting.
@@ -12,3 +12,6 @@ Le bouton ne crée aucune nouvelle facture ni aucune tâche d'impression. Il ré
 **Important :** avant récupération, exporter les données complètes en JSON depuis **Sauvegardes de sécurité**. La synchronisation cloud doit être active et sans conflit. La suppression directe exige désormais de taper `SUPPRIMER` et garde une copie locale de la dernière commande supprimée.
 
 Cette version ne règle **pas encore** les notifications push en arrière-plan. Aucun changement Firestore Rules requis pour cette réparation.
+
+## v4.11.49 — captures d’écran sans enregistrement
+Dans Commandes personnalisées, ouvre une commande, fais Win+Shift+S, clique « Coller une capture ici (Ctrl + V) » sous le produit (ou la couleur), puis Ctrl+V. Vérifie l’aperçu et enregistre la commande. La capture suit la sauvegarde photo existante. Aucune modification de règles Firestore nécessaire pour cette fonction.

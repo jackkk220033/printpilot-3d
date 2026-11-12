@@ -1199,7 +1199,7 @@
  const customOrderStages={new:'Nouvelle demande',quoted:'Soumission envoyée',approved:'Confirmée',awaiting_payment:'Paiement à confirmer',printing:'En production',ready:'Prête',delivered:'Remise / livrée',cancelled:'Annulée'};
  const customOrders=()=>Array.isArray(extras.customOrders)?extras.customOrders:[];
 
- // v4.11.48 — Recuperation prudente depuis les factures existantes.
+ // v4.11.49 — Recuperation prudente depuis les factures existantes.
  // Ne modifie PAS la facture, la file d'impression ni les photos et ne fait aucune restauration automatique.
  function missingCustomOrderInvoices(){
   const orders=customOrders(), linked=new Set(orders.map(o=>String(o.id)));
@@ -1228,7 +1228,7 @@
   const message=`Récupérer ${number} pour ${customer} depuis la facture ${invoice.number||''} ?\n\nLa facture originale et la tâche À imprimer NE seront PAS modifiées. Les autres commandes seront conservées. Vérifie les détails après récupération.`;
   if(!confirm(message))return;
   // Sauvegarde locale explicite avant toute tentative (sans remplacer l'inventaire).
-  try{const dump=JSON.stringify({at:new Date().toISOString(),invoice,customOrders:customOrders()});localStorage.setItem('jj3d-recovery-last-before-v4.11.48',dump);}catch(e){notify('Sauvegarde de précaution indisponible : exporte ton JSON avant de continuer.',true);return;}
+  try{const dump=JSON.stringify({at:new Date().toISOString(),invoice,customOrders:customOrders()});localStorage.setItem('jj3d-recovery-last-before-v4.11.49',dump);}catch(e){notify('Sauvegarde de précaution indisponible : exporte ton JSON avant de continuer.',true);return;}
   const now=new Date().toISOString();
   const row={id,number,customer,contact:String(invoice.clientEmail||''),item:label,quantity,
    colors:color?color[1].trim():'',filamentType:material?material[1]:'',orderedAt:String(invoice.date||now.slice(0,10)),dueAt:String(invoice.due||''),
@@ -1367,12 +1367,12 @@
       <input type="file" name="photo" accept="image/*" aria-label="Choisir la photo du produit demandé">
       <span class="jj-photo-upload-icon" aria-hidden="true">🖼️</span><span class="jj-photo-upload-title">Choisir une photo</span>
       <span class="jj-photo-upload-subtitle">Photo, modèle ou capture du slicer</span>
-    </label><div class="jj-upload-result" data-upload-result="photo" aria-live="polite">Aucune nouvelle photo sélectionnée</div><img class="jj-upload-preview" data-upload-preview="photo" alt="Aperçu du modèle demandé" hidden></div>
+    </label><button type="button" class="jj-paste-photo-btn" data-paste-target="photo" title="Sélectionner cette zone puis coller la capture">📋 Coller une capture ici (Ctrl + V)</button><div class="jj-upload-result" data-upload-result="photo" aria-live="polite">Aucune nouvelle photo sélectionnée</div><img class="jj-upload-preview" data-upload-preview="photo" alt="Aperçu du modèle demandé" hidden></div>
     <div class="jj-order-photo-field"><strong>🎨 Photo de la couleur / du filament</strong><label class="jj-photo-upload">
       <input type="file" name="colorPhoto" accept="image/*" aria-label="Choisir la photo de couleur ou de filament">
       <span class="jj-photo-upload-icon" aria-hidden="true">🎨</span><span class="jj-photo-upload-title">Choisir une photo</span>
       <span class="jj-photo-upload-subtitle">Bobine ou couleur exacte demandée</span>
-    </label><div class="jj-upload-result" data-upload-result="colorPhoto" aria-live="polite">Aucune nouvelle photo sélectionnée</div><img class="jj-upload-preview" data-upload-preview="colorPhoto" alt="Aperçu de la couleur demandée" hidden></div>
+    </label><button type="button" class="jj-paste-photo-btn" data-paste-target="colorPhoto" title="Sélectionner cette zone puis coller la capture">📋 Coller une capture ici (Ctrl + V)</button><div class="jj-upload-result" data-upload-result="colorPhoto" aria-live="polite">Aucune nouvelle photo sélectionnée</div><img class="jj-upload-preview" data-upload-preview="colorPhoto" alt="Aperçu de la couleur demandée" hidden></div>
    </div>
    <p class="small-hint">La photo est stockée séparément et synchronisée avec Firebase si tu es connecté. Cette commande ne retire pas automatiquement de stock. Une facture brouillon privée est automatiquement associée à son enregistrement; elle n’est ni envoyée ni marquée payée.</p>
    <p id="custom-order-edit-hint" class="small-hint" hidden></p>
@@ -1466,6 +1466,41 @@
    if(result)result.textContent=row?.[flag]?'✓ Photo déjà enregistrée — choisir une autre photo pour la remplacer':'Aucune nouvelle photo sélectionnée';
   }
  }
+ // Collage direct depuis Win+Shift+S, sans fichier temporaire sur disque.
+ let jjPastePhotoTarget='photo';
+ document.addEventListener('click',event=>{
+  const b=event.target.closest('[data-paste-target]');
+  if(!b||!b.closest('#custom-order-form'))return;
+  jjPastePhotoTarget=b.dataset.pasteTarget;
+  document.querySelectorAll('#custom-order-form [data-paste-target]').forEach(x=>x.classList.toggle('jj-paste-target-active',x===b));
+  b.focus();
+ });
+ document.addEventListener('paste',event=>{
+  const dialog=document.getElementById('custom-order-dialog');
+  if(!dialog?.open)return;
+  const el=event.target;
+  if(el instanceof Element && (el.closest('input:not([type=file]), textarea, [contenteditable="true"]')))return;
+  const items=Array.from(event.clipboardData?.items||[]);
+  const image=items.find(item=>item.kind==='file'&&item.type.startsWith('image/'));
+  if(!image)return;
+  const original=image.getAsFile();if(!original)return;
+  const target=el instanceof Element?el.closest('[data-paste-target]')?.dataset.pasteTarget:null;
+  const field=target||jjPastePhotoTarget||'photo';
+  const f=document.getElementById('custom-order-form');
+  const input=f?.elements.namedItem(field);
+  if(!input)return;
+  try{
+   const ext=(original.type.split('/')[1]||'png').replace(/[^a-z0-9]/gi,'')||'png';
+   const file=new File([original],`capture-${Date.now()}.${ext}`,{type:original.type||'image/png'});
+   const transfer=new DataTransfer();transfer.items.add(file);
+   input.files=transfer.files;
+   jjUpdateOrderPhotoInput(input);
+   f.querySelectorAll('[data-paste-target]').forEach(x=>x.classList.toggle('jj-paste-target-active',x.dataset.pasteTarget===field));
+   jjPastePhotoTarget=field;
+   event.preventDefault();
+   notify('📋 Capture collée! Enregistre la commande pour sauvegarder la photo.');
+  }catch(err){console.error('Collage de capture',err);notify('Impossible de coller cette capture. Essaie le bouton Choisir une photo.',true);}
+ });
  function jjUpdateOrderPhotoInput(input){
   const f=input.closest('#custom-order-form');if(!f)return;
   const field=input.name,preview=f.querySelector(`[data-upload-preview="${field}"]`),result=f.querySelector(`[data-upload-result="${field}"]`);
@@ -1485,7 +1520,7 @@
   document.getElementById('custom-order-submit').textContent='💾 Enregistrer la commande';
   document.getElementById('custom-order-error').textContent='';
   const hint=document.getElementById('custom-order-edit-hint');if(hint)hint.hidden=true;
-  jjDimensionPreview();jjFilamentPurchaseToggle();jjBoutiqueSettlementToggle();jjResetOrderPhotoInputs();
+  jjPastePhotoTarget="photo";jjDimensionPreview();jjFilamentPurchaseToggle();jjBoutiqueSettlementToggle();jjResetOrderPhotoInputs();
   dialog.showModal();dialog.scrollTop=0;
  }
  function editCustomOrder(id){
@@ -1500,7 +1535,7 @@
   f.elements.namedItem('boutiqueSettlementReceived').checked=!!row.boutiqueSettlementReceived;
   for(const k of ['height','diameter','length','width']){const inp=f.elements.namedItem('dimension_'+k);if(inp)inp.value=String(row.dimensionRaw?.[k]||'');}
   f.elements.namedItem('orderId').value=id;
-  jjDimensionPreview();jjFilamentPurchaseToggle();jjBoutiqueSettlementToggle();jjResetOrderPhotoInputs(row);
+  jjPastePhotoTarget="photo";jjDimensionPreview();jjFilamentPurchaseToggle();jjBoutiqueSettlementToggle();jjResetOrderPhotoInputs(row);
   document.getElementById('custom-order-error').textContent='';
   document.getElementById('custom-order-form-title').textContent='✎ Modifier la commande '+(row.number||'');
   document.getElementById('custom-order-submit').textContent='💾 Enregistrer les modifications';
@@ -1514,7 +1549,7 @@
   const row=customOrders().find(x=>x.id===id);if(!row)return;
   const typed=prompt('SUPPRESSION : '+row.number+' — '+row.customer+'\nPour supprimer uniquement CETTE commande, écris SUPPRIMER.\nLes factures et autres commandes restent intactes.');
   if(typed!=='SUPPRIMER')return;
-  try{localStorage.setItem('jj3d-last-deleted-custom-order-v4.11.48',JSON.stringify({savedAt:new Date().toISOString(),row}));}catch(e){notify('Sauvegarde locale de la commande impossible : suppression annulée.',true);return;}
+  try{localStorage.setItem('jj3d-last-deleted-custom-order-v4.11.49',JSON.stringify({savedAt:new Date().toISOString(),row}));}catch(e){notify('Sauvegarde locale de la commande impossible : suppression annulée.',true);return;}
   const next=customOrders().filter(x=>x.id!==id);
   if(next.length!==customOrders().length-1){notify('Anomalie détectée : suppression annulée.',true);return;}
   if(persistExtras({...extras,customOrders:next})){render();try{await window.JJ3DSyncOrderQueue?.({...row,status:'cancelled',deleted:true});notify('Commande '+row.number+' supprimée uniquement; factures conservées.');}catch(err){notify('Commande supprimée, mais tâche À imprimer à vérifier : '+(err.message||err),true);}}
