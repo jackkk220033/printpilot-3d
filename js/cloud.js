@@ -49,6 +49,17 @@ const configOK = CFG && typeof CFG.apiKey === 'string' && CFG.apiKey.length > 12
 let auth=null, db=null, firebase=null, currentUser=null, remote=null, unsubscribe=null;
 let baseRevision=null, active=false, pending=false, busy=false, conflict=false, timer=null, observedOnce=false;
 let jj3dLastPublishedRevision=null;
+// Données en attente de rapprochement jusqu'à la fin de la synchronisation initiale.
+let jjPendingCustomTickets=[];
+let jjReconcileTimer=null;
+function jjScheduleCustomReconcile(){
+ clearTimeout(jjReconcileTimer);
+ jjReconcileTimer=setTimeout(async()=>{
+  if(!currentUser||!active||busy||pending||conflict||!window.JJ3DAutoReconcileBoutique)return;
+  await window.JJ3DAutoReconcileBoutique(jjPendingCustomTickets);
+ },1100);
+}
+
 const localJSON=()=>JSON.stringify(adapter.exportState());
 const stamp=()=>new Date().toLocaleString('fr-CA');
 const describe=doc=> doc ? `Version cloud ${doc.revision || 0} • ${doc.savedAt?.toDate?.()?.toLocaleString('fr-CA') || 'date indisponible'} • ${doc.data?.rolls?.length ?? 0} bobines, ${doc.data?.products?.length ?? 0} produits` : 'Aucune sauvegarde cloud pour ce compte.';
@@ -67,7 +78,7 @@ function rememberSynced(){localStorage.setItem(LINK_UID,currentUser.uid);localSt
 function safeSyncRemote(record){
   const old=localJSON();
   if(record?.data && JSON.stringify(record.data)!==old){adapter.closeAllDialogs();adapter.applyState(record.data);}
-  baseRevision=record.revision;rememberSynced();active=true;pending=false;conflict=false;
+  baseRevision=record.revision;rememberSynced();active=true;pending=false;conflict=false;jjScheduleCustomReconcile();
   setStatus(`☁ Synchronisé avec Firebase • ${stamp()}`);window.JJ3DPublishDeliveries?.(record.data)?.catch(e=>console.warn('Publication livraisons :',e));
   window.JJ3DReconcileOrderQueue?.(record.data)?.catch(e=>console.warn('Liaison des commandes:',e));
 }
@@ -503,6 +514,7 @@ if(!configOK){
       const count=list.filter(r=>['pending','payment_reported'].includes(r.status)).length;
       const bell=document.getElementById('jj3d-live-bell-count');if(bell)bell.textContent=String(count);
       const link=document.getElementById('jj3d-live-bell');if(link){link.classList.toggle('is-alert',count>0);link.title=count?`${count} demande(s) spéciale(s) à traiter`:'Aucune demande spéciale en attente';}
+      jjPendingCustomTickets=list;jjScheduleCustomReconcile();
       if(jj3dNotificationSeen){const fresh=list.filter(r=>!jj3dNotificationSeen.has(r.id));const changed=list.filter(r=>jj3dNotificationSeen.has(r.id)&&jj3dNotificationSeen.get(r.id)!==r.status);
         if(fresh.length||changed.length){const msg=fresh.length?`🔔 ${fresh.length} nouvelle(s) demande(s) spéciale(s) reçue(s)`:`🔔 Mise à jour Boutique : ${changed[0].item||'Projet'} (${changed[0].status})`;
           const a=document.getElementById('pp-notification-where');if(a){a.hidden=false;a.innerHTML=`<a href="#atelier-demandes">${msg.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</a>`;}
@@ -518,3 +530,5 @@ if(!configOK){
   });
  }catch(e){showError(e);authArea.hidden=true;}
 }
+
+window.addEventListener('printpilot:changed',()=>{if(jjPendingCustomTickets.length)jjScheduleCustomReconcile();});

@@ -1072,6 +1072,7 @@
     const iframe=document.getElementById('pp-atelier-frame');
     if(!iframe || event.source!==iframe.contentWindow)return;
     if(event.data.type==='height' && Number.isFinite(event.data.height))iframe.style.height=Math.max(650,Math.min(24000,Math.ceil(event.data.height)+28))+'px';
+    if(event.data.type==='reconcile-boutique-requests')window.JJ3DAutoReconcileBoutique?.(event.data.requests);
     if(event.data.type==='import-boutique-request')jjImportBoutiqueRequest(event.data.request).then(ok=>jjBoutiqueFlowReply(event.data.request?.id,ok?'reviewed':'',ok?'':'Impossible de sauvegarder cette demande.')).catch(e=>jjBoutiqueFlowReply(event.data.request?.id,'',e.message));
     if(event.data.type==='approve-boutique-quote')jjApproveBoutiqueQuote(event.data.request);
     if(event.data.type==='validate-boutique-payment')jjValidateBoutiquePayment(event.data.request);
@@ -1108,6 +1109,68 @@
   }
   notify('✓ Demande Boutique importée. Ouvre Commandes personnalisées pour préparer la soumission et l’aperçu.');return true;
  }
+ // v4.11.50 — Réconciliation unique des tickets Boutique et du registre privé.
+ // Ne supprime jamais les commandes existantes. N'écrase pas une facture modifiée manuellement.
+ let jjReconcileBusy=false;
+ window.JJ3DAutoReconcileBoutique=async function(requests){
+  if(jjReconcileBusy||!Array.isArray(requests))return false;
+  jjReconcileBusy=true;
+  try{
+   let changed=false;
+   const nextOrders=[...customOrders()], nextInvoices=[...(extras.invoices||[])];
+   const now=new Date().toISOString();
+   for(const r of requests){
+    if(!r?.id||!r?.customer||!r?.item||r.status==='rejected')continue;
+    const id='boutique-'+String(r.id).replace(/[^a-zA-Z0-9_-]/g,'').slice(0,70);
+    let idx=nextOrders.findIndex(o=>o.boutiqueRequestId===r.id||o.id===id);
+    if(idx<0){
+     // Le numéro et l'identifiant proviennent du ticket, ce qui évite les doublons.
+     const row={id,number:'JJ-B-'+String(r.id).slice(0,9).toUpperCase(),boutiqueRequestId:r.id,source:'boutique',productionHold:true,createdAt:now,updatedAt:now,orderedAt:now.slice(0,10),customer:String(r.customer).slice(0,120),contact:[r.phone,r.email].filter(Boolean).join(' · '),phone:r.phone||'',email:r.email||'',item:String(r.item).slice(0,160),quantity:Math.max(1,Math.min(300,Number(r.quantity)||1)),colors:String(r.colors||'').slice(0,160),filamentType:'',dueAt:String(r.dueAt||''),notes:String(r.note||'').slice(0,2000),price:0,deposit:0,status:'new',delivery:'boutique',paymentCollector:'boutique',boutiqueCommissionPercent:30,clientApproval:'pending',hasPhoto:!!r.photo,filamentPurchased:false,filamentChargePercent:50,filamentChargeMode:'extra',dimensionShape:'cylinder',dimensionUnit:'mm',dimensionRaw:{},dimensionMm:{}};
+     nextOrders.push(row);idx=nextOrders.length-1;changed=true;
+    }
+    let row=nextOrders[idx];
+    const approved=['awaiting_payment','payment_reported','paid'].includes(r.status);
+    const verified=r.status==='paid'&&!!r.paymentValidatedAt;
+    const price=Number(r.quoteTotal);
+    const updates={};
+    if(Number.isFinite(price)&&price>0&&Math.abs(Number(row.price||0)-price)>.001&&row.status!=='delivered')updates.price=Math.round(price*100)/100;
+    if(approved&&row.clientApproval!=='approved')updates.clientApproval='approved';
+    if(verified&&row.productionHold)updates.productionHold=false;
+    if(verified&&row.status==='new')updates.status='approved';
+    if(Object.keys(updates).length){row={...row,...updates,updatedAt:now};nextOrders[idx]=row;changed=true;}
+    let ii=nextInvoices.findIndex(i=>i.customOrderId===row.id);
+    if(ii<0){
+     const invoice=jjInvoiceForOrder(row);
+     // Prevent sequential number collision when multiple tickets arrive in the same snapshot.
+     const numbers=nextInvoices.map(i=>Number(String(i.number||'').split('-').at(-1))||0);
+     invoice.number='JJ3D-'+now.slice(0,4)+'-'+String(Math.max(0,...numbers)+1).padStart(4,'0');
+     nextInvoices.push(invoice);ii=nextInvoices.length-1;changed=true;
+    }
+    let invoice=nextInvoices[ii];
+    // Keep user-edited invoices intact except when they are still drafts with a single zero-priced line.
+    const blankDraft=invoice.status==='draft'&&invoice.lines?.length===1&&Number(invoice.lines[0]?.price||0)===0;
+    if(blankDraft&&Number(row.price)>0){invoice={...invoice,lines:jjInvoiceLinesFromOrder(row),updatedAt:now};nextInvoices[ii]=invoice;changed=true;}
+    if(verified&&invoice.status!=='paid'&&invoice.status!=='cancelled'){
+     invoice={...invoice,status:'paid',paidDate:String(r.paymentDate||now.slice(0,10)),paymentMethod:String(r.paymentMethod||'Paiement confirmé JJ3D'),updatedAt:now,history:[...(invoice.history||[]),{at:now,action:'Paiement vérifié via le ticket Boutique',status:'paid'}]};nextInvoices[ii]=invoice;changed=true;
+    }
+   }
+   if(changed){
+    if(!persistExtras({...extras,customOrders:nextOrders,invoices:nextInvoices}))throw Error('Sauvegarde locale refusée');
+    render();
+   }
+   // Publier le résumé de facture, même si la demande était déjà approuvée avant cette mise à jour.
+   for(const r of requests){
+    const o=nextOrders.find(x=>x.boutiqueRequestId===r.id),inv=o&&nextInvoices.find(x=>x.customOrderId===o.id);
+    if(!inv||!(Number(r.quoteTotal)>0)&&!(Number(o?.price)>0))continue;
+    if(!window.JJ3DShareBoutiqueQuote)continue;
+    const invoiceTotal=(inv.lines||[]).reduce((s,l)=>s+(Number(l.qty)||0)*(Number(l.price)||0),0);
+    const needShare=!r.quoteInvoiceNumber||r.quoteInvoiceNumber!==inv.number||r.quoteInvoiceStatus!==inv.status||!Array.isArray(r.quoteLines)||r.quoteLines.length===0||Math.abs(Number(r.quoteTotal||0)-invoiceTotal)>.01;
+    if(needShare)try{await window.JJ3DShareBoutiqueQuote(o,inv);}catch(e){console.warn('Facture Boutique non partagée:',e);}
+   }
+   return true;
+  }catch(e){console.error('Réconciliation commandes Boutique:',e);return false;}
+  finally{jjReconcileBusy=false;}
+ };
  async function jjValidateBoutiquePayment(r){
   if(!r?.id)return;
   const o=customOrders().find(x=>x.boutiqueRequestId===r.id);
@@ -1199,7 +1262,7 @@
  const customOrderStages={new:'Nouvelle demande',quoted:'Soumission envoyée',approved:'Confirmée',awaiting_payment:'Paiement à confirmer',printing:'En production',ready:'Prête',delivered:'Remise / livrée',cancelled:'Annulée'};
  const customOrders=()=>Array.isArray(extras.customOrders)?extras.customOrders:[];
 
- // v4.11.49 — Recuperation prudente depuis les factures existantes.
+ // v4.11.50 — Recuperation prudente depuis les factures existantes.
  // Ne modifie PAS la facture, la file d'impression ni les photos et ne fait aucune restauration automatique.
  function missingCustomOrderInvoices(){
   const orders=customOrders(), linked=new Set(orders.map(o=>String(o.id)));
@@ -1228,7 +1291,7 @@
   const message=`Récupérer ${number} pour ${customer} depuis la facture ${invoice.number||''} ?\n\nLa facture originale et la tâche À imprimer NE seront PAS modifiées. Les autres commandes seront conservées. Vérifie les détails après récupération.`;
   if(!confirm(message))return;
   // Sauvegarde locale explicite avant toute tentative (sans remplacer l'inventaire).
-  try{const dump=JSON.stringify({at:new Date().toISOString(),invoice,customOrders:customOrders()});localStorage.setItem('jj3d-recovery-last-before-v4.11.49',dump);}catch(e){notify('Sauvegarde de précaution indisponible : exporte ton JSON avant de continuer.',true);return;}
+  try{const dump=JSON.stringify({at:new Date().toISOString(),invoice,customOrders:customOrders()});localStorage.setItem('jj3d-recovery-last-before-v4.11.50',dump);}catch(e){notify('Sauvegarde de précaution indisponible : exporte ton JSON avant de continuer.',true);return;}
   const now=new Date().toISOString();
   const row={id,number,customer,contact:String(invoice.clientEmail||''),item:label,quantity,
    colors:color?color[1].trim():'',filamentType:material?material[1]:'',orderedAt:String(invoice.date||now.slice(0,10)),dueAt:String(invoice.due||''),
@@ -1549,7 +1612,7 @@
   const row=customOrders().find(x=>x.id===id);if(!row)return;
   const typed=prompt('SUPPRESSION : '+row.number+' — '+row.customer+'\nPour supprimer uniquement CETTE commande, écris SUPPRIMER.\nLes factures et autres commandes restent intactes.');
   if(typed!=='SUPPRIMER')return;
-  try{localStorage.setItem('jj3d-last-deleted-custom-order-v4.11.49',JSON.stringify({savedAt:new Date().toISOString(),row}));}catch(e){notify('Sauvegarde locale de la commande impossible : suppression annulée.',true);return;}
+  try{localStorage.setItem('jj3d-last-deleted-custom-order-v4.11.50',JSON.stringify({savedAt:new Date().toISOString(),row}));}catch(e){notify('Sauvegarde locale de la commande impossible : suppression annulée.',true);return;}
   const next=customOrders().filter(x=>x.id!==id);
   if(next.length!==customOrders().length-1){notify('Anomalie détectée : suppression annulée.',true);return;}
   if(persistExtras({...extras,customOrders:next})){render();try{await window.JJ3DSyncOrderQueue?.({...row,status:'cancelled',deleted:true});notify('Commande '+row.number+' supprimée uniquement; factures conservées.');}catch(err){notify('Commande supprimée, mais tâche À imprimer à vérifier : '+(err.message||err),true);}}
