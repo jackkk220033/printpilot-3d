@@ -1,4 +1,4 @@
-# JJ3D v4.11.32 — Commandes personnalisées et suivi de production
+# JJ3D v4.11.33 — Commandes personnalisées et suivi de production
 
 Version complète basée sur JJ3D v4.11.29, avec le correctif connu de synchronisation automatique Boutique (v4.11.27) et le filigrane PAYÉ sur les factures mobiles conservés.
 
@@ -33,7 +33,7 @@ Nouvelle page **Sauvegardes**. L'application conserve jusqu'à huit états préc
 
 Les photos de commandes admin sont sauvegardées séparément de l'état JSON et synchronisées avec le système de photos privé quand celui-ci est prêt. La restauration JSON ne recrée pas automatiquement les images perdues.
 
-## Nouveauté v4.11.32 : commandes personnalisées
+## Nouveauté v4.11.33 : commandes personnalisées
 - Forme vase/rond (hauteur et diamètre) ou rectangulaire (L × l × H).
 - Conversion automatique et aperçu en millimètres, saisie libre `1'`, `6"`, `1' 6"`, `30 cm`, `304.8 mm`, `6 in`; nombres sans unité selon le menu sélectionné.
 - Dimensions originales et conversions conservées dans les données privées des commandes, modifiables plus tard.
@@ -42,9 +42,17 @@ Les photos de commandes admin sont sauvegardées séparément de l'état JSON et
 - Exemple : 1 pied = 304,8 mm ; 6 pouces = 152,4 mm.
 
 
-## v4.11.32 — correctif enregistrement commandes
+## v4.11.33 — correctif enregistrement commandes
 - Formulaire sans validation navigateur silencieuse; erreurs visibles avec notification et focus sur le champ concerné.
 - Commande possible avant fixation du prix final, même si un acompte a été reçu.
 - Champs filament séparés : type et couleur.
 - Confirmation d’enregistrement, traitement des photos séparé et gestion des exceptions.
 - Synchronisation automatique Boutique et filigrane PAYÉ de v4.11.29 conservés.
+
+
+## v4.11.33 — Erreur FormData et modification des commandes
+- Correction de la cible de l'événement `submit`: `event.target` désigne le vrai `<form>`; `event.currentTarget` désignait `document` dans l'écouteur délégué, ce qui faisait échouer `new FormData(...)`.
+- Les commandes enregistrées comportent **Modifier la commande**. Le formulaire recharge les informations, la forme, les dimensions, le filament et l'état Oui/Non pour achat spécial.
+- Après modification, l'identifiant d'origine est conservé, donc aucune commande doublon.
+- Les photos existantes restent associées à la commande si aucune nouvelle photo n'est choisie.
+- L'enregistrement reste local + synchronisation Firebase privée déjà existante; aucun changement aux règles.

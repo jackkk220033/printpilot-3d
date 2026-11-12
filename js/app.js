@@ -1173,6 +1173,7 @@
    <div class="jj-order-photo-grid"><label>📷 Photo du produit demandé<input type="file" name="photo" accept="image/*"><small>Photo du vase, modèle ou capture d’écran (facultatif).</small></label>
    <label>🎨 Photo de la couleur / du filament<input type="file" name="colorPhoto" accept="image/*"><small>Une deuxième photo séparée, pour retrouver la teinte exacte.</small></label></div>
    <p class="small-hint">La photo est stockée séparément et synchronisée avec Firebase si tu es connecté. Cette commande ne retire pas automatiquement de stock et ne crée pas de facture avant ta confirmation.</p>
+   <p id="custom-order-edit-hint" class="small-hint" hidden></p>
    <p id="custom-order-error" class="form-error" role="alert" aria-live="assertive"></p><div class="actions"><button class="primary-btn" type="submit" id="custom-order-submit">💾 Enregistrer la commande</button><button class="secondary-btn" type="button" id="custom-order-reset">Effacer / nouvelle commande</button></div></form></section>`+
    `<section class="panel"><div class="panel-head"><div><h2>Mes commandes (${orders.length})</h2><p>Les commandes terminées restent dans l'historique.</p></div></div>
    <div class="jj-custom-orders-grid">${orders.map(o=>`<article class="inventory-card jj-customer-order" data-custom-order-id="${esc(o.id)}"><div class="inventory-card-head"><div><small>${esc(o.number||'Commande')}</small><h3>${esc(o.item||'Projet')} × ${esc(o.quantity||1)}</h3></div><span class="pill ${o.status==='cancelled'?'low':'ok'}">${esc(customOrderStages[o.status]||o.status||'Nouvelle')}</span></div>
@@ -1182,11 +1183,13 @@
    ${jjDimHtml(o)}
    <p><b>Filament acheté spécialement :</b> ${o.filamentPurchased?'Oui · '+money(o.filamentPurchasePrice||0):'Non'}</p>
    <p><b>Prix :</b> ${money(o.price||0)} · <b>Acompte :</b> ${money(o.deposit||0)} · <b>Solde :</b> ${money(Math.max(0,safeNum(o.price)-safeNum(o.deposit)))}</p>
-   <p class="jj-order-notes">${esc(o.notes||'')}</p><div class="actions"><button type="button" class="secondary-btn" data-edit-custom-order="${esc(o.id)}">✎ Modifier</button><button type="button" class="secondary-btn danger" data-delete-custom-order="${esc(o.id)}">Supprimer</button><select aria-label="Statut de la commande" data-custom-status="${esc(o.id)}">${Object.entries(customOrderStages).map(([k,v])=>`<option value="${k}" ${o.status===k?'selected':''}>${esc(v)}</option>`).join('')}</select></div></article>`).join('')||'<p class="empty">Aucune commande pour le moment. Ajoute celle qu’on vient de te demander dans le formulaire ci-dessus!</p>'}</div></section>`;
+   <p class="jj-order-notes">${esc(o.notes||'')}</p><div class="actions"><button type="button" class="secondary-btn" data-edit-custom-order="${esc(o.id)}">✎ Modifier la commande</button><button type="button" class="secondary-btn danger" data-delete-custom-order="${esc(o.id)}">Supprimer</button><select aria-label="Statut de la commande" data-custom-status="${esc(o.id)}">${Object.entries(customOrderStages).map(([k,v])=>`<option value="${k}" ${o.status===k?'selected':''}>${esc(v)}</option>`).join('')}</select></div></article>`).join('')||'<p class="empty">Aucune commande pour le moment. Ajoute celle qu’on vient de te demander dans le formulaire ci-dessus!</p>'}</div></section>`;
  }
  async function saveCustomOrder(event){
   event.preventDefault();
-  const f=event.currentTarget, e=document.getElementById('custom-order-error'), button=f.querySelector('#custom-order-submit');
+  const f=event.target, e=document.getElementById('custom-order-error'), button=f.querySelector('#custom-order-submit');
+  // Le submit est écouté sur document; currentTarget serait document et non le formulaire.
+  if(!(f instanceof HTMLFormElement)||f.id!=='custom-order-form')return false;
   if(button?.disabled)return;
   const fail=(message,field)=>{e.textContent=message;e.setAttribute('role','alert');notify('Commande non enregistrée : '+message,true);if(field){const el=f.elements.namedItem(field);if(el?.focus)el.focus();}return false;};
   e.textContent='';
@@ -1230,11 +1233,24 @@
   }catch(err){console.error('Enregistrement commande personnalisée:',err);return fail('Une erreur inattendue est survenue : '+(err?.message||'inconnue')+'. Aucune modification supplémentaire ne sera faite.');}
   finally{if(button?.isConnected){button.disabled=false;button.textContent='💾 Enregistrer la commande';}}
  }
- function editCustomOrder(id){const row=customOrders().find(x=>x.id===id);if(!row)return;editingCustomOrderId=id;const f=document.getElementById('custom-order-form');for(const [k,v] of Object.entries(row)){const inp=f.elements.namedItem(k==='id'?'orderId':k);if(inp&&inp.type!=='file'&&k!=='filamentPurchased')inp.value=v??'';}
+ function editCustomOrder(id){
+  const row=customOrders().find(x=>x.id===id);if(!row)return;
+  editingCustomOrderId=id;
+  const f=document.getElementById('custom-order-form');if(!f)return;
+  f.reset();
+  // Modifier l'enregistrement existant (même identifiant) et non en créer un nouveau.
+  const keys=['customer','contact','item','productId','quantity','colors','filamentType','orderedAt','dueAt','price','deposit','delivery','status','notes','dimensionShape','dimensionUnit','filamentPurchasePrice'];
+  for(const k of keys){const inp=f.elements.namedItem(k);if(inp&&row[k]!==undefined&&row[k]!==null)inp.value=String(row[k]);}
   f.elements.namedItem('filamentPurchased').checked=!!row.filamentPurchased;
-  for(const [k,v] of Object.entries(row.dimensionRaw||{})){const inp=f.elements.namedItem('dimension_'+k);if(inp)inp.value=v||'';}
+  for(const k of ['height','diameter','length','width']){const inp=f.elements.namedItem('dimension_'+k);if(inp)inp.value=String(row.dimensionRaw?.[k]||'');}
+  f.elements.namedItem('orderId').value=id;
   jjDimensionPreview();jjFilamentPurchaseToggle();
-  f.elements.namedItem('orderId').value=id;document.getElementById('custom-order-form-title').textContent='✎ Modifier la commande '+(row.number||'');document.getElementById('custom-order-submit').textContent='💾 Enregistrer les modifications';f.scrollIntoView({behavior:'smooth',block:'start'});}
+  document.getElementById('custom-order-error').textContent='';
+  document.getElementById('custom-order-form-title').textContent='✎ Modifier la commande '+(row.number||'');
+  document.getElementById('custom-order-submit').textContent='💾 Enregistrer les modifications';
+  const hint=document.getElementById('custom-order-edit-hint');if(hint){hint.hidden=false;hint.textContent='Modification de '+(row.number||'cette commande')+' — les champs non modifiés et les photos déjà enregistrées seront conservés.';}
+  f.scrollIntoView({behavior:'smooth',block:'start'});
+ }
  function deleteCustomOrder(id){const row=customOrders().find(x=>x.id===id);if(!row||!confirm('Supprimer définitivement la commande « '+row.item+' » de '+row.customer+' ?'))return;if(persistExtras({...extras,customOrders:customOrders().filter(x=>x.id!==id)})){render();notify('Commande supprimée.');}}
  function updateCustomOrderStatus(id,status){if(!Object.hasOwn(customOrderStages,status))return;const row=customOrders().find(x=>x.id===id);if(!row)return;if(persistExtras({...extras,customOrders:customOrders().map(x=>x.id===id?{...x,status,updatedAt:new Date().toISOString()}:x)})){render();notify('✓ Statut mis à jour.');}}
 
