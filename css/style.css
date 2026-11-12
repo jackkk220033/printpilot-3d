@@ -372,17 +372,17 @@ select[data-choice]{width:100%;min-width:0}
 .jj-mini-conditions{margin:12px 0;padding:10px 12px;background:#211b36;border:1px solid #66518d;border-radius:10px;color:#eee6ff;font-size:.84rem;line-height:1.6}
 @media(max-width:760px){.jj-order-info-grid{grid-template-columns:1fr}.jj-order-info{padding:14px}}
 
-/* JJ3D v4.11.35 : confirmation de publication visible, sans ouvrir le panneau cloud */
+/* JJ3D v4.11.37 : confirmation de publication visible, sans ouvrir le panneau cloud */
 .jj3d-sync-pill{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;background:#22304b;color:#c9d8ff;font-size:11px;font-weight:650;white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis}
 .jj3d-sync-pill[data-state="success"]{background:#183b35;color:#98efcb}
 .jj3d-sync-pill[data-state="error"]{background:#4d2435;color:#ffc0c7}
 .jj3d-sync-pill[data-state="pending"]{background:#483820;color:#ffe1a4}
 @media(max-width:640px){.jj3d-sync-pill{font-size:10px;max-width:130px;white-space:normal;line-height:1.1}}
 
-/* JJ3D v4.11.35: commandes personnalisées */
+/* JJ3D v4.11.37: commandes personnalisées */
 .jj-custom-order-panel form{display:grid;gap:14px}.jj-custom-order-panel textarea{width:100%;min-height:95px}.jj-custom-order-panel input[type=file]{display:block;width:100%;margin-top:8px}.jj-custom-orders-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:16px}.jj-customer-order{min-width:0}.jj-customer-order .inventory-card-head{align-items:start}.jj-customer-order p{margin:8px 0;overflow-wrap:anywhere}.jj-customer-order .jj-custom-order-photo{width:100%;height:165px;display:grid;place-items:center;border-radius:12px;background:rgba(142,124,180,.12);overflow:hidden;color:#a8a5b5}.jj-custom-order-photo img{max-width:100%;width:100%;height:100%;object-fit:contain}.jj-customer-order .actions{display:flex;flex-wrap:wrap;gap:8px}.jj-customer-order .actions select{max-width:100%;min-width:140px}.jj-order-notes{white-space:pre-wrap;overflow-wrap:anywhere}
 
-/* JJ3D v4.11.35 — dimensions converties et photos des commandes */
+/* JJ3D v4.11.37 — dimensions converties et photos des commandes */
 .jj-dimension-fieldset{border:1px solid var(--line,#4e465a);border-radius:14px;padding:14px;min-width:0}
 .jj-dimension-fieldset legend{font-weight:750;padding:0 8px}
 .jj-dimension-fieldset [hidden],.jj-custom-order-panel [hidden]{display:none!important}
@@ -393,7 +393,7 @@ select[data-choice]{width:100%;min-width:0}
 .jj-order-photo-grid > *{min-width:0}
 @media(max-width:580px){.jj-order-photo-grid{grid-template-columns:1fr}}
 
-/* JJ3D v4.11.35 — détail d'approvisionnement filament et aperçu facture */
+/* JJ3D v4.11.37 — détail d'approvisionnement filament et aperçu facture */
 .jj-filament-purchase-fieldset{display:grid;gap:12px;border-color:rgba(154,115,255,.55)}
 .jj-filament-purchase-fieldset #custom-order-filament-details{display:grid;gap:12px}
 .jj-filament-purchase-fieldset #custom-order-filament-details[hidden]{display:none!important}
@@ -403,3 +403,15 @@ select[data-choice]{width:100%;min-width:0}
 .jj-filament-totals .jj-filament-grand-total{border-top:1px solid rgba(177,162,217,.32);padding-top:9px;margin-top:4px}
 .jj-filament-grand-total strong{font-size:1.2rem;color:#c0a1ff}
 .jj-filament-preview small{display:block;opacity:.8;margin-top:9px}
+
+/* v4.11.37 — formulaire Commandes personnalisées en fenêtre modale */
+.jj-custom-orders-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-bottom:22px}
+.jj-custom-orders-toolbar .small-hint{margin:0;flex:1 1 260px}
+.jj-custom-order-dialog{width:min(900px,calc(100vw - 24px));max-width:900px;max-height:calc(100dvh - 32px);padding:24px;overflow-y:auto;overscroll-behavior:contain;background:#151d31;color:#eaf0ff;position:fixed}
+.jj-custom-order-dialog::backdrop{background:rgba(2,5,12,.8)}
+.jj-custom-order-modal-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:24px}
+.jj-custom-order-modal-heading h2{margin:0 0 8px;font-size:23px}
+.jj-custom-order-modal-heading p{margin:0;color:#9cabca;font-size:13px;line-height:1.5}
+.jj-custom-order-modal-heading .close{flex-shrink:0;font-size:28px;line-height:1;padding:5px 11px}
+.jj-custom-order-dialog .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+@media(max-width:600px){.jj-custom-order-dialog{padding:18px;width:calc(100vw - 14px);max-height:calc(100dvh - 14px)}.jj-custom-order-modal-heading h2{font-size:19px}.jj-custom-orders-toolbar>.primary-btn{width:100%}}

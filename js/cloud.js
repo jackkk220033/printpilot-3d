@@ -69,6 +69,7 @@ function safeSyncRemote(record){
   if(record?.data && JSON.stringify(record.data)!==old){adapter.closeAllDialogs();adapter.applyState(record.data);}
   baseRevision=record.revision;rememberSynced();active=true;pending=false;conflict=false;
   setStatus(`☁ Synchronisé avec Firebase • ${stamp()}`);window.JJ3DPublishDeliveries?.(record.data)?.catch(e=>console.warn('Publication livraisons :',e));
+  window.JJ3DReconcileOrderQueue?.(record.data)?.catch(e=>console.warn('Liaison des commandes:',e));
 }
 function beginListener(){
  if(unsubscribe)unsubscribe();
@@ -120,6 +121,7 @@ async function uploadSnapshot(){
   }
   // Publie une copie filtrée des bons Boutique, sans facture ni données privées.
   try{await window.JJ3DPublishDeliveries?.(snapshot);}catch(e){console.warn('Publication livraisons Boutique :',e);}
+  try{await window.JJ3DReconcileOrderQueue?.(snapshot);}catch(e){console.warn('Liaison commandes :',e);}
   // Le catalogue est publié APRÈS la fin de cette transaction, pas pendant busy/pending.
   // Another edit may have happened while awaiting network; don't mark those changes synced.
   localStorage.setItem(LINK_UID,currentUser.uid);
@@ -176,6 +178,74 @@ if(!configOK){
       window.JJ3DAutoPublishCatalogue?.(true);
       window.dispatchEvent(new Event('printpilot:photos-changed'));
     }
+  };
+  // 4.11.37 — Commandes personnalisées ↔ file Atelier+ (même document Firebase).
+  // Identifiant stable : enregistrer plusieurs fois la commande ne crée jamais un deuxième print.
+  const orderQueueRef=()=>doc(db,'boutiques',currentUser.uid,'management','current');
+  const queueTaskForOrder=(order,previous)=>{
+   const finished=previous&&['done','failed'].includes(previous.status);
+   const cancelled=order.status==='cancelled'||order.deleted;
+   const note=['Commande personnalisée '+String(order.number||''),String(order.colors||''),String(order.filamentType||'')].filter(Boolean).join(' · ').slice(0,200);
+   return {...previous,id:previous?.id||('order-'+order.id),customOrderId:order.id,customOrderNumber:String(order.number||''),productId:String(order.productId||''),name:String(order.item||'Commande personnalisée').slice(0,120),quantity:Math.max(1,Math.min(500,Number(order.quantity)||1)),printer:previous?.printer||'Anycubic Kobra X',minutes:Number(previous?.minutes)||0,startAt:previous?.startAt||'',priority:previous?.priority||'normal',note,status:cancelled&&!finished?'failed':previous?.cancelledByOrder?'todo':previous?.status||'todo',cancelledByOrder:!!(cancelled&&!finished),date:previous?.date||String(order.orderedAt||'').slice(0,10)||new Date().toISOString().slice(0,10),hasPhoto:!!previous?.hasPhoto,orderDueAt:String(order.dueAt||'')};
+  };
+  window.JJ3DSyncOrderQueue=async order=>{
+   if(!currentUser||!db)throw Error('Firebase non connecté');
+   if(!order?.id)throw Error('Identifiant de commande manquant');
+   const ref=orderQueueRef();
+   await runTransaction(db,async tx=>{
+    const snap=await tx.get(ref),existing=snap.exists()?snap.data():{};
+    const queue=Array.isArray(existing.queue)?[...existing.queue]:[];
+    const at=queue.findIndex(q=>q.customOrderId===order.id||q.id==='order-'+order.id);
+    const prev=at>=0?queue[at]:null;
+    const cancel=order.deleted||order.status==='cancelled';
+    if(at<0&&cancel)return; // Ne pas recréer une commande annulée.
+    if(at<0&&queue.length>=80)throw Error('File À imprimer pleine (80 tâches). Archive des impressions avant de continuer.');
+    const next=queueTaskForOrder(order,prev);
+    if(at<0)queue.unshift(next);else queue[at]=next;
+    tx.set(ref,{...existing,queue,updatedAt:serverTimestamp()});
+    const perPrinter=new Map(),blocked=new Set(),anchor=Math.max(Date.now(),Date.parse(existing.planStart||'')||0),estimated=new Map();
+    for(const item of [...queue].reverse()){
+     if(['done','failed'].includes(item.status))continue;
+     const machine=item.printer||'Anycubic Kobra X';
+     if(blocked.has(machine))continue;
+     if(item.status==='paused'||!(Number(item.minutes)>0)){blocked.add(machine);continue;}
+     const started=Date.parse(item.startedAt||'')||0;
+     const elapsed=(Number(item.elapsedMs)||0)+(item.status==='doing'&&started?Math.max(0,Date.now()-started):0);
+     const remaining=Math.max(0,Number(item.minutes)*60000-elapsed);
+     const begin=Math.max(perPrinter.get(machine)||anchor,Date.parse(item.startAt||'')||0);
+     const start=item.status==='doing'?Math.max(Date.now(),begin):begin;
+     const end=start+remaining;estimated.set(item.id,{start:new Date(start).toISOString(),end:new Date(end).toISOString()});perPrinter.set(machine,end);
+    }
+    // Mise à jour immédiate de la vue Boutique sans attendre une ouverture d'Atelier+.
+    const items=queue.slice(0,80).map(x=>({id:String(x.id||''),name:String(x.name||''),quantity:Number(x.quantity)||1,printer:String(x.printer||'Anycubic Kobra X'),minutes:Number(x.minutes)||0,startAt:String(x.startAt||''),status:String(x.status||'todo'),note:String(x.note||''),hasPhoto:!!x.hasPhoto,estimatedStart:estimated.get(x.id)?.start||'',estimatedEnd:estimated.get(x.id)?.end||''}));
+    tx.set(doc(db,'boutiques',currentUser.uid,'planning','current'),{items,updatedAt:serverTimestamp()});
+   });
+  };
+  window.JJ3DSyncOrderQueuePhoto=async (orderId,image)=>{
+   if(!currentUser||!orderId)throw Error('Connexion Firebase requise pour la photo de la file');
+   if(typeof image!=='string'||!image.startsWith('data:image/jpeg;base64,')||image.length>175000)throw Error('Photo de la file trop volumineuse');
+   const taskId='order-'+orderId;
+   const ref=orderQueueRef(),planningRef=doc(db,'boutiques',currentUser.uid,'planning','current');
+   await setDoc(doc(db,'boutiques',currentUser.uid,'planningPhotos',taskId),{image,updatedAt:serverTimestamp()});
+   await runTransaction(db,async tx=>{
+    const [m,p]=await Promise.all([tx.get(ref),tx.get(planningRef)]);
+    if(!m.exists())return;
+    const current=m.data(),queue=Array.isArray(current.queue)?current.queue.map(x=>x.id===taskId?{...x,hasPhoto:true}:x):[];
+    tx.set(ref,{...current,queue,updatedAt:serverTimestamp()});
+    const planning=p.exists()?p.data():{items:[]};
+    tx.set(planningRef,{items:(planning.items||[]).map(x=>x.id===taskId?{...x,hasPhoto:true}:x),updatedAt:serverTimestamp()});
+   });
+  };
+  window.JJ3DReconcileOrderQueue=async snapshot=>{
+   if(!currentUser||!Array.isArray(snapshot?.customOrders)||!snapshot.customOrders.length)return;
+   const snap=await getDoc(orderQueueRef()),queue=snap.data()?.queue||[];
+   const byOrder=new Map(queue.filter(q=>q.customOrderId).map(q=>[q.customOrderId,q]));
+   for(const order of snapshot.customOrders){
+    const prev=byOrder.get(order.id);
+    if(!prev||prev.name!==String(order.item||'').slice(0,120)||Number(prev.quantity)!==Number(order.quantity)||prev.customOrderNumber!==String(order.number||'')|| (order.status==='cancelled'&&prev.status!=='failed'&&prev.status!=='done')){
+     await window.JJ3DSyncOrderQueue(order);
+    }
+   }
   };
   window.JJ3DPublishDeliveries=async snapshot=>{
     if(!currentUser||!active)return;

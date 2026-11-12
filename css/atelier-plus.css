@@ -88,7 +88,7 @@ button.danger-action:hover{background:#73313e;}
 #jj-queue-edit .jj-queue-edit-top button:hover{background:#bc344a}
 @media(max-width:540px){#jj-queue-edit .jj-queue-edit-form{padding:16px}}
 
-/* JJ3D v4.11.35 — photo de planification : coller, importer, photographier */
+/* JJ3D v4.11.37 — photo de planification : coller, importer, photographier */
 .jj-queue-photo-entry{box-sizing:border-box;width:100%;min-width:0;border:1px dashed #7888b2;border-radius:12px;background:#101c34;padding:12px;margin:8px 0 12px;color:#dbe5ff;outline:none}
 .jj-queue-photo-entry:focus,.jj-queue-photo-entry:focus-within{border-color:#b18bff;box-shadow:0 0 0 2px #9f77f644}
 .jj-queue-photo-preview{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;text-align:center;min-height:65px;padding:10px;border-radius:9px;background:#0d1629;overflow:hidden}
@@ -103,5 +103,18 @@ button.danger-action:hover{background:#73313e;}
 @media(max-width:560px){.jj-queue-photo-actions{flex-direction:column}.jj-queue-photo-actions .photo-button{justify-content:center}.jj-queue-photo-preview{min-height:80px}}
 @media print{.jj-queue-photo-entry{display:none!important}}
 
-/* v4.11.35 calendrier / filament */
+/* v4.11.37 calendrier / filament */
 .jj-calendar-day{border:1px solid rgba(160,140,200,.23);border-radius:13px;padding:12px;margin:12px 0}.jj-calendar-entry{padding:9px 6px;display:flex;flex-wrap:wrap;gap:8px;border-top:1px solid rgba(160,140,200,.18)}.jj-calendar-entry small{margin-left:auto}.jj-filament-check{padding:9px 12px;border-radius:9px;background:rgba(130,120,180,.14)}.jj-filament-check.shortage{color:#ffc5aa;border:1px solid #e9714d}.jj-filament-check.ok{color:#abebc2}
+
+/* JJ3D 4.11.37 — formulaire d'impression en popup */
+#jj-queue-add-dialog{box-sizing:border-box;width:min(760px,calc(100% - 24px));max-width:calc(100% - 24px);max-height:90vh;overflow-y:auto;overscroll-behavior:contain;border:1px solid #53648b;border-radius:16px;padding:0;background:#14213a;color:#fff;box-shadow:0 22px 70px #000b}
+#jj-queue-add-dialog::backdrop{background:rgba(4,8,20,.64)}
+#jj-queue-add-dialog .jj-queue-edit-top{position:sticky;top:0;z-index:1;background:#14213a;padding:4px 0 8px}
+#jj-queue-add-dialog .jj-queue-edit-top button{background:#263655;color:white;border:1px solid #58698d;border-radius:8px;padding:7px 11px}
+#jj-queue-add-dialog .jj-queue-edit-top button:hover{background:#bc344a}
+#jj-queue-add-dialog .jj-queue-photo-entry{grid-column:1/-1}
+#jj-queue-add-dialog #jj-filament-check{grid-column:1/-1}
+#jj-queue-add-dialog .jj-queue-add-footer{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.jj-queue-add-button{background:#8060eb;color:white;border:0;padding:12px 20px;border-radius:11px;font-weight:750;cursor:pointer}
+.jj-queue-order-ref{font-size:.82rem;color:#c9bbff;background:#30274a;padding:4px 8px;border-radius:7px;margin-left:7px}
+@media(max-width:540px){#jj-queue-add-dialog .jj-queue-edit-form{padding:14px}}
