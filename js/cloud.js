@@ -179,7 +179,7 @@ if(!configOK){
       window.dispatchEvent(new Event('printpilot:photos-changed'));
     }
   };
-  // 4.11.38 — Commandes personnalisées ↔ file Atelier+ (même document Firebase).
+  // 4.11.39 — Commandes personnalisées ↔ file Atelier+ (même document Firebase).
   // Identifiant stable : enregistrer plusieurs fois la commande ne crée jamais un deuxième print.
   const orderQueueRef=()=>doc(db,'boutiques',currentUser.uid,'management','current');
   const queueTaskForOrder=(order,previous)=>{
@@ -198,6 +198,8 @@ if(!configOK){
     const at=queue.findIndex(q=>q.customOrderId===order.id||q.id==='order-'+order.id);
     const prev=at>=0?queue[at]:null;
     const cancel=order.deleted||order.status==='cancelled';
+    // Demandes Boutique restent hors production jusqu'au paiement vérifié par l'admin.
+    if(order.productionHold&&!cancel){if(at>=0){queue.splice(at,1);tx.set(ref,{...existing,queue,updatedAt:serverTimestamp()});}return;}
     if(at<0&&cancel)return; // Ne pas recréer une commande annulée.
     if(at<0&&queue.length>=80)throw Error('File À imprimer pleine (80 tâches). Archive des impressions avant de continuer.');
     const next=queueTaskForOrder(order,prev);

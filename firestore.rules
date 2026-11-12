@@ -103,9 +103,11 @@ service cloud.firestore {
       // JJ3D v4.11.30 — demandes d'impression spéciales Boutique : destinées à l'admin uniquement.
       match /customRequests/{requestId} {
         allow create: if canViewBoutique(ownerUid)
-          && request.resource.data.keys().hasOnly(['customer','item','quantity','colors','dueAt','note','photo','senderUid','senderEmail','status','createdAt'])
-          && request.resource.data.keys().hasAll(['customer','item','quantity','colors','dueAt','note','photo','senderUid','senderEmail','status','createdAt'])
+          && request.resource.data.keys().hasOnly(['customer','phone','email','item','quantity','colors','dueAt','note','photo','senderUid','senderEmail','status','createdAt'])
+          && request.resource.data.keys().hasAll(['customer','phone','email','item','quantity','colors','dueAt','note','photo','senderUid','senderEmail','status','createdAt'])
           && request.resource.data.customer is string && request.resource.data.customer.size() >= 1 && request.resource.data.customer.size() <= 120
+          && request.resource.data.phone is string && request.resource.data.phone.size() >= 5 && request.resource.data.phone.size() <= 30
+          && request.resource.data.email is string && request.resource.data.email.matches('^[^ @]+@[^ @]+[.][^ @]+$') && request.resource.data.email.size() <= 254
           && request.resource.data.item is string && request.resource.data.item.size() >= 1 && request.resource.data.item.size() <= 160
           && request.resource.data.quantity is int && request.resource.data.quantity >= 1 && request.resource.data.quantity <= 300
           && request.resource.data.colors is string && request.resource.data.colors.size() <= 160
@@ -117,11 +119,24 @@ service cloud.firestore {
           && request.resource.data.senderEmail == request.auth.token.email
           && request.resource.data.status == 'pending'
           && request.resource.data.createdAt == request.time;
-        allow get, list: if isBoutiqueOwner(ownerUid);
+        allow get, list: if isBoutiqueOwner(ownerUid) || (canViewBoutique(ownerUid) && resource.data.senderUid == request.auth.uid);
         allow update: if isBoutiqueOwner(ownerUid)
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','resolvedAt'])
-          && request.resource.data.status in ['accepted','rejected']
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','resolvedAt','quoteTotal','quoteInvoiceNumber','quotePreviewUrl'])
+          && request.resource.data.status in ['accepted','rejected','reviewed','awaiting_payment','paid']
+          && (!('quoteTotal' in request.resource.data) || (request.resource.data.quoteTotal is number && request.resource.data.quoteTotal >= 0 && request.resource.data.quoteTotal <= 100000))
+          && (!('quoteInvoiceNumber' in request.resource.data) || (request.resource.data.quoteInvoiceNumber is string && request.resource.data.quoteInvoiceNumber.size() <= 60))
+          && (!('quotePreviewUrl' in request.resource.data) || (request.resource.data.quotePreviewUrl is string && request.resource.data.quotePreviewUrl.size() <= 600))
           && request.resource.data.resolvedAt == request.time;
+        // Un membre autorisé peut uniquement déclarer le paiement de sa propre demande,
+        // sans pouvoir valider celui-ci ni changer le prix ou le client.
+        allow update: if canViewBoutique(ownerUid) && resource.data.senderUid == request.auth.uid
+          && resource.data.status == 'awaiting_payment'
+          && request.resource.data.status == 'payment_reported'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','paymentAmount','paymentMethod','paymentDate','paymentReportedAt'])
+          && request.resource.data.paymentAmount is number && request.resource.data.paymentAmount > 0 && request.resource.data.paymentAmount <= 100000
+          && request.resource.data.paymentMethod is string && request.resource.data.paymentMethod in ['Espèces','Virement Interac','Carte','Autre']
+          && request.resource.data.paymentDate is string && request.resource.data.paymentDate.size() == 10
+          && request.resource.data.paymentReportedAt == request.time;
         allow delete: if isBoutiqueOwner(ownerUid);
       }
       // v4.11 — Commandes en une seule étape : boutique écrit, administrateur traite.
