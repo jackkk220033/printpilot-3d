@@ -1,8 +1,8 @@
-/* JJ3D — PWA 4.11.31
+/* JJ3D — PWA 4.11.32
    Cache uniquement les ressources locales statiques et les pages publiques.
    Les requêtes Firebase, APIs, auth et images distantes ne sont pas interceptées.
    L'installation ne garantit pas le fonctionnement hors ligne des données Firebase. */
-const CACHE = 'printpilot-static-v4.11.31';
+const CACHE = 'printpilot-static-v4.11.32';
 const STATIC = [
   './', './index.html', './boutique.html', './atelier-plus.html', './messages.html',
   './css/style.css', './css/boutique.css', './css/atelier-plus.css',

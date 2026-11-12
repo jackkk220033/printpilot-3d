@@ -1,4 +1,4 @@
-# JJ3D v4.11.31 — Commandes personnalisées et suivi de production
+# JJ3D v4.11.32 — Commandes personnalisées et suivi de production
 
 Version complète basée sur JJ3D v4.11.29, avec le correctif connu de synchronisation automatique Boutique (v4.11.27) et le filigrane PAYÉ sur les factures mobiles conservés.
 
@@ -33,10 +33,18 @@ Nouvelle page **Sauvegardes**. L'application conserve jusqu'à huit états préc
 
 Les photos de commandes admin sont sauvegardées séparément de l'état JSON et synchronisées avec le système de photos privé quand celui-ci est prêt. La restauration JSON ne recrée pas automatiquement les images perdues.
 
-## Nouveauté v4.11.31 : commandes personnalisées
+## Nouveauté v4.11.32 : commandes personnalisées
 - Forme vase/rond (hauteur et diamètre) ou rectangulaire (L × l × H).
 - Conversion automatique et aperçu en millimètres, saisie libre `1'`, `6"`, `1' 6"`, `30 cm`, `304.8 mm`, `6 in`; nombres sans unité selon le menu sélectionné.
 - Dimensions originales et conversions conservées dans les données privées des commandes, modifiables plus tard.
 - Photo du produit et photo de la couleur séparées (Firestore photos).
 - Case à cocher d'achat spécial de filament, prix d'achat affiché conditionnellement.
 - Exemple : 1 pied = 304,8 mm ; 6 pouces = 152,4 mm.
+
+
+## v4.11.32 — correctif enregistrement commandes
+- Formulaire sans validation navigateur silencieuse; erreurs visibles avec notification et focus sur le champ concerné.
+- Commande possible avant fixation du prix final, même si un acompte a été reçu.
+- Champs filament séparés : type et couleur.
+- Confirmation d’enregistrement, traitement des photos séparé et gestion des exceptions.
+- Synchronisation automatique Boutique et filigrane PAYÉ de v4.11.29 conservés.
