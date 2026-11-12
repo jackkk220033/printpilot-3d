@@ -1134,7 +1134,19 @@
  }
  function jjDimHtml(o){const raw=o.dimensionRaw||{},mm=o.dimensionMm||{},shape=o.dimensionShape||'cylinder';const keys=shape==='cylinder'?['height','diameter']:['length','width','height'];const labels={height:'Hauteur',diameter:'Diamètre',length:'Longueur',width:'Largeur'};const values=keys.filter(k=>raw[k]||mm[k]);return values.length?`<p><b>Dimensions :</b> ${values.map(k=>`${labels[k]} ${esc(raw[k]||'—')} → <strong>${esc(mm[k])} mm</strong>`).join(' · ')}</p>`:'';}
  function jjDimensionPreview(){const f=document.getElementById('custom-order-form'),out=document.getElementById('custom-dimension-preview');if(!f||!out)return;const shape=f.elements.namedItem('dimensionShape').value;f.querySelectorAll('[data-dimension-key]').forEach(el=>el.hidden=(shape==='cylinder'?!['height','diameter'].includes(el.dataset.dimensionKey):el.dataset.dimensionKey==='diameter'));try{const d=jjDimensionsFromForm(f),keys=d.dimensionShape==='cylinder'?['height','diameter']:['length','width','height'];const labels={height:'Hauteur',diameter:'Diamètre',length:'Longueur',width:'Largeur'};out.textContent=keys.filter(k=>d.dimensionMm[k]!=null).map(k=>labels[k]+' : '+d.dimensionMm[k]+' mm').join(' · ')||'Entre tes mesures pour voir les millimètres.';out.classList.remove('form-error');}catch(e){out.textContent=e.message;out.classList.add('form-error');}}
- function jjFilamentPurchaseToggle(){const f=document.getElementById('custom-order-form');if(!f)return;const yes=f.elements.namedItem('filamentPurchased').checked;const field=document.getElementById('custom-order-filament-cost-wrap');if(field)field.hidden=!yes;}
+ function jjFilamentPurchaseToggle(){const f=document.getElementById('custom-order-form');if(!f)return;const yes=f.elements.namedItem('filamentPurchased').checked;const field=document.getElementById('custom-order-filament-cost-wrap');if(field)field.hidden=!yes;const charge=document.getElementById('custom-order-filament-charge-wrap');if(charge)charge.hidden=!yes;const preview=document.getElementById('custom-order-filament-preview');if(preview){const cost=Math.max(0,safeNum(f.elements.namedItem('filamentPurchasePrice').value));const pct=Math.max(0,Math.min(100,safeNum(f.elements.namedItem('filamentChargePercent').value)));const fee=Math.round(cost*pct)/100;const extra=f.elements.namedItem('filamentChargeMode').value==='extra';preview.textContent=yes?('Frais demandé : '+money(fee)+' ('+pct+' % de '+money(cost)+') · '+(extra?'ajouté au prix':'déjà compris dans le prix')):'Aucun frais spécial de filament.';}}
+ function jjCustomOrderFee(o){return o?.filamentPurchased?Math.round(Math.max(0,safeNum(o.filamentPurchasePrice))*Math.min(100,Math.max(0,safeNum(o.filamentChargePercent)))*100)/10000:0;}
+ function jjCustomOrderTotal(o){return Math.round((Math.max(0,safeNum(o?.price))+(o?.filamentChargeMode==='included'?0:jjCustomOrderFee(o)))*100)/100;}
+ function jjInvoiceLinesFromOrder(o){const lines=[{name:o.item+' — '+(o.colors||o.filamentType||'commande personnalisée'),qty:o.quantity,price:Math.round(Math.max(0,safeNum(o.price))/Math.max(1,o.quantity)*100)/100}];const fee=jjCustomOrderFee(o);if(fee>0&&o.filamentChargeMode!=='included')lines.push({name:'Couleur / filament spécial ('+safeNum(o.filamentChargePercent)+' % du prix d’achat)',qty:1,price:fee});return lines;}
+ function jjInvoiceForOrder(o,previous){const now=new Date().toISOString(),date=now.slice(0,10);const invoices=extras.invoices||[];const same=previous||invoices.find(x=>x.customOrderId===o.id);
+   if(same&&same.status!=='draft')return same;
+   const numbers=invoices.map(x=>String(x.number||'')).filter(x=>x.startsWith('JJ3D-'+now.slice(0,4)+'-')).map(x=>parseInt(x.split('-').at(-1),10)||0);
+   const number=same?.number||('JJ3D-'+now.slice(0,4)+'-'+String(Math.max(0,...numbers)+1).padStart(4,'0'));
+   const email=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(o.contact||'')?o.contact:'';
+   const summary='Commande '+o.number+' · '+(o.filamentType||'Filament à déterminer')+' · '+(o.colors||'Couleur à préciser')+' · Acompte noté : '+money(o.deposit||0)+' (à confirmer manuellement dans Factures).';
+   return {...same,id:same?.id||'inv-'+crypto.randomUUID(),number,date:same?.date||date,due:same?.due||o.dueAt||date,status:'draft',customOrderId:o.id,clientName:o.customer,clientEmail:same?.clientEmail||email,clientAddress:same?.clientAddress||'',lines:jjInvoiceLinesFromOrder(o),discount:same?.discount||0,shipping:same?.shipping||0,taxRate:same?.taxRate||0,notes:summary,createdAt:same?.createdAt||now,updatedAt:now,history:[...(same?.history||[]),{at:now,action:same?'Brouillon ajusté depuis la commande '+o.number:'Brouillon généré depuis la commande '+o.number,status:'draft'}]};
+ }
+ function openCustomOrderInvoice(id){const o=customOrders().find(x=>x.id===id);if(!o)return;let inv=(extras.invoices||[]).find(i=>i.customOrderId===id);if(!inv){inv=jjInvoiceForOrder(o);if(!persistExtras({...extras,invoices:[...(extras.invoices||[]),inv]})){notify('Impossible de créer la facture.',true);return;}}if(page()!=='factures'){location.hash='factures';render();}window.JJ3DInvoices.openInvoice(inv.id);}
  function customOrdersPage(){
   const orders=customOrders().slice().sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
   const active=orders.filter(x=>!['delivered','cancelled'].includes(x.status));
@@ -1161,7 +1173,11 @@
    <fieldset class="jj-dimension-fieldset"><legend>🎨 Filament acheté pour cette commande</legend>
    <label class="jj-inline-check"><input name="filamentPurchased" type="checkbox" value="yes"> Oui, j’ai acheté du filament spécialement pour ce produit</label>
    <label id="custom-order-filament-cost-wrap" hidden>Prix d’achat du filament ($)<input name="filamentPurchasePrice" type="number" min="0" step="0.01" placeholder="Ex. 24.99"></label>
-   <p class="small-hint">Décoche = Non. Le prix sert au suivi de l’achat; il n’est pas automatiquement soustrait en entier du profit de ce vase.</p></fieldset>
+   <div class="form-grid" id="custom-order-filament-charge-wrap" hidden>
+   <label>Part de l’achat facturée au client (%)<input name="filamentChargePercent" type="number" min="0" max="100" step="1" value="0" placeholder="Ex. 50"></label>
+   <label>Traitement dans le prix<select name="filamentChargeMode"><option value="extra">Ajouter ce montant au prix du projet</option><option value="included">Déjà inclus dans le prix convenu</option></select></label>
+   </div><output id="custom-order-filament-preview" class="jj-dimension-preview" aria-live="polite">Aucun frais spécial de filament.</output>
+   <p class="small-hint">Tu décides du pourcentage pour chaque commande. Ce frais est une ligne facturée au client, pas le coût de filament consommé. Choisis « déjà inclus » si ton prix convenu comprend déjà la couleur spéciale, pour éviter de facturer deux fois.</p></fieldset>
    <div class="form-grid">
    <label>Date de la demande<input name="orderedAt" type="date" value="${today}"></label>
    <label>Date souhaitée par le client<input name="dueAt" type="date"></label>
@@ -1172,7 +1188,7 @@
    </div><label>Notes / instructions (dimensions, personnalisation, conversation…)<textarea name="notes" maxlength="2000" rows="4" placeholder="Détails à ne pas oublier…"></textarea></label>
    <div class="jj-order-photo-grid"><label>📷 Photo du produit demandé<input type="file" name="photo" accept="image/*"><small>Photo du vase, modèle ou capture d’écran (facultatif).</small></label>
    <label>🎨 Photo de la couleur / du filament<input type="file" name="colorPhoto" accept="image/*"><small>Une deuxième photo séparée, pour retrouver la teinte exacte.</small></label></div>
-   <p class="small-hint">La photo est stockée séparément et synchronisée avec Firebase si tu es connecté. Cette commande ne retire pas automatiquement de stock et ne crée pas de facture avant ta confirmation.</p>
+   <p class="small-hint">La photo est stockée séparément et synchronisée avec Firebase si tu es connecté. Cette commande ne retire pas automatiquement de stock. Une facture brouillon privée est automatiquement associée à son enregistrement; elle n’est ni envoyée ni marquée payée.</p>
    <p id="custom-order-edit-hint" class="small-hint" hidden></p>
    <p id="custom-order-error" class="form-error" role="alert" aria-live="assertive"></p><div class="actions"><button class="primary-btn" type="submit" id="custom-order-submit">💾 Enregistrer la commande</button><button class="secondary-btn" type="button" id="custom-order-reset">Effacer / nouvelle commande</button></div></form></section>`+
    `<section class="panel"><div class="panel-head"><div><h2>Mes commandes (${orders.length})</h2><p>Les commandes terminées restent dans l'historique.</p></div></div>
@@ -1181,9 +1197,9 @@
    <p><b>Client :</b> ${esc(o.customer||'—')} · ${esc(o.contact||'')}</p>
    <p><b>Filament :</b> ${esc(o.filamentType||'À déterminer')} · <b>Couleur :</b> ${esc(o.colors||'À préciser')} · <b>Demandée :</b> ${esc(o.orderedAt||'—')} · <b>Souhaitée :</b> ${esc(o.dueAt||'—')}</p>
    ${jjDimHtml(o)}
-   <p><b>Filament acheté spécialement :</b> ${o.filamentPurchased?'Oui · '+money(o.filamentPurchasePrice||0):'Non'}</p>
-   <p><b>Prix :</b> ${money(o.price||0)} · <b>Acompte :</b> ${money(o.deposit||0)} · <b>Solde :</b> ${money(Math.max(0,safeNum(o.price)-safeNum(o.deposit)))}</p>
-   <p class="jj-order-notes">${esc(o.notes||'')}</p><div class="actions"><button type="button" class="secondary-btn" data-edit-custom-order="${esc(o.id)}">✎ Modifier la commande</button><button type="button" class="secondary-btn danger" data-delete-custom-order="${esc(o.id)}">Supprimer</button><select aria-label="Statut de la commande" data-custom-status="${esc(o.id)}">${Object.entries(customOrderStages).map(([k,v])=>`<option value="${k}" ${o.status===k?'selected':''}>${esc(v)}</option>`).join('')}</select></div></article>`).join('')||'<p class="empty">Aucune commande pour le moment. Ajoute celle qu’on vient de te demander dans le formulaire ci-dessus!</p>'}</div></section>`;
+   <p><b>Filament acheté spécialement :</b> ${o.filamentPurchased?'Oui · Achat '+money(o.filamentPurchasePrice||0)+' · Facturé '+safeNum(o.filamentChargePercent||0)+' % ('+money(Math.round(safeNum(o.filamentPurchasePrice)*safeNum(o.filamentChargePercent))/100)+') · '+(o.filamentChargeMode==='included'?'inclus dans le prix':'ajouté au prix'):'Non'}</p>
+   <p><b>Prix du projet :</b> ${money(o.price||0)} · <b>Total à facturer :</b> ${money(jjCustomOrderTotal(o))} · <b>Acompte :</b> ${money(o.deposit||0)} · <b>Solde indicatif :</b> ${money(Math.max(0,jjCustomOrderTotal(o)-safeNum(o.deposit)))}</p><p><b>Facture :</b> ${esc((extras.invoices||[]).find(i=>i.customOrderId===o.id)?.number||'À créer')} · ${esc(({draft:'Brouillon',sent:'Envoyée',paid:'Payée',cancelled:'Annulée'})[(extras.invoices||[]).find(i=>i.customOrderId===o.id)?.status]||'')} </p>
+   <p class="jj-order-notes">${esc(o.notes||'')}</p><div class="actions"><button type="button" class="secondary-btn" data-edit-custom-order="${esc(o.id)}">✎ Modifier la commande</button><button type="button" class="secondary-btn" data-invoice-custom-order="${esc(o.id)}">🧾 Ouvrir la facture</button><button type="button" class="secondary-btn danger" data-delete-custom-order="${esc(o.id)}">Supprimer</button><select aria-label="Statut de la commande" data-custom-status="${esc(o.id)}">${Object.entries(customOrderStages).map(([k,v])=>`<option value="${k}" ${o.status===k?'selected':''}>${esc(v)}</option>`).join('')}</select></div></article>`).join('')||'<p class="empty">Aucune commande pour le moment. Ajoute celle qu’on vient de te demander dans le formulaire ci-dessus!</p>'}</div></section>`;
  }
  async function saveCustomOrder(event){
   event.preventDefault();
@@ -1210,13 +1226,18 @@
    try{dimensions=jjDimensionsFromForm(f);}catch(error){return fail(error.message);}
    const filamentPurchased=!!f.elements.namedItem('filamentPurchased')?.checked;
    const filamentPurchasePrice=filamentPurchased?Number(v.filamentPurchasePrice||0):0;
+   const filamentChargePercent=filamentPurchased?Number(v.filamentChargePercent||0):0;const filamentChargeMode=String(v.filamentChargeMode||'extra');
+   if(!Number.isFinite(filamentChargePercent)||filamentChargePercent<0||filamentChargePercent>100)return fail('Le pourcentage du filament doit être entre 0 et 100.','filamentChargePercent');
    if(!Number.isFinite(filamentPurchasePrice)||filamentPurchasePrice<0)return fail('Le prix du filament doit être égal ou supérieur à 0.','filamentPurchasePrice');
    const old=customOrders().find(x=>x.id===v.orderId),now=new Date().toISOString();
    const id=old?.id||('CO-'+Date.now()+'-'+Math.random().toString(36).slice(2,7));
-   const row={...old,id,number:old?.number||'JJ-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-7),customer,contact:String(v.contact||'').trim(),item,productId:String(v.productId||''),quantity:qty,colors:String(v.colors||'').trim(),filamentType:String(v.filamentType||'').trim(),orderedAt:String(v.orderedAt||''),dueAt:String(v.dueAt||''),price,deposit,delivery:String(v.delivery||'pickup'),status:String(v.status||'new'),notes:String(v.notes||'').trim(),createdAt:old?.createdAt||now,updatedAt:now,hasPhoto:old?.hasPhoto||false,hasColorPhoto:old?.hasColorPhoto||false,filamentPurchased,filamentPurchasePrice,...dimensions};
+   const row={...old,id,number:old?.number||'JJ-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-7),customer,contact:String(v.contact||'').trim(),item,productId:String(v.productId||''),quantity:qty,colors:String(v.colors||'').trim(),filamentType:String(v.filamentType||'').trim(),orderedAt:String(v.orderedAt||''),dueAt:String(v.dueAt||''),price,deposit,delivery:String(v.delivery||'pickup'),status:String(v.status||'new'),notes:String(v.notes||'').trim(),createdAt:old?.createdAt||now,updatedAt:now,hasPhoto:old?.hasPhoto||false,hasColorPhoto:old?.hasColorPhoto||false,filamentPurchased,filamentPurchasePrice,filamentChargePercent,filamentChargeMode,...dimensions};
    const next=old?customOrders().map(x=>x.id===id?row:x):[...customOrders(),row];
-   // Toujours sauvegarder les informations texte d'abord, même si les photos échouent.
-   if(!persistExtras({...extras,customOrders:next}))return fail('Le navigateur n’a pas pu sauvegarder cette commande. Vérifie l’espace disponible et réessaie.');
+   // Sauvegarde atomique de la commande et de son brouillon : une seule écriture dans les données privées.
+   const existingInvoice=(extras.invoices||[]).find(i=>i.customOrderId===id);
+   const linkedInvoice=jjInvoiceForOrder(row,existingInvoice);
+   const nextInvoices=existingInvoice?(extras.invoices||[]).map(i=>i.id===existingInvoice.id?linkedInvoice:i):[...(extras.invoices||[]),linkedInvoice];
+   if(!persistExtras({...extras,customOrders:next,invoices:nextInvoices}))return fail('La commande et sa facture ne peuvent pas être sauvegardées. Vérifie l’espace disponible.');
    const photo=f.elements.namedItem('photo')?.files?.[0];
    const colorPhoto=f.elements.namedItem('colorPhoto')?.files?.[0];
    let photoWarning='';
@@ -1227,7 +1248,7 @@
     catch(err){console.error('Photo de commande',label,err);photoWarning+=' La photo '+label+' n’a pas pu être sauvegardée.';}
    }
    editingCustomOrderId=null;render();
-   notify('✓ Commande enregistrée!'+photoWarning,!!photoWarning);
+   notify('✓ Commande et facture brouillon enregistrées!'+(existingInvoice&&existingInvoice.status!=='draft'?' La facture déjà envoyée/payée n’a pas été modifiée.':'')+photoWarning,!!photoWarning);
    document.querySelector(`[data-custom-order-id="${CSS.escape(id)}"]`)?.scrollIntoView({behavior:'smooth',block:'center'});
    return true;
   }catch(err){console.error('Enregistrement commande personnalisée:',err);return fail('Une erreur inattendue est survenue : '+(err?.message||'inconnue')+'. Aucune modification supplémentaire ne sera faite.');}
@@ -1239,7 +1260,7 @@
   const f=document.getElementById('custom-order-form');if(!f)return;
   f.reset();
   // Modifier l'enregistrement existant (même identifiant) et non en créer un nouveau.
-  const keys=['customer','contact','item','productId','quantity','colors','filamentType','orderedAt','dueAt','price','deposit','delivery','status','notes','dimensionShape','dimensionUnit','filamentPurchasePrice'];
+  const keys=['customer','contact','item','productId','quantity','colors','filamentType','orderedAt','dueAt','price','deposit','delivery','status','notes','dimensionShape','dimensionUnit','filamentPurchasePrice','filamentChargePercent','filamentChargeMode'];
   for(const k of keys){const inp=f.elements.namedItem(k);if(inp&&row[k]!==undefined&&row[k]!==null)inp.value=String(row[k]);}
   f.elements.namedItem('filamentPurchased').checked=!!row.filamentPurchased;
   for(const k of ['height','diameter','length','width']){const inp=f.elements.namedItem('dimension_'+k);if(inp)inp.value=String(row.dimensionRaw?.[k]||'');}
@@ -1277,9 +1298,9 @@
  document.getElementById('cancel-dialog').addEventListener('click',()=>dialog.close());
  document.getElementById('print-form').addEventListener('submit',savePrint);
  document.addEventListener('submit',e=>{if(e.target.id==='custom-order-form')saveCustomOrder(e);});
- document.addEventListener('input',e=>{if(e.target.closest('#custom-order-form')&&(/^(dimension_|dimensionShape$|dimensionUnit$)/.test(e.target.name||'')))jjDimensionPreview();});
- document.addEventListener('change',e=>{if(e.target.closest('#custom-order-form')){if(e.target.name==='filamentPurchased')jjFilamentPurchaseToggle();if(e.target.name==='dimensionShape'||e.target.name==='dimensionUnit')jjDimensionPreview();}});
- document.addEventListener('click',e=>{const edit=e.target.closest('[data-edit-custom-order]'),del=e.target.closest('[data-delete-custom-order]');if(e.target.closest('[data-restore-backup]'))restoreBackup(e.target.closest('[data-restore-backup]').dataset.restoreBackup);else if(edit)editCustomOrder(edit.dataset.editCustomOrder);else if(del)deleteCustomOrder(del.dataset.deleteCustomOrder);else if(e.target.closest('#custom-order-reset')){editingCustomOrderId=null;render();}});
+ document.addEventListener('input',e=>{if(e.target.closest('#custom-order-form')&&(/^(dimension_|dimensionShape$|dimensionUnit$)/.test(e.target.name||'')))jjDimensionPreview();if(e.target.closest('#custom-order-form')&&['filamentPurchasePrice','filamentChargePercent'].includes(e.target.name))jjFilamentPurchaseToggle();});
+ document.addEventListener('change',e=>{if(e.target.closest('#custom-order-form')){if(['filamentPurchased','filamentPurchasePrice','filamentChargePercent','filamentChargeMode'].includes(e.target.name))jjFilamentPurchaseToggle();if(e.target.name==='dimensionShape'||e.target.name==='dimensionUnit')jjDimensionPreview();}});
+ document.addEventListener('click',e=>{const edit=e.target.closest('[data-edit-custom-order]'),del=e.target.closest('[data-delete-custom-order]');if(e.target.closest('[data-restore-backup]'))restoreBackup(e.target.closest('[data-restore-backup]').dataset.restoreBackup);else if(edit)editCustomOrder(edit.dataset.editCustomOrder);else if(e.target.closest('[data-invoice-custom-order]'))openCustomOrderInvoice(e.target.closest('[data-invoice-custom-order]').dataset.invoiceCustomOrder);else if(del)deleteCustomOrder(del.dataset.deleteCustomOrder);else if(e.target.closest('#custom-order-reset')){editingCustomOrderId=null;render();}});
  document.addEventListener('change',e=>{if(e.target.matches('[data-custom-status]'))updateCustomOrderStatus(e.target.dataset.customStatus,e.target.value);});
  document.getElementById('print-product').addEventListener('change',()=>{if(!editingPrintId){selectedProductInfo({prefillDuration:true});const p=extras.products.find(x=>String(x.id)===document.getElementById('print-product').value);suggestExcelUsage(p);suggestHardwareFromProduct();if(p?.printer)setChoiceValue(document.getElementById('print-form'),'printer',p.printer);refreshPrintCreation();}else{selectedProductInfo();refreshPrintCreation();}});
  document.getElementById('print-form').addEventListener('input',updatePrintCreationCost);document.getElementById('print-form').addEventListener('change',updatePrintCreationCost);
