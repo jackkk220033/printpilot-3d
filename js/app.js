@@ -1134,16 +1134,42 @@
  }
  function jjDimHtml(o){const raw=o.dimensionRaw||{},mm=o.dimensionMm||{},shape=o.dimensionShape||'cylinder';const keys=shape==='cylinder'?['height','diameter']:['length','width','height'];const labels={height:'Hauteur',diameter:'Diamètre',length:'Longueur',width:'Largeur'};const values=keys.filter(k=>raw[k]||mm[k]);return values.length?`<p><b>Dimensions :</b> ${values.map(k=>`${labels[k]} ${esc(raw[k]||'—')} → <strong>${esc(mm[k])} mm</strong>`).join(' · ')}</p>`:'';}
  function jjDimensionPreview(){const f=document.getElementById('custom-order-form'),out=document.getElementById('custom-dimension-preview');if(!f||!out)return;const shape=f.elements.namedItem('dimensionShape').value;f.querySelectorAll('[data-dimension-key]').forEach(el=>el.hidden=(shape==='cylinder'?!['height','diameter'].includes(el.dataset.dimensionKey):el.dataset.dimensionKey==='diameter'));try{const d=jjDimensionsFromForm(f),keys=d.dimensionShape==='cylinder'?['height','diameter']:['length','width','height'];const labels={height:'Hauteur',diameter:'Diamètre',length:'Longueur',width:'Largeur'};out.textContent=keys.filter(k=>d.dimensionMm[k]!=null).map(k=>labels[k]+' : '+d.dimensionMm[k]+' mm').join(' · ')||'Entre tes mesures pour voir les millimètres.';out.classList.remove('form-error');}catch(e){out.textContent=e.message;out.classList.add('form-error');}}
- function jjFilamentPurchaseToggle(){const f=document.getElementById('custom-order-form');if(!f)return;const yes=f.elements.namedItem('filamentPurchased').checked;const field=document.getElementById('custom-order-filament-cost-wrap');if(field)field.hidden=!yes;const charge=document.getElementById('custom-order-filament-charge-wrap');if(charge)charge.hidden=!yes;const preview=document.getElementById('custom-order-filament-preview');if(preview){const cost=Math.max(0,safeNum(f.elements.namedItem('filamentPurchasePrice').value));const pct=Math.max(0,Math.min(100,safeNum(f.elements.namedItem('filamentChargePercent').value)));const fee=Math.round(cost*pct)/100;const extra=f.elements.namedItem('filamentChargeMode').value==='extra';preview.textContent=yes?('Frais demandé : '+money(fee)+' ('+pct+' % de '+money(cost)+') · '+(extra?'ajouté au prix':'déjà compris dans le prix')):'Aucun frais spécial de filament.';}}
- function jjCustomOrderFee(o){return o?.filamentPurchased?Math.round(Math.max(0,safeNum(o.filamentPurchasePrice))*Math.min(100,Math.max(0,safeNum(o.filamentChargePercent)))*100)/10000:0;}
- function jjCustomOrderTotal(o){return Math.round((Math.max(0,safeNum(o?.price))+(o?.filamentChargeMode==='included'?0:jjCustomOrderFee(o)))*100)/100;}
- function jjInvoiceLinesFromOrder(o){const lines=[{name:o.item+' — '+(o.colors||o.filamentType||'commande personnalisée'),qty:o.quantity,price:Math.round(Math.max(0,safeNum(o.price))/Math.max(1,o.quantity)*100)/100}];const fee=jjCustomOrderFee(o);if(fee>0&&o.filamentChargeMode!=='included')lines.push({name:'Couleur / filament spécial ('+safeNum(o.filamentChargePercent)+' % du prix d’achat)',qty:1,price:fee});return lines;}
+ // Prix fournisseur, taxes payées et frais de livraison : ces montants sont internes à JJ3D.
+ function jjCents(n){return Math.round(Math.max(0,safeNum(n))*100);}
+ function jjFilamentFullCost(o){return (jjCents(o?.filamentPurchasePrice)+jjCents(o?.filamentPurchaseTax)+jjCents(o?.filamentPurchaseShipping))/100;}
+ function jjCustomOrderFee(o){return o?.filamentPurchased?Math.round(jjCents(jjFilamentFullCost(o))*Math.min(100,Math.max(0,safeNum(o.filamentChargePercent)))/100)/100:0;}
+ function jjCustomOrderTotal(o){return (jjCents(o?.price)+(o?.filamentChargeMode==='included'?0:jjCents(jjCustomOrderFee(o))))/100;}
+ function jjFilamentPurchaseToggle(){
+  const f=document.getElementById('custom-order-form');if(!f)return;
+  const yes=f.elements.namedItem('filamentPurchased').checked;
+  const detail=document.getElementById('custom-order-filament-details');if(detail)detail.hidden=!yes;
+  const preview=document.getElementById('custom-order-filament-preview');if(!preview)return;
+  if(!yes){preview.innerHTML='<strong>Pas d’achat de filament spécial.</strong> Aucun supplément sur la facture.';return;}
+  const v={filamentPurchased:true,filamentPurchasePrice:f.elements.namedItem('filamentPurchasePrice').value,filamentPurchaseTax:f.elements.namedItem('filamentPurchaseTax').value,filamentPurchaseShipping:f.elements.namedItem('filamentPurchaseShipping').value,filamentChargePercent:f.elements.namedItem('filamentChargePercent').value};
+  const full=jjFilamentFullCost(v), fee=jjCustomOrderFee(v),pct=Math.max(0,Math.min(100,safeNum(v.filamentChargePercent)));
+  const mode=f.elements.namedItem('filamentChargeMode').value;
+  const base=Math.max(0,safeNum(f.elements.namedItem('price').value));
+  preview.innerHTML='<div class="jj-filament-totals"><div><span>Coût de la bobine (taxes et livraison comprises)</span><b>'+money(full)+'</b></div><div><span>Part facturée au client ('+pct+' %)</span><b>'+money(fee)+'</b></div><div class="jj-filament-grand-total"><span>Supplément sur la facture</span><strong>'+money(mode==='extra'?fee:0)+'</strong></div><div><span>Total estimé de la facture</span><strong>'+money(base+(mode==='extra'?fee:0))+'</strong></div></div>'+(mode==='included'?'<small>Le supplément de '+money(fee)+' sera détaillé sur une ligne, mais déjà compris dans le prix convenu : aucun montant ajouté.</small>':'<small>Le client verra une ligne « Filament spécial » avec le montant facturé, sans ton prix d’achat fournisseur.</small>');
+ }
+ function jjInvoiceLinesFromOrder(o){
+  const qty=Math.max(1,Number(o.quantity)||1),fee=jjCustomOrderFee(o),included=!!o.filamentPurchased&&o.filamentChargeMode==='included';
+  // Facture: ligne du filament visible même si déjà inclus; on évite toute double facturation.
+  const invoiceFee=included?Math.min(jjCents(o.price),jjCents(fee))/100:fee;
+  const projectCents=jjCents(o.price)-(included?jjCents(invoiceFee):0);
+  const lines=[{name:o.item+' — '+(o.colors||o.filamentType||'commande personnalisée'),qty:1,price:projectCents/100}];
+  if(o.filamentPurchased){
+   const material=[o.filamentType,o.colors].filter(Boolean).join(' / ');
+   const label='Filament acheté spécialement'+(material?' — '+material:'')+' ('+Math.min(100,Math.max(0,safeNum(o.filamentChargePercent)))+' % des frais d’achat'+(included?', inclus dans le projet':'')+')';
+   lines.push({name:label,qty:1,price:invoiceFee});
+  }
+  return lines;
+ }
  function jjInvoiceForOrder(o,previous){const now=new Date().toISOString(),date=now.slice(0,10);const invoices=extras.invoices||[];const same=previous||invoices.find(x=>x.customOrderId===o.id);
    if(same&&same.status!=='draft')return same;
    const numbers=invoices.map(x=>String(x.number||'')).filter(x=>x.startsWith('JJ3D-'+now.slice(0,4)+'-')).map(x=>parseInt(x.split('-').at(-1),10)||0);
    const number=same?.number||('JJ3D-'+now.slice(0,4)+'-'+String(Math.max(0,...numbers)+1).padStart(4,'0'));
    const email=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(o.contact||'')?o.contact:'';
-   const summary='Commande '+o.number+' · '+(o.filamentType||'Filament à déterminer')+' · '+(o.colors||'Couleur à préciser')+' · Acompte noté : '+money(o.deposit||0)+' (à confirmer manuellement dans Factures).';
+   const summary='Commande '+o.number+' · '+(o.filamentType||'Filament à déterminer')+' · '+(o.colors||'Couleur à préciser')+(o.filamentPurchased?' · Filament spécial commandé pour ce projet ('+safeNum(o.filamentChargePercent)+' % facturé au client).':'')+' · Acompte noté : '+money(o.deposit||0)+' (à confirmer manuellement dans Factures).';
    return {...same,id:same?.id||'inv-'+crypto.randomUUID(),number,date:same?.date||date,due:same?.due||o.dueAt||date,status:'draft',customOrderId:o.id,clientName:o.customer,clientEmail:same?.clientEmail||email,clientAddress:same?.clientAddress||'',lines:jjInvoiceLinesFromOrder(o),discount:same?.discount||0,shipping:same?.shipping||0,taxRate:same?.taxRate||0,notes:summary,createdAt:same?.createdAt||now,updatedAt:now,history:[...(same?.history||[]),{at:now,action:same?'Brouillon ajusté depuis la commande '+o.number:'Brouillon généré depuis la commande '+o.number,status:'draft'}]};
  }
  function openCustomOrderInvoice(id){const o=customOrders().find(x=>x.id===id);if(!o)return;let inv=(extras.invoices||[]).find(i=>i.customOrderId===id);if(!inv){inv=jjInvoiceForOrder(o);if(!persistExtras({...extras,invoices:[...(extras.invoices||[]),inv]})){notify('Impossible de créer la facture.',true);return;}}if(page()!=='factures'){location.hash='factures';render();}window.JJ3DInvoices.openInvoice(inv.id);}
@@ -1170,14 +1196,21 @@
    <label data-dimension-key="length" hidden>Longueur<input name="dimension_length" inputmode="text" placeholder='Ex. 12"'></label>
    <label data-dimension-key="width" hidden>Largeur<input name="dimension_width" inputmode="text" placeholder='Ex. 6"'></label>
    </div><p class="small-hint">Tu peux écrire <b>1'</b> pour un pied, <b>6"</b> pour six pouces ou <b>1' 6"</b> pour un pied et six pouces. Les millimètres sont calculés automatiquement.</p><output id="custom-dimension-preview" class="jj-dimension-preview" aria-live="polite">Entre tes mesures pour voir les millimètres.</output></fieldset>
-   <fieldset class="jj-dimension-fieldset"><legend>🎨 Filament acheté pour cette commande</legend>
-   <label class="jj-inline-check"><input name="filamentPurchased" type="checkbox" value="yes"> Oui, j’ai acheté du filament spécialement pour ce produit</label>
-   <label id="custom-order-filament-cost-wrap" hidden>Prix d’achat du filament ($)<input name="filamentPurchasePrice" type="number" min="0" step="0.01" placeholder="Ex. 24.99"></label>
-   <div class="form-grid" id="custom-order-filament-charge-wrap" hidden>
-   <label>Part de l’achat facturée au client (%)<input name="filamentChargePercent" type="number" min="0" max="100" step="1" value="0" placeholder="Ex. 50"></label>
-   <label>Traitement dans le prix<select name="filamentChargeMode"><option value="extra">Ajouter ce montant au prix du projet</option><option value="included">Déjà inclus dans le prix convenu</option></select></label>
-   </div><output id="custom-order-filament-preview" class="jj-dimension-preview" aria-live="polite">Aucun frais spécial de filament.</output>
-   <p class="small-hint">Tu décides du pourcentage pour chaque commande. Ce frais est une ligne facturée au client, pas le coût de filament consommé. Choisis « déjà inclus » si ton prix convenu comprend déjà la couleur spéciale, pour éviter de facturer deux fois.</p></fieldset>
+   <fieldset class="jj-dimension-fieldset jj-filament-purchase-fieldset"><legend>🧵 Achat de filament spécial — détails et facture</legend>
+   <label class="jj-inline-check"><input name="filamentPurchased" type="checkbox" value="yes"> <strong>Oui, je dois acheter une couleur / bobine spécialement pour cette commande</strong></label>
+   <div id="custom-order-filament-details" hidden>
+    <p class="small-hint">Entre les montants que tu paieras réellement au fournisseur. Ces prix d’achat restent privés; le client voit seulement le supplément que tu décides de lui facturer.</p>
+    <div class="form-grid">
+     <label>Prix du filament, avant taxes ($)<input name="filamentPurchasePrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Ex. 29.99"></label>
+     <label>Taxes payées à l'achat ($)<input name="filamentPurchaseTax" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Ex. 3.90"></label>
+     <label>Livraison du filament ($)<input name="filamentPurchaseShipping" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Ex. 0.00"></label>
+     <label>Pourcentage facturé au client (%)<input name="filamentChargePercent" type="number" min="0" max="100" step="1" inputmode="decimal" value="50" placeholder="Ex. 50"></label>
+     <label>Traitement sur la facture<select name="filamentChargeMode"><option value="extra">Ajouter le supplément au prix du projet</option><option value="included">Le supplément est déjà inclus dans le prix convenu</option></select></label>
+    </div>
+   </div>
+   <output id="custom-order-filament-preview" class="jj-dimension-preview jj-filament-preview" aria-live="polite">Pas d’achat de filament spécial. Aucun supplément sur la facture.</output>
+   <p class="small-hint">JJ3D affichera une ligne « Filament acheté spécialement » sur la facture avec le montant facturé au client. Les taxes Amazon et les taxes facturées au client sont deux choses différentes : le taux de taxe de la facture reste réglable séparément.</p>
+   </fieldset>
    <div class="form-grid">
    <label>Date de la demande<input name="orderedAt" type="date" value="${today}"></label>
    <label>Date souhaitée par le client<input name="dueAt" type="date"></label>
@@ -1197,7 +1230,7 @@
    <p><b>Client :</b> ${esc(o.customer||'—')} · ${esc(o.contact||'')}</p>
    <p><b>Filament :</b> ${esc(o.filamentType||'À déterminer')} · <b>Couleur :</b> ${esc(o.colors||'À préciser')} · <b>Demandée :</b> ${esc(o.orderedAt||'—')} · <b>Souhaitée :</b> ${esc(o.dueAt||'—')}</p>
    ${jjDimHtml(o)}
-   <p><b>Filament acheté spécialement :</b> ${o.filamentPurchased?'Oui · Achat '+money(o.filamentPurchasePrice||0)+' · Facturé '+safeNum(o.filamentChargePercent||0)+' % ('+money(Math.round(safeNum(o.filamentPurchasePrice)*safeNum(o.filamentChargePercent))/100)+') · '+(o.filamentChargeMode==='included'?'inclus dans le prix':'ajouté au prix'):'Non'}</p>
+   <p><b>Filament spécial :</b> ${o.filamentPurchased?'Oui · Bobine '+money(o.filamentPurchasePrice||0)+' + taxes '+money(o.filamentPurchaseTax||0)+' + livraison '+money(o.filamentPurchaseShipping||0)+' = <strong>'+money(jjFilamentFullCost(o))+'</strong> · Chargé au client '+safeNum(o.filamentChargePercent||0)+' % : <strong>'+money(jjCustomOrderFee(o))+'</strong> ('+(o.filamentChargeMode==='included'?'déjà inclus dans le prix':'supplément sur la facture')+')':'Aucun achat spécial'}</p>
    <p><b>Prix du projet :</b> ${money(o.price||0)} · <b>Total à facturer :</b> ${money(jjCustomOrderTotal(o))} · <b>Acompte :</b> ${money(o.deposit||0)} · <b>Solde indicatif :</b> ${money(Math.max(0,jjCustomOrderTotal(o)-safeNum(o.deposit)))}</p><p><b>Facture :</b> ${esc((extras.invoices||[]).find(i=>i.customOrderId===o.id)?.number||'À créer')} · ${esc(({draft:'Brouillon',sent:'Envoyée',paid:'Payée',cancelled:'Annulée'})[(extras.invoices||[]).find(i=>i.customOrderId===o.id)?.status]||'')} </p>
    <p class="jj-order-notes">${esc(o.notes||'')}</p><div class="actions"><button type="button" class="secondary-btn" data-edit-custom-order="${esc(o.id)}">✎ Modifier la commande</button><button type="button" class="secondary-btn" data-invoice-custom-order="${esc(o.id)}">🧾 Ouvrir la facture</button><button type="button" class="secondary-btn danger" data-delete-custom-order="${esc(o.id)}">Supprimer</button><select aria-label="Statut de la commande" data-custom-status="${esc(o.id)}">${Object.entries(customOrderStages).map(([k,v])=>`<option value="${k}" ${o.status===k?'selected':''}>${esc(v)}</option>`).join('')}</select></div></article>`).join('')||'<p class="empty">Aucune commande pour le moment. Ajoute celle qu’on vient de te demander dans le formulaire ci-dessus!</p>'}</div></section>`;
  }
@@ -1226,12 +1259,17 @@
    try{dimensions=jjDimensionsFromForm(f);}catch(error){return fail(error.message);}
    const filamentPurchased=!!f.elements.namedItem('filamentPurchased')?.checked;
    const filamentPurchasePrice=filamentPurchased?Number(v.filamentPurchasePrice||0):0;
+   const filamentPurchaseTax=filamentPurchased?Number(v.filamentPurchaseTax||0):0;
+   const filamentPurchaseShipping=filamentPurchased?Number(v.filamentPurchaseShipping||0):0;
    const filamentChargePercent=filamentPurchased?Number(v.filamentChargePercent||0):0;const filamentChargeMode=String(v.filamentChargeMode||'extra');
    if(!Number.isFinite(filamentChargePercent)||filamentChargePercent<0||filamentChargePercent>100)return fail('Le pourcentage du filament doit être entre 0 et 100.','filamentChargePercent');
    if(!Number.isFinite(filamentPurchasePrice)||filamentPurchasePrice<0)return fail('Le prix du filament doit être égal ou supérieur à 0.','filamentPurchasePrice');
+   if(!Number.isFinite(filamentPurchaseTax)||filamentPurchaseTax<0)return fail('Les taxes payées doivent être égales ou supérieures à 0.','filamentPurchaseTax');
+   if(!Number.isFinite(filamentPurchaseShipping)||filamentPurchaseShipping<0)return fail('La livraison du filament doit être égale ou supérieure à 0.','filamentPurchaseShipping');
+   if(filamentPurchased&&filamentChargeMode==='included'&&jjCents(price)<jjCents(jjCustomOrderFee({filamentPurchased,filamentPurchasePrice,filamentPurchaseTax,filamentPurchaseShipping,filamentChargePercent})))return fail('La part de filament incluse dépasse le prix du projet. Réduis le pourcentage ou choisis « Ajouter le supplément ».','filamentChargePercent');
    const old=customOrders().find(x=>x.id===v.orderId),now=new Date().toISOString();
    const id=old?.id||('CO-'+Date.now()+'-'+Math.random().toString(36).slice(2,7));
-   const row={...old,id,number:old?.number||'JJ-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-7),customer,contact:String(v.contact||'').trim(),item,productId:String(v.productId||''),quantity:qty,colors:String(v.colors||'').trim(),filamentType:String(v.filamentType||'').trim(),orderedAt:String(v.orderedAt||''),dueAt:String(v.dueAt||''),price,deposit,delivery:String(v.delivery||'pickup'),status:String(v.status||'new'),notes:String(v.notes||'').trim(),createdAt:old?.createdAt||now,updatedAt:now,hasPhoto:old?.hasPhoto||false,hasColorPhoto:old?.hasColorPhoto||false,filamentPurchased,filamentPurchasePrice,filamentChargePercent,filamentChargeMode,...dimensions};
+   const row={...old,id,number:old?.number||'JJ-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-7),customer,contact:String(v.contact||'').trim(),item,productId:String(v.productId||''),quantity:qty,colors:String(v.colors||'').trim(),filamentType:String(v.filamentType||'').trim(),orderedAt:String(v.orderedAt||''),dueAt:String(v.dueAt||''),price,deposit,delivery:String(v.delivery||'pickup'),status:String(v.status||'new'),notes:String(v.notes||'').trim(),createdAt:old?.createdAt||now,updatedAt:now,hasPhoto:old?.hasPhoto||false,hasColorPhoto:old?.hasColorPhoto||false,filamentPurchased,filamentPurchasePrice,filamentPurchaseTax,filamentPurchaseShipping,filamentChargePercent,filamentChargeMode,...dimensions};
    const next=old?customOrders().map(x=>x.id===id?row:x):[...customOrders(),row];
    // Sauvegarde atomique de la commande et de son brouillon : une seule écriture dans les données privées.
    const existingInvoice=(extras.invoices||[]).find(i=>i.customOrderId===id);
@@ -1260,7 +1298,7 @@
   const f=document.getElementById('custom-order-form');if(!f)return;
   f.reset();
   // Modifier l'enregistrement existant (même identifiant) et non en créer un nouveau.
-  const keys=['customer','contact','item','productId','quantity','colors','filamentType','orderedAt','dueAt','price','deposit','delivery','status','notes','dimensionShape','dimensionUnit','filamentPurchasePrice','filamentChargePercent','filamentChargeMode'];
+  const keys=['customer','contact','item','productId','quantity','colors','filamentType','orderedAt','dueAt','price','deposit','delivery','status','notes','dimensionShape','dimensionUnit','filamentPurchasePrice','filamentPurchaseTax','filamentPurchaseShipping','filamentChargePercent','filamentChargeMode'];
   for(const k of keys){const inp=f.elements.namedItem(k);if(inp&&row[k]!==undefined&&row[k]!==null)inp.value=String(row[k]);}
   f.elements.namedItem('filamentPurchased').checked=!!row.filamentPurchased;
   for(const k of ['height','diameter','length','width']){const inp=f.elements.namedItem('dimension_'+k);if(inp)inp.value=String(row.dimensionRaw?.[k]||'');}
@@ -1298,8 +1336,8 @@
  document.getElementById('cancel-dialog').addEventListener('click',()=>dialog.close());
  document.getElementById('print-form').addEventListener('submit',savePrint);
  document.addEventListener('submit',e=>{if(e.target.id==='custom-order-form')saveCustomOrder(e);});
- document.addEventListener('input',e=>{if(e.target.closest('#custom-order-form')&&(/^(dimension_|dimensionShape$|dimensionUnit$)/.test(e.target.name||'')))jjDimensionPreview();if(e.target.closest('#custom-order-form')&&['filamentPurchasePrice','filamentChargePercent'].includes(e.target.name))jjFilamentPurchaseToggle();});
- document.addEventListener('change',e=>{if(e.target.closest('#custom-order-form')){if(['filamentPurchased','filamentPurchasePrice','filamentChargePercent','filamentChargeMode'].includes(e.target.name))jjFilamentPurchaseToggle();if(e.target.name==='dimensionShape'||e.target.name==='dimensionUnit')jjDimensionPreview();}});
+ document.addEventListener('input',e=>{if(e.target.closest('#custom-order-form')&&(/^(dimension_|dimensionShape$|dimensionUnit$)/.test(e.target.name||'')))jjDimensionPreview();if(e.target.closest('#custom-order-form')&&['filamentPurchasePrice','filamentPurchaseTax','filamentPurchaseShipping','filamentChargePercent','price'].includes(e.target.name))jjFilamentPurchaseToggle();});
+ document.addEventListener('change',e=>{if(e.target.closest('#custom-order-form')){if(['filamentPurchased','filamentPurchasePrice','filamentPurchaseTax','filamentPurchaseShipping','filamentChargePercent','filamentChargeMode'].includes(e.target.name))jjFilamentPurchaseToggle();if(e.target.name==='dimensionShape'||e.target.name==='dimensionUnit')jjDimensionPreview();}});
  document.addEventListener('click',e=>{const edit=e.target.closest('[data-edit-custom-order]'),del=e.target.closest('[data-delete-custom-order]');if(e.target.closest('[data-restore-backup]'))restoreBackup(e.target.closest('[data-restore-backup]').dataset.restoreBackup);else if(edit)editCustomOrder(edit.dataset.editCustomOrder);else if(e.target.closest('[data-invoice-custom-order]'))openCustomOrderInvoice(e.target.closest('[data-invoice-custom-order]').dataset.invoiceCustomOrder);else if(del)deleteCustomOrder(del.dataset.deleteCustomOrder);else if(e.target.closest('#custom-order-reset')){editingCustomOrderId=null;render();}});
  document.addEventListener('change',e=>{if(e.target.matches('[data-custom-status]'))updateCustomOrderStatus(e.target.dataset.customStatus,e.target.value);});
  document.getElementById('print-product').addEventListener('change',()=>{if(!editingPrintId){selectedProductInfo({prefillDuration:true});const p=extras.products.find(x=>String(x.id)===document.getElementById('print-product').value);suggestExcelUsage(p);suggestHardwareFromProduct();if(p?.printer)setChoiceValue(document.getElementById('print-form'),'printer',p.printer);refreshPrintCreation();}else{selectedProductInfo();refreshPrintCreation();}});

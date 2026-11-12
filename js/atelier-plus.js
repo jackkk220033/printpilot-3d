@@ -85,7 +85,7 @@ function showQueueEditInView(dialog, trigger){
   if(!dialog.open)dialog.showModal();
  }
 }
-// JJ3D 4.11.34 : dépôt d'images, collage Ctrl+V et caméra mobile.
+// JJ3D 4.11.35 : dépôt d'images, collage Ctrl+V et caméra mobile.
 function queuePhotoControls(context,id=''){
  return `<div class="jj-queue-photo-entry" tabindex="0" role="group" aria-label="Photo du projet, cliquer ici puis Ctrl+V" data-photo-context="${context}" data-id="${esc(id)}">
   <div class="jj-queue-photo-preview" aria-live="polite">📋 Clique ici puis <b>Ctrl+V</b> pour coller une capture d’écran</div>

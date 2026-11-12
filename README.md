@@ -1,4 +1,4 @@
-# JJ3D v4.11.34 — Commandes personnalisées et suivi de production
+# JJ3D v4.11.35 — Commandes personnalisées et suivi de production
 
 Version complète basée sur JJ3D v4.11.29, avec le correctif connu de synchronisation automatique Boutique (v4.11.27) et le filigrane PAYÉ sur les factures mobiles conservés.
 
@@ -33,7 +33,7 @@ Nouvelle page **Sauvegardes**. L'application conserve jusqu'à huit états préc
 
 Les photos de commandes admin sont sauvegardées séparément de l'état JSON et synchronisées avec le système de photos privé quand celui-ci est prêt. La restauration JSON ne recrée pas automatiquement les images perdues.
 
-## Nouveauté v4.11.34 : commandes personnalisées
+## Nouveauté v4.11.35 : commandes personnalisées
 - Forme vase/rond (hauteur et diamètre) ou rectangulaire (L × l × H).
 - Conversion automatique et aperçu en millimètres, saisie libre `1'`, `6"`, `1' 6"`, `30 cm`, `304.8 mm`, `6 in`; nombres sans unité selon le menu sélectionné.
 - Dimensions originales et conversions conservées dans les données privées des commandes, modifiables plus tard.
@@ -42,7 +42,7 @@ Les photos de commandes admin sont sauvegardées séparément de l'état JSON et
 - Exemple : 1 pied = 304,8 mm ; 6 pouces = 152,4 mm.
 
 
-## v4.11.34 — correctif enregistrement commandes
+## v4.11.35 — correctif enregistrement commandes
 - Formulaire sans validation navigateur silencieuse; erreurs visibles avec notification et focus sur le champ concerné.
 - Commande possible avant fixation du prix final, même si un acompte a été reçu.
 - Champs filament séparés : type et couleur.
@@ -50,7 +50,7 @@ Les photos de commandes admin sont sauvegardées séparément de l'état JSON et
 - Synchronisation automatique Boutique et filigrane PAYÉ de v4.11.29 conservés.
 
 
-## v4.11.34 — Erreur FormData et modification des commandes
+## v4.11.35 — Erreur FormData et modification des commandes
 - Correction de la cible de l'événement `submit`: `event.target` désigne le vrai `<form>`; `event.currentTarget` désignait `document` dans l'écouteur délégué, ce qui faisait échouer `new FormData(...)`.
 - Les commandes enregistrées comportent **Modifier la commande**. Le formulaire recharge les informations, la forme, les dimensions, le filament et l'état Oui/Non pour achat spécial.
 - Après modification, l'identifiant d'origine est conservé, donc aucune commande doublon.
@@ -58,7 +58,7 @@ Les photos de commandes admin sont sauvegardées séparément de l'état JSON et
 - L'enregistrement reste local + synchronisation Firebase privée déjà existante; aucun changement aux règles.
 
 
-## v4.11.34 — Commande → facture, achat de filament
+## v4.11.35 — Commande → facture, achat de filament
 
 - Toute nouvelle commande personnalisée crée une facture **brouillon privée**, liée à la commande, dans la section Factures. Elle n'est ni envoyée ni payée automatiquement.
 - Bouton « Ouvrir la facture » dans chaque commande. Une facture déjà liée est réutilisée et ne sera jamais dupliquée.
@@ -70,3 +70,12 @@ Les photos de commandes admin sont sauvegardées séparément de l'état JSON et
 - Le coût de la bobine et le supplément de prix sont deux informations distinctes; attention à ne pas refacturer le filament déjà inclus dans le prix convenu.
 
 **Test recommandé** : enregistrement d'une commande test avec 20 $ de filament à 50 % ajouté et 40 $ de prix de projet → brouillon à 50 $ ; modifier à 25 % → brouillon à 45 $ ; passer la facture « envoyée » et modifier à nouveau la commande → la facture envoyée reste inchangée.
+
+## v4.11.35 — Filament spécial et facture
+
+- Nouvelle section visuelle dans Commandes personnalisées (case « achat spécial », prix de bobine avant taxes, taxes fournisseur payées, frais de livraison du filament, pourcentage facturé au client et choix supplément/inclus).
+- Calcul en cents : coût complet = bobine + taxes achat + livraison; montant facturé = coût complet × pourcentage. Aperçu immédiatement actualisé.
+- Sur la facture brouillon liée : ligne « Filament acheté spécialement » visible avec le montant facturé au client. Le coût Amazon et les taxes fournisseur restent privés. Si le supplément est inclus, la ligne « projet » est ajustée à la baisse pour ne pas facturer deux fois.
+- Un brouillon lié se met à jour lors de la modification de la commande; une facture envoyée/payée est volontairement préservée sans changement automatique.
+- Les données nouvelles sont conservées dans `customOrders`, les sauvegardes JSON et la synchronisation Firebase privée existante. Les anciennes commandes sans frais de livraison ou taxes fournisseur sont prises en charge (0 $ par défaut).
+- ATTENTION : les taux de taxe sur la vente sont distincts des taxes payées sur Amazon; ne pas utiliser ce simulateur comme calcul fiscal.
