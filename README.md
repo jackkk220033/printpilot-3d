@@ -1,100 +1,21 @@
-# JJ3D v4.11.37 — Commandes personnalisées et suivi de production
+# JJ3D v4.11.38 — Ergonomie et ventes liées aux factures
 
-Version complète basée sur JJ3D v4.11.29, avec le correctif connu de synchronisation automatique Boutique (v4.11.27) et le filigrane PAYÉ sur les factures mobiles conservés.
+## Nouveautés
 
-## Commandes personnalisées saisies par l'administrateur
+- Commandes personnalisées en fiches compactes avec détails repliables, photos, infos, acompte, facture et actions.
+- « À imprimer » : cartes compactes, photo miniature cliquable, contrôle de statut regroupé dans Actions. Le collage/import photo reste dans Modifier.
+- Champ « Date et heure de début souhaitées » clarifié.
+- Finances : tableau sur grands écrans, fiches de ventes compactes sur écrans plus petits.
+- Navigation : À imprimer et Factures directement en Espace de travail; Impressions, Imprimantes et Ventes dans Outils & statistiques.
+- Factures PAYÉES : création automatique d’un enregistrement de vente liée **sans retirer de stock**. Édition répétée de la facture ne crée pas de vente en double. Une facture annulée/non payée n’est pas comptée dans les ventes actives.
+- Les factures brouillons ne sont pas des ventes et les acomptes ne sont pas comptés comme revenus distincts.
+- Le coût des ventes issues de factures est estimé uniquement si les lignes sont reliées à un produit de stock identifié ; vérifier les profits si la facture contient des lignes libres.
+- Les taxes facturées ne sont pas incluses dans le revenu brut des ventes automatiques.
 
-Le menu **Commandes personnalisées** permet de saisir immédiatement une demande reçue en personne, par téléphone ou par Messenger : client, contact, projet, quantité, couleurs, produit lié éventuel, date de demande, date souhaitée, prix, acompte, remise, statut, notes et photo de référence. Ces commandes ont des états (nouvelle, soumission, confirmée, en production, prête, remise, annulée), peuvent être modifiées et apparaissent dans un rappel sur le tableau de bord. Elles sont **privées**, enregistrées dans `customOrders` et incluses dans le flux de sauvegarde Firebase privé et les exports JSON. Elles ne deviennent PAS des ventes ou des déductions de stock automatiquement.
+## Mise à jour
+1. Exporter une sauvegarde JSON depuis la version précédente.
+2. Publier le contenu de ce dossier sur GitHub Pages.
+3. Recharger les deux interfaces. Aucune modification des règles Firebase n’est nécessaire pour ces changements.
+4. Tester une commande puis une facture brouillon, payée, modifiée et annulée. Vérifier qu’une seule entrée de vente automatique s’affiche et que le stock ne change pas.
 
-## Production
-
-- Boutons de suivi **Démarrer/Reprendre, Pause, Terminer, Échec** dans **À imprimer**. Chronométrage estimé entre les actions (il ne s'agit pas d'un relevé machine).
-- **Calendrier de production** par jour et imprimante dans **À imprimer**. Les estimations de début et fin sont publiées au portail Boutique via le flux existant.
-- **Avertissement filament** avant de planifier/démarrer une tâche liée à un produit connu. Compare les besoins saisis à l'inventaire numérique; si les informations sont absentes, le contrôle ne peut pas conclure.
-- **Statistiques de production par imprimante** basées sur les tâches conservées (les tâches supprimées ne sont plus comptabilisées).
-- Sur la page **Finances**, séparation du tarif horaire facturé et des coûts matériels; le tarif facturé n'est PAS soustrait du montant restant.
-
-## Boutique
-
-- **Demande personnalisée** avec photo, quantité, couleurs et date souhaitée dans le portail. Les demandes sont reçues dans **Demandes Boutique** côté Atelier+, où elles peuvent être acceptées et ajoutées à la file de production (durée à préciser), ou refusées. Les règles Firestore incluses doivent être publiées pour autoriser ce nouveau flux.
-- **Avis Boutique** sur impressions terminées, bons envoyés et réceptions en attente de validation, selon les données visibles au portail.
-
-## Sauvegardes
-
-Nouvelle page **Sauvegardes**. L'application conserve jusqu'à huit états précédents localement (au plus une capture toutes les deux minutes) et propose une restauration avec confirmation. **Ce n'est pas une sauvegarde cloud indépendante** : elle peut disparaître en vidant les données du navigateur. Exporter un JSON reste recommandé.
-
-## Installation et précautions
-
-1. Avant mise à jour, exporter une sauvegarde JSON complète depuis JJ3D.
-2. Publier **le contenu entier** du dossier sur GitHub Pages, sans modifier les réglages Firebase existants.
-3. Publier les règles incluses dans `firestore.rules` depuis Firestore Database → Rules pour que les demandes personnalisées Boutique puissent être créées.
-4. Actualiser avec Ctrl+Shift+R; sur téléphone fermer et rouvrir la PWA si nécessaire.
-5. Vérifier une commande d'essai de bout en bout avant d'enregistrer une vraie demande. Ne pas considérer les dates d'impression comme horaires réels de l'imprimante.
-
-Les photos de commandes admin sont sauvegardées séparément de l'état JSON et synchronisées avec le système de photos privé quand celui-ci est prêt. La restauration JSON ne recrée pas automatiquement les images perdues.
-
-## Nouveauté v4.11.37 : commandes personnalisées
-- Forme vase/rond (hauteur et diamètre) ou rectangulaire (L × l × H).
-- Conversion automatique et aperçu en millimètres, saisie libre `1'`, `6"`, `1' 6"`, `30 cm`, `304.8 mm`, `6 in`; nombres sans unité selon le menu sélectionné.
-- Dimensions originales et conversions conservées dans les données privées des commandes, modifiables plus tard.
-- Photo du produit et photo de la couleur séparées (Firestore photos).
-- Case à cocher d'achat spécial de filament, prix d'achat affiché conditionnellement.
-- Exemple : 1 pied = 304,8 mm ; 6 pouces = 152,4 mm.
-
-
-## v4.11.37 — correctif enregistrement commandes
-- Formulaire sans validation navigateur silencieuse; erreurs visibles avec notification et focus sur le champ concerné.
-- Commande possible avant fixation du prix final, même si un acompte a été reçu.
-- Champs filament séparés : type et couleur.
-- Confirmation d’enregistrement, traitement des photos séparé et gestion des exceptions.
-- Synchronisation automatique Boutique et filigrane PAYÉ de v4.11.29 conservés.
-
-
-## v4.11.37 — Erreur FormData et modification des commandes
-- Correction de la cible de l'événement `submit`: `event.target` désigne le vrai `<form>`; `event.currentTarget` désignait `document` dans l'écouteur délégué, ce qui faisait échouer `new FormData(...)`.
-- Les commandes enregistrées comportent **Modifier la commande**. Le formulaire recharge les informations, la forme, les dimensions, le filament et l'état Oui/Non pour achat spécial.
-- Après modification, l'identifiant d'origine est conservé, donc aucune commande doublon.
-- Les photos existantes restent associées à la commande si aucune nouvelle photo n'est choisie.
-- L'enregistrement reste local + synchronisation Firebase privée déjà existante; aucun changement aux règles.
-
-
-## v4.11.37 — Commande → facture, achat de filament
-
-- Toute nouvelle commande personnalisée crée une facture **brouillon privée**, liée à la commande, dans la section Factures. Elle n'est ni envoyée ni payée automatiquement.
-- Bouton « Ouvrir la facture » dans chaque commande. Une facture déjà liée est réutilisée et ne sera jamais dupliquée.
-- Le brouillon suit les modifications de commande ; une facture envoyée, payée ou annulée n'est pas écrasée automatiquement.
-- Pour chaque commande avec achat spécial de filament, entrer prix de la bobine, pourcentage facturé (0–100 %) et choisir « ajouter au prix » ou « déjà inclus ». Si le projet est 50 $ et le supplément 15 $, la facture brouillon fait 65 $ (taxes par défaut à 0 %, à régler selon obligations applicables).
-- Le montant d'acompte est conservé dans le suivi de commande et rappelé dans les notes de facture, **mais n'est pas automatiquement déduit ni considéré comme un paiement**. Vérifier tout solde avant d'envoyer.
-- Facture et commande sont écrites ensemble au même endroit avant les photos, puis incluses dans les sauvegardes JSON/Firebase existantes.
-- La création de facture ne crée pas de vente et ne déduit pas le stock.
-- Le coût de la bobine et le supplément de prix sont deux informations distinctes; attention à ne pas refacturer le filament déjà inclus dans le prix convenu.
-
-**Test recommandé** : enregistrement d'une commande test avec 20 $ de filament à 50 % ajouté et 40 $ de prix de projet → brouillon à 50 $ ; modifier à 25 % → brouillon à 45 $ ; passer la facture « envoyée » et modifier à nouveau la commande → la facture envoyée reste inchangée.
-
-## v4.11.37 — Filament spécial et facture
-
-- Nouvelle section visuelle dans Commandes personnalisées (case « achat spécial », prix de bobine avant taxes, taxes fournisseur payées, frais de livraison du filament, pourcentage facturé au client et choix supplément/inclus).
-- Calcul en cents : coût complet = bobine + taxes achat + livraison; montant facturé = coût complet × pourcentage. Aperçu immédiatement actualisé.
-- Sur la facture brouillon liée : ligne « Filament acheté spécialement » visible avec le montant facturé au client. Le coût Amazon et les taxes fournisseur restent privés. Si le supplément est inclus, la ligne « projet » est ajustée à la baisse pour ne pas facturer deux fois.
-- Un brouillon lié se met à jour lors de la modification de la commande; une facture envoyée/payée est volontairement préservée sans changement automatique.
-- Les données nouvelles sont conservées dans `customOrders`, les sauvegardes JSON et la synchronisation Firebase privée existante. Les anciennes commandes sans frais de livraison ou taxes fournisseur sont prises en charge (0 $ par défaut).
-- ATTENTION : les taux de taxe sur la vente sont distincts des taxes payées sur Amazon; ne pas utiliser ce simulateur comme calcul fiscal.
-
-## v4.11.37 — formulaire de commandes en popup
-- Commandes personnalisées affiche le tableau de bord et les cartes de commandes par défaut, sans le long formulaire.
-- Bouton « ＋ Ajouter une commande » ouvrant un dialogue natif avec son propre défilement.
-- « Modifier la commande » ouvre le même dialogue prérempli, sans dupliquer la commande.
-- Fermeture par Annuler, X, Échap ou clic sur le fond; les validations restent visibles dans le dialogue.
-- Les factures liées, dimensions, photos, achats de filament, synchronisation et calculs restent inchangés.
-
-
-## v4.11.37 — À imprimer et commandes liées
-- « À imprimer » : bouton Ajouter une impression et formulaire en fenêtre modale (ordinateur et téléphone).
-- Enregistrer une commande personnalisée crée ou met à jour automatiquement une tâche liée dans Firebase (identifiant permanent, aucun doublon).
-- Modification et annulation de commandes : mise à jour de la tâche liée; une impression déjà terminée n’est pas relancée automatiquement.
-- Dans la file, le numéro de commande est visible et ouvre la section des commandes personnalisées.
-- La facture brouillon et le rappel du tableau de bord sont conservés. Les impressions terminées ne créent pas automatiquement une vente, afin d'éviter les doublons.
-- Connexion Firebase requise pour la liaison de file. Si la connexion ou le quota échoue, la commande reste sauvegardée; un avertissement est affiché.
-- Nouvelle photo du produit dans la commande : JJ3D tente aussi de la copier dans l'aperçu de la tâche « À imprimer » (taille adaptée aux règles Firebase); la photo de couleur reste privée dans la commande.
-- Les photos des commandes plus anciennes, sans nouvelle sélection, peuvent devoir être ajoutées séparément à la tâche d'impression.
-- Un clic à l'extérieur du popup « Ajouter une impression », Échap, X et Annuler ferment le formulaire.
+La publication automatique de la Boutique et le filigrane PAYÉ de la facture mobile viennent de la base v4.11.38. Les changements de vente sont des écritures de données privées synchronisées par le système existant ; tester sur les comptes Firebase réels.
