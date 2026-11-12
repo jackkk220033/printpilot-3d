@@ -1,23 +1,14 @@
-# JJ3D v4.11.28 — Photos dans À imprimer
+# JJ3D v4.11.29 — Filigrane PAYÉ sur mobile
 
-**Version complète** fondée sur JJ3D v4.11.27, sans retirer le correctif Firebase de publication automatique confirmé fonctionnel.
+Version complète fondée sur JJ3D v4.11.28.
 
-## Ajouter une impression
+## Correction
+- Le filigrane rouge PAYÉ fait maintenant partie de la facture (position:absolute dans main), au lieu d’être ancré à la fenêtre du téléphone (position:fixed).
+- Sur mobile, il se déplace avec la page lors du défilement, sans flotter sur l’écran.
+- Même position relative au contenu pour l’impression / Enregistrer en PDF.
+- Numéros de version, cache PWA et lien facture mis à jour.
 
-- Cliquer dans la zone « Ctrl+V » puis coller une capture copiée du slicer.
-- Ou choisir une photo depuis le PC.
-- Ou prendre une photo directement depuis un téléphone compatible (« Prendre une photo »).
-- Glisser-déposer une image sur la zone est aussi accepté.
-- L'aperçu s'affiche avant d'ajouter la tâche. La photo est enregistrée dans Firebase en même temps que la tâche.
+## Installation
+Publier tous les fichiers du dossier sur GitHub Pages. Recharger l’application, et régénérer un PDF pour voir la correction : un PDF déjà téléchargé ne peut pas changer automatiquement.
 
-## Impression existante / Modifier
-
-Les mêmes options sont proposées. Sur les tâches existantes, l'envoi de l'image se fait dès la sélection/le collage et l'image apparaît dans la Boutique. Sur le formulaire Modifier, les autres changements attendent le bouton Enregistrer.
-
-## Informations importantes
-
-- Pour le collage sur ordinateur, copier une **image** ou une capture d'écran (touche Windows+Maj+S, puis Ctrl+V). Copier uniquement le fichier dans l'Explorateur de fichiers n'est pas toujours interprété comme une image par le navigateur.
-- La caméra apparaît selon les capacités du navigateur et de l'appareil; si elle n'est pas disponible, le sélecteur d'images est utilisé.
-- Les photos sont compressées et enregistrées dans Firestore (planningPhotos), sous les mêmes règles que les captures existantes. Une connexion Internet est nécessaire à l'enregistrement.
-- Maintient le code JS de synchronisation Boutique v4.11.27; pas de changement aux règles Firebase.
-- Après installation, rafraîchir la PWA et les onglets avec Ctrl+Shift+R.
+Les flux Firebase et la publication Boutique de v4.11.27/28 sont conservés tels quels.
