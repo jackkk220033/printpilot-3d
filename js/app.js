@@ -1088,7 +1088,7 @@
   if(!inv||inv.status==='cancelled'){jjBoutiqueFlowReply(r.id,'','Prépare une facture brouillon valide avant paiement.');return;}
   jjBoutiqueFlowReply(r.id,'awaiting_payment','',{quoteTotal:jjCustomOrderTotal(o),quoteInvoiceNumber:inv.number||'',quotePreviewUrl:o.previewUrl||''});notify('✓ Prix et lien d’aperçu disponibles côté Boutique. Le client doit payer là-bas.');
  }
- // v4.11.39 — import privé d'une demande Boutique, sans création anticipée d'impression ni de vente.
+ // v4.11.40 — import privé d'une demande Boutique, sans création anticipée d'impression ni de vente.
  async function jjImportBoutiqueRequest(r){
   if(!r||!r.id||!r.customer||!r.item){notify('Demande Boutique incomplète.',true);return;}
   const existing=customOrders().find(x=>x.boutiqueRequestId===r.id);
@@ -1303,8 +1303,18 @@
    <label class="jj-inline-check"><input name="boutiqueSettlementReceived" type="checkbox"> <strong>La Boutique m’a remis ma part du paiement</strong></label>
    <label>Date du règlement de la Boutique<input name="boutiqueSettlementDate" type="date"></label>
    </div><label>Notes / instructions (dimensions, personnalisation, conversation…)<textarea name="notes" maxlength="2000" rows="4" placeholder="Détails à ne pas oublier…"></textarea></label>
-   <div class="jj-order-photo-grid"><label>📷 Photo du produit demandé<input type="file" name="photo" accept="image/*"><small>Photo du vase, modèle ou capture d’écran (facultatif).</small></label>
-   <label>🎨 Photo de la couleur / du filament<input type="file" name="colorPhoto" accept="image/*"><small>Une deuxième photo séparée, pour retrouver la teinte exacte.</small></label></div>
+   <div class="jj-order-photo-grid">
+    <div class="jj-order-photo-field"><strong>📷 Photo du produit demandé</strong><label class="jj-photo-upload">
+      <input type="file" name="photo" accept="image/*" aria-label="Choisir la photo du produit demandé">
+      <span class="jj-photo-upload-icon" aria-hidden="true">🖼️</span><span class="jj-photo-upload-title">Choisir une photo</span>
+      <span class="jj-photo-upload-subtitle">Photo, modèle ou capture du slicer</span>
+    </label><div class="jj-upload-result" data-upload-result="photo" aria-live="polite">Aucune nouvelle photo sélectionnée</div><img class="jj-upload-preview" data-upload-preview="photo" alt="Aperçu du modèle demandé" hidden></div>
+    <div class="jj-order-photo-field"><strong>🎨 Photo de la couleur / du filament</strong><label class="jj-photo-upload">
+      <input type="file" name="colorPhoto" accept="image/*" aria-label="Choisir la photo de couleur ou de filament">
+      <span class="jj-photo-upload-icon" aria-hidden="true">🎨</span><span class="jj-photo-upload-title">Choisir une photo</span>
+      <span class="jj-photo-upload-subtitle">Bobine ou couleur exacte demandée</span>
+    </label><div class="jj-upload-result" data-upload-result="colorPhoto" aria-live="polite">Aucune nouvelle photo sélectionnée</div><img class="jj-upload-preview" data-upload-preview="colorPhoto" alt="Aperçu de la couleur demandée" hidden></div>
+   </div>
    <p class="small-hint">La photo est stockée séparément et synchronisée avec Firebase si tu es connecté. Cette commande ne retire pas automatiquement de stock. Une facture brouillon privée est automatiquement associée à son enregistrement; elle n’est ni envoyée ni marquée payée.</p>
    <p id="custom-order-edit-hint" class="small-hint" hidden></p>
    <p id="custom-order-error" class="form-error" role="alert" aria-live="assertive"></p><div class="actions"><button class="primary-btn" type="submit" id="custom-order-submit">💾 Enregistrer la commande</button><button class="secondary-btn" type="button" id="custom-order-reset">Annuler</button></div></form></dialog>`+
@@ -1314,7 +1324,7 @@
    <div class="jj-order-facts"><div><small>👤 Client</small><strong>${esc(o.customer||'—')}</strong><span>${esc(o.contact||'Aucun contact')}</span></div><div><small>🧵 Filament</small><strong>${esc(o.filamentType||'À déterminer')} · ${esc(o.colors||'À préciser')}</strong><span>${o.filamentPurchased?'Bobine spéciale à acheter':'Stock habituel'}</span></div><div><small>📅 Dates</small><strong>Demande : ${esc(o.orderedAt||'—')}</strong><span>Souhaitée : ${esc(o.dueAt||'—')}</span></div><div><small>📐 Dimensions</small><strong>${o.dimensionShape==='box'?'Rectangulaire':'Rond / vase'}</strong><span>${Object.entries(o.dimensionMm||{}).map(([k,v])=>esc(({height:'H',diameter:'Ø',length:'L',width:'l'})[k]||k)+' '+esc(v)+' mm').join(' · ')||'À préciser'}</span></div></div>
    <div class="jj-order-financial"><h4>🧾 Résumé de la facture</h4><div class="jj-order-money-line"><span>Fabrication : ${esc(o.item||'Projet')}</span><strong>${money(o.filamentChargeMode==='included'?Math.max(0,safeNum(o.price)-jjCustomOrderFee(o)):safeNum(o.price))}</strong></div>${o.filamentPurchased?`<div class="jj-order-money-line"><span>Filament spécial (${safeNum(o.filamentChargePercent)} % de ${money(jjFilamentFullCost(o))})</span><strong>${money(jjCustomOrderFee(o))}</strong></div>`:''}<div class="jj-order-money-line jj-order-money-total"><span>Total convenu hors taxes</span><strong>${money(jjCustomOrderTotal(o))}</strong></div><div class="jj-order-money-line"><span>Acompte déclaré</span><strong>${money(o.deposit||0)}</strong></div><div class="jj-order-money-line"><span>Solde indicatif</span><strong>${money(Math.max(0,jjCustomOrderTotal(o)-safeNum(o.deposit)))}</strong></div><div class="jj-order-money-line"><span>Facture liée</span><strong>${esc((extras.invoices||[]).find(i=>i.customOrderId===o.id)?.number||'À créer')} · ${esc((extras.invoices||[]).find(i=>i.customOrderId===o.id)?.status||'brouillon')}</strong></div></div>
    <div class="jj-order-facts"><div><small>✓ Validation client</small><strong>${esc(({approved:'Modèle et prix approuvés',changes:'Corrections demandées',pending:'En attente'})[o.clientApproval]||'En attente')}</strong>${o.previewUrl?`<a href="${esc(o.previewUrl)}" target="_blank" rel="noopener noreferrer">Voir l’aperçu envoyé</a>`:''}</div><div><small>💳 Paiement</small><strong>${o.paymentCollector==='boutique'?'Encaissé par la Boutique':'Direct JJ3D'}</strong><span>Commission Boutique : ${safeNum(o.boutiqueCommissionPercent||0)} %</span>${o.paymentCollector==='boutique'?`<span>${o.boutiqueSettlementReceived?'✓ Règlement reçu de la Boutique'+(o.boutiqueSettlementDate?' le '+esc(o.boutiqueSettlementDate):''):'⏳ Règlement Boutique à recevoir'}</span><strong>Part JJ3D estimée : ${money(jjCustomOrderTotal(o)*(1-safeNum(o.boutiqueCommissionPercent||0)/100))}</strong>`:''}</div></div>
-   <div class="jj-order-notes"><strong>📝 Notes de production</strong><p>${esc(o.notes||'Aucune note')}</p></div></div></details><div class="actions jj-order-card-actions"><button type="button" class="secondary-btn" data-edit-custom-order="${esc(o.id)}">✎ Modifier la commande</button><button type="button" class="secondary-btn" data-invoice-custom-order="${esc(o.id)}">🧾 Ouvrir la facture</button><button type="button" class="secondary-btn" data-queue-custom-order="${esc(o.id)}">🖨️ À imprimer</button><button type="button" class="secondary-btn danger" data-delete-custom-order="${esc(o.id)}">Supprimer</button><select aria-label="Statut de la commande" data-custom-status="${esc(o.id)}">${Object.entries(customOrderStages).map(([k,v])=>`<option value="${k}" ${o.status===k?'selected':''}>${esc(v)}</option>`).join('')}</select></div></article>`).join('')||'<p class="empty">Aucune commande pour le moment. Clique sur « + Ajouter une commande » pour commencer!</p>'}</div></section>`;
+   <div class="jj-order-notes"><strong>📝 Notes de production</strong><p>${esc(o.notes||'Aucune note')}</p></div></div></details><div class="actions jj-order-card-actions"><button type="button" class="secondary-btn" data-edit-custom-order="${esc(o.id)}">✎ Modifier la commande</button><button type="button" class="secondary-btn" data-invoice-custom-order="${esc(o.id)}">🧾 Ouvrir la facture</button><button type="button" class="secondary-btn" data-queue-custom-order="${esc(o.id)}">🖨️ À imprimer</button><button type="button" class="secondary-btn danger" data-delete-custom-order="${esc(o.id)}">Supprimer</button><select class="jj-order-status-select" aria-label="Statut de la commande" data-custom-status="${esc(o.id)}">${Object.entries(customOrderStages).map(([k,v])=>`<option value="${k}" ${o.status===k?'selected':''}>${esc(v)}</option>`).join('')}</select></div></article>`).join('')||'<p class="empty">Aucune commande pour le moment. Clique sur « + Ajouter une commande » pour commencer!</p>'}</div></section>`;
  }
  async function jjQueuePhotoFromOrder(src){
   const img=new Image();img.src=src;await img.decode();
@@ -1385,6 +1395,25 @@
   }catch(err){console.error('Enregistrement commande personnalisée:',err);return fail('Une erreur inattendue est survenue : '+(err?.message||'inconnue')+'. Aucune modification supplémentaire ne sera faite.');}
   finally{if(button?.isConnected){button.disabled=false;button.textContent='💾 Enregistrer la commande';}}
  }
+ function jjResetOrderPhotoInputs(row){
+  const f=document.getElementById('custom-order-form');if(!f)return;
+  for(const [field,flag] of [['photo','hasPhoto'],['colorPhoto','hasColorPhoto']]){
+   const input=f.elements.namedItem(field);if(input)input.value='';
+   const preview=f.querySelector(`[data-upload-preview="${field}"]`);
+   if(preview){if(preview.dataset.objectUrl){URL.revokeObjectURL(preview.dataset.objectUrl);delete preview.dataset.objectUrl;}preview.removeAttribute('src');preview.hidden=true;}
+   const result=f.querySelector(`[data-upload-result="${field}"]`);
+   if(result)result.textContent=row?.[flag]?'✓ Photo déjà enregistrée — choisir une autre photo pour la remplacer':'Aucune nouvelle photo sélectionnée';
+  }
+ }
+ function jjUpdateOrderPhotoInput(input){
+  const f=input.closest('#custom-order-form');if(!f)return;
+  const field=input.name,preview=f.querySelector(`[data-upload-preview="${field}"]`),result=f.querySelector(`[data-upload-result="${field}"]`);
+  if(preview?.dataset.objectUrl){URL.revokeObjectURL(preview.dataset.objectUrl);delete preview.dataset.objectUrl;}
+  const file=input.files?.[0];
+  if(!file){if(preview){preview.hidden=true;preview.removeAttribute('src');}if(result)result.textContent='Aucune nouvelle photo sélectionnée';return;}
+  if(result)result.textContent='✓ '+file.name;
+  if(preview&&file.type.startsWith('image/')){const url=URL.createObjectURL(file);preview.dataset.objectUrl=url;preview.src=url;preview.hidden=false;}
+ }
  function openNewCustomOrder(){
   editingCustomOrderId=null;
   const dialog=document.getElementById('custom-order-dialog');
@@ -1395,7 +1424,7 @@
   document.getElementById('custom-order-submit').textContent='💾 Enregistrer la commande';
   document.getElementById('custom-order-error').textContent='';
   const hint=document.getElementById('custom-order-edit-hint');if(hint)hint.hidden=true;
-  jjDimensionPreview();jjFilamentPurchaseToggle();
+  jjDimensionPreview();jjFilamentPurchaseToggle();jjResetOrderPhotoInputs();
   dialog.showModal();dialog.scrollTop=0;
  }
  function editCustomOrder(id){
@@ -1410,7 +1439,7 @@
   f.elements.namedItem('boutiqueSettlementReceived').checked=!!row.boutiqueSettlementReceived;
   for(const k of ['height','diameter','length','width']){const inp=f.elements.namedItem('dimension_'+k);if(inp)inp.value=String(row.dimensionRaw?.[k]||'');}
   f.elements.namedItem('orderId').value=id;
-  jjDimensionPreview();jjFilamentPurchaseToggle();
+  jjDimensionPreview();jjFilamentPurchaseToggle();jjResetOrderPhotoInputs(row);
   document.getElementById('custom-order-error').textContent='';
   document.getElementById('custom-order-form-title').textContent='✎ Modifier la commande '+(row.number||'');
   document.getElementById('custom-order-submit').textContent='💾 Enregistrer les modifications';
@@ -1447,7 +1476,7 @@
  document.getElementById('print-form').addEventListener('submit',savePrint);
  document.addEventListener('submit',e=>{if(e.target.id==='custom-order-form')saveCustomOrder(e);});
  document.addEventListener('input',e=>{if(e.target.closest('#custom-order-form')&&(/^(dimension_|dimensionShape$|dimensionUnit$)/.test(e.target.name||'')))jjDimensionPreview();if(e.target.closest('#custom-order-form')&&['filamentPurchasePrice','filamentPurchaseTax','filamentPurchaseShipping','filamentChargePercent','price'].includes(e.target.name))jjFilamentPurchaseToggle();});
- document.addEventListener('change',e=>{if(e.target.closest('#custom-order-form')){if(['filamentPurchased','filamentPurchasePrice','filamentPurchaseTax','filamentPurchaseShipping','filamentChargePercent','filamentChargeMode'].includes(e.target.name))jjFilamentPurchaseToggle();if(e.target.name==='dimensionShape'||e.target.name==='dimensionUnit')jjDimensionPreview();}});
+ document.addEventListener('change',e=>{if(e.target.closest('#custom-order-form')&&e.target.matches('input[type=file][name=photo], input[type=file][name=colorPhoto]'))jjUpdateOrderPhotoInput(e.target);if(e.target.closest('#custom-order-form')){if(['filamentPurchased','filamentPurchasePrice','filamentPurchaseTax','filamentPurchaseShipping','filamentChargePercent','filamentChargeMode'].includes(e.target.name))jjFilamentPurchaseToggle();if(e.target.name==='dimensionShape'||e.target.name==='dimensionUnit')jjDimensionPreview();}});
  document.addEventListener('click',e=>{
   const hide=e.target.closest('[data-hide-duplicate-sale]'),restore=e.target.closest('[data-restore-duplicate-sale]');if(!hide&&!restore)return;
   const id=(hide||restore).dataset[hide?'hideDuplicateSale':'restoreDuplicateSale'];const sale=extras.sales.find(s=>s.id===id);if(!sale)return;

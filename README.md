@@ -1,4 +1,4 @@
-# JJ3D v4.11.39 — Boutique → Soumission → Facture → Paiement → Production
+# JJ3D v4.11.40 — Boutique → Soumission → Facture → Paiement → Production
 
 ## Changements
 - Navigation rapide : Commandes personnalisées dans Espace de travail; accès aussi depuis Produits.
@@ -24,3 +24,10 @@
 - Vérifier facture PDF et timbre PAYÉ, auto-publication du catalogue et utilisation mobile.
 
 **Limites** : la Boutique peut déclarer qu'elle a encaissé un montant, mais JJ3D ne vérifie pas automatiquement le mouvement bancaire. L'administrateur doit le vérifier. Le modèle/aperçu est partagé par lien HTTPS, pas par envoi automatique de fichier/email. Les demandes anciennes sans téléphone/courriel restent lisibles. L'application ne comptabilise pas automatiquement les remboursements.
+
+## v4.11.40 — Ergonomie des commandes
+- Produits accessible directement dans Espace de travail (ancienne entrée imbriquée supprimée, menu mobile conservé).
+- Menu Statut des commandes personnalisé selon le thème sombre JJ3D.
+- Téléversement des photos du produit et de la couleur avec de grandes zones cliquables et un aperçu immédiat.
+- Les photos déjà enregistrées restent conservées lorsqu'on modifie une commande sans sélectionner de nouveau fichier.
+- Aucun changement aux règles Firebase ou à la logique métier des commandes/factures/synchronisation Boutique.
