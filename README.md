@@ -1,21 +1,23 @@
-# JJ3D v4.11.27 — Correction de l’auto-publication à la connexion Firebase
+# JJ3D v4.11.28 — Photos dans À imprimer
 
-## Cause identifiée dans v4.11.26
+**Version complète** fondée sur JJ3D v4.11.27, sans retirer le correctif Firebase de publication automatique confirmé fonctionnel.
 
-La fonction `resetCloud()` était appelée lors de chaque événement `onAuthStateChanged()` et remettait `window.JJ3DAutoPublishCatalogue` et `window.JJ3DPublishCatalogueAfterSave` à `null`.
+## Ajouter une impression
 
-Ces fonctions étaient pourtant enregistrées une seule fois au chargement de `cloud.js`. Elles étaient donc effacées lors de la connexion Firebase et jamais réinstallées. Le badge pouvait annoncer « publication automatique active », alors que les événements `printpilot:changed` n'avaient plus de callback à appeler. Cela explique pourquoi les prix restaient différents entre la page Produits et la Boutique malgré les actualisations.
+- Cliquer dans la zone « Ctrl+V » puis coller une capture copiée du slicer.
+- Ou choisir une photo depuis le PC.
+- Ou prendre une photo directement depuis un téléphone compatible (« Prendre une photo »).
+- Glisser-déposer une image sur la zone est aussi accepté.
+- L'aperçu s'affiche avant d'ajouter la tâche. La photo est enregistrée dans Firebase en même temps que la tâche.
 
-## Correction
+## Impression existante / Modifier
 
-- Ne plus effacer les callbacks permanents durant la réinitialisation de session.
-- La déconnexion ne publie pas : les callbacks vérifient déjà `currentUser` avant chaque requête.
-- La publication est lancée dès l'événement de sauvegarde locale `printpilot:changed`, sans ouvrir Synchronisation.
-- Elle reste sérialisée en cas d'enregistrements rapprochés ; un échec est signalé dans le badge Boutique.
-- Aucune action manuelle de publication initiale n'est requise si Firebase est connecté et les règles autorisent le compte administrateur à écrire son catalogue.
+Les mêmes options sont proposées. Sur les tâches existantes, l'envoi de l'image se fait dès la sélection/le collage et l'image apparaît dans la Boutique. Sur le formulaire Modifier, les autres changements attendent le bouton Enregistrer.
 
-## Vérification recommandée
+## Informations importantes
 
-Après publication GitHub Pages et recharge forcée (`Ctrl + Shift + R`), changer le prix d'une variante, cliquer Enregistrer, vérifier la transition du badge « publication automatique prévue » → « Boutique : à jour ✓ » et comparer côté Boutique. Ne pas cliquer sur la publication manuelle pendant le test. Si erreur : copier le message exact du badge.
-
-Les fichiers JS ont été vérifiés statiquement. Impossible de valider une écriture réelle sur la base Firebase privée depuis cet environnement.
+- Pour le collage sur ordinateur, copier une **image** ou une capture d'écran (touche Windows+Maj+S, puis Ctrl+V). Copier uniquement le fichier dans l'Explorateur de fichiers n'est pas toujours interprété comme une image par le navigateur.
+- La caméra apparaît selon les capacités du navigateur et de l'appareil; si elle n'est pas disponible, le sélecteur d'images est utilisé.
+- Les photos sont compressées et enregistrées dans Firestore (planningPhotos), sous les mêmes règles que les captures existantes. Une connexion Internet est nécessaire à l'enregistrement.
+- Maintient le code JS de synchronisation Boutique v4.11.27; pas de changement aux règles Firebase.
+- Après installation, rafraîchir la PWA et les onglets avec Ctrl+Shift+R.

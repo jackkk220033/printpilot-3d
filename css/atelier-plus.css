@@ -87,3 +87,18 @@ button.danger-action:hover{background:#73313e;}
 #jj-queue-edit .jj-queue-edit-top button{background:#263655;color:white;border:1px solid #58698d;border-radius:8px;padding:7px 11px}
 #jj-queue-edit .jj-queue-edit-top button:hover{background:#bc344a}
 @media(max-width:540px){#jj-queue-edit .jj-queue-edit-form{padding:16px}}
+
+/* JJ3D v4.11.28 — photo de planification : coller, importer, photographier */
+.jj-queue-photo-entry{box-sizing:border-box;width:100%;min-width:0;border:1px dashed #7888b2;border-radius:12px;background:#101c34;padding:12px;margin:8px 0 12px;color:#dbe5ff;outline:none}
+.jj-queue-photo-entry:focus,.jj-queue-photo-entry:focus-within{border-color:#b18bff;box-shadow:0 0 0 2px #9f77f644}
+.jj-queue-photo-preview{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;text-align:center;min-height:65px;padding:10px;border-radius:9px;background:#0d1629;overflow:hidden}
+.jj-queue-photo-preview img{display:block;max-width:180px;max-height:155px;object-fit:contain;border-radius:7px}
+.jj-queue-photo-preview span{font-weight:700;color:#9debc0}
+.jj-queue-photo-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:9px}
+.jj-queue-photo-actions .photo-button{margin:0;display:inline-flex;align-items:center;min-height:34px;font-size:.88rem}
+.jj-queue-photo-entry small{display:block;text-align:center;color:#afbbd2;margin-top:7px;line-height:1.5}
+#queue-form>.jj-queue-photo-entry{flex:1 1 100%;}
+.queue-detail .jj-queue-photo-entry{max-width:480px}
+#jj-queue-edit .jj-queue-photo-entry{margin:0}
+@media(max-width:560px){.jj-queue-photo-actions{flex-direction:column}.jj-queue-photo-actions .photo-button{justify-content:center}.jj-queue-photo-preview{min-height:80px}}
+@media print{.jj-queue-photo-entry{display:none!important}}
