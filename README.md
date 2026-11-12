@@ -1,33 +1,12 @@
-# JJ3D v4.11.40 — Boutique → Soumission → Facture → Paiement → Production
+# JJ3D v4.11.41 — Demandes Boutique / dates / règlement
 
-## Changements
-- Navigation rapide : Commandes personnalisées dans Espace de travail; accès aussi depuis Produits.
-- Commandes : détails en panneaux, résumé type facture et approbation client, lien vers aperçu et commission Boutique.
-- Finances : Ventes → Coûts matière → Liste des prix. Doublons possibles identifiés par produit/montant/quantité : action **Masquer** explicite et réversible (aucune suppression automatique des vraies ventes).
-- Portail Boutique : nom complet du client, téléphone, email, projet, quantité, couleur, date souhaitée, photo, précisions, consentement à l'évaluation. Mes demandes envoyées, prix confirmé, lien aperçu et déclaration d'un paiement reçu par la Boutique.
-- Admin demandes Boutique : importer sans lancer d'impression, approuver modèle/prix, demander paiement, vérifier paiement déclaré. Une facture PAYÉE crée une vente (sans nouvelle déduction de stock); la commission Boutique est incluse dans le profit estimé si configurée.
-- Autorisation production : les commandes importées ont `productionHold:true`, donc ne créent une tâche dans À imprimer qu'après vérification administrative du paiement.
+Version complète à publier sur GitHub Pages, issue de v4.11.40.
 
-## Installation
-1. Sauvegarder le JSON JJ3D actuel.
-2. Publier tous les fichiers du ZIP sur GitHub Pages.
-3. **IMPORTANT : remplacer les règles Firestore par le fichier `firestore.rules` du ZIP et les publier**. Sinon les nouveaux champs Boutique et déclarations de paiement seront refusés.
-4. Recharger la PWA et le portail Boutique (Ctrl+Shift+R). Mettre à jour les deux côtés.
+- Correctif d’envoi des demandes personnalisées Boutique : `f.elements.item` désignait la méthode `item()` du navigateur au lieu du champ « Projet à fabriquer ». Utilise `namedItem('item')`.
+- Messages visibles en cas d’échec; ne vide pas le formulaire si l’envoi échoue.
+- Bouton calendrier à côté de « Date souhaitée » dans le formulaire Boutique; calendrier natif du navigateur.
+- Case de confirmation Boutique mieux alignée.
+- Commandes administrateur : la case « J’ai reçu ma part de la Boutique » est maintenant expliquée et n’apparaît que si l’encaissement est effectué par la Boutique. Elle ne signifie **pas** que le client a payé.
+- Dates administrateur : ouverture du sélecteur natif lors du clic, lorsque le navigateur le prend en charge.
 
-## Tests de validation recommandés
-- Créer une demande Boutique avec nom complet/téléphone/email. Vérifier qu'elle apparaît dans Atelier → Demandes Boutique.
-- Importer; ouvrir Commandes personnalisées, indiquer le prix, le lien d'aperçu et approbation; la demande ne doit pas apparaître dans À imprimer.
-- Revenir dans Demandes Boutique et cliquer « Client a approuvé — demander paiement »; vérifier le montant dans le portail Boutique.
-- Signaler paiement dans la Boutique; l'admin doit le voir sans qu'il soit encore validé.
-- Vérifier paiement en admin; contrôler facture PAYÉE, une vente financière unique, commission, puis tâche À imprimer.
-- Masquer et rétablir un doublon de vente directe (conserver la vente historique).
-- Vérifier facture PDF et timbre PAYÉ, auto-publication du catalogue et utilisation mobile.
-
-**Limites** : la Boutique peut déclarer qu'elle a encaissé un montant, mais JJ3D ne vérifie pas automatiquement le mouvement bancaire. L'administrateur doit le vérifier. Le modèle/aperçu est partagé par lien HTTPS, pas par envoi automatique de fichier/email. Les demandes anciennes sans téléphone/courriel restent lisibles. L'application ne comptabilise pas automatiquement les remboursements.
-
-## v4.11.40 — Ergonomie des commandes
-- Produits accessible directement dans Espace de travail (ancienne entrée imbriquée supprimée, menu mobile conservé).
-- Menu Statut des commandes personnalisé selon le thème sombre JJ3D.
-- Téléversement des photos du produit et de la couleur avec de grandes zones cliquables et un aperçu immédiat.
-- Les photos déjà enregistrées restent conservées lorsqu'on modifie une commande sans sélectionner de nouveau fichier.
-- Aucun changement aux règles Firebase ou à la logique métier des commandes/factures/synchronisation Boutique.
+Aucun changement aux règles Firestore. Conserve la synchronisation automatique catalogue et le filigrane PAYÉ corrigé. Faire une sauvegarde JSON avant déploiement. Vérifier avec les comptes réels après publication.

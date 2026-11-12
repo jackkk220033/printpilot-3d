@@ -179,7 +179,7 @@ if(!configOK){
       window.dispatchEvent(new Event('printpilot:photos-changed'));
     }
   };
-  // 4.11.40 — Commandes personnalisées ↔ file Atelier+ (même document Firebase).
+  // 4.11.41 — Commandes personnalisées ↔ file Atelier+ (même document Firebase).
   // Identifiant stable : enregistrer plusieurs fois la commande ne crée jamais un deuxième print.
   const orderQueueRef=()=>doc(db,'boutiques',currentUser.uid,'management','current');
   const queueTaskForOrder=(order,previous)=>{

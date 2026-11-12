@@ -1088,7 +1088,7 @@
   if(!inv||inv.status==='cancelled'){jjBoutiqueFlowReply(r.id,'','Prépare une facture brouillon valide avant paiement.');return;}
   jjBoutiqueFlowReply(r.id,'awaiting_payment','',{quoteTotal:jjCustomOrderTotal(o),quoteInvoiceNumber:inv.number||'',quotePreviewUrl:o.previewUrl||''});notify('✓ Prix et lien d’aperçu disponibles côté Boutique. Le client doit payer là-bas.');
  }
- // v4.11.40 — import privé d'une demande Boutique, sans création anticipée d'impression ni de vente.
+ // v4.11.41 — import privé d'une demande Boutique, sans création anticipée d'impression ni de vente.
  async function jjImportBoutiqueRequest(r){
   if(!r||!r.id||!r.customer||!r.item){notify('Demande Boutique incomplète.',true);return;}
   const existing=customOrders().find(x=>x.boutiqueRequestId===r.id);
@@ -1216,6 +1216,10 @@
  function jjFilamentFullCost(o){return (jjCents(o?.filamentPurchasePrice)+jjCents(o?.filamentPurchaseTax)+jjCents(o?.filamentPurchaseShipping))/100;}
  function jjCustomOrderFee(o){return o?.filamentPurchased?Math.round(jjCents(jjFilamentFullCost(o))*Math.min(100,Math.max(0,safeNum(o.filamentChargePercent)))/100)/100:0;}
  function jjCustomOrderTotal(o){return (jjCents(o?.price)+(o?.filamentChargeMode==='included'?0:jjCents(jjCustomOrderFee(o))))/100;}
+ function jjBoutiqueSettlementToggle(){
+  const f=document.getElementById('custom-order-form'),sec=document.getElementById('jj-boutique-settlement');
+  if(!f||!sec)return;const isBoutique=f.elements.namedItem('paymentCollector')?.value==='boutique';sec.hidden=!isBoutique;
+ }
  function jjFilamentPurchaseToggle(){
   const f=document.getElementById('custom-order-form');if(!f)return;
   const yes=f.elements.namedItem('filamentPurchased').checked;
@@ -1300,8 +1304,10 @@
    <label>Fichier / aperçu envoyé au client (lien facultatif)<input name="previewUrl" type="url" maxlength="600" placeholder="https://…"></label>
    <label>Encaissement<select name="paymentCollector"><option value="direct">Paiement direct à JJ3D</option><option value="boutique">Paiement encaissé à la Boutique</option></select></label>
    <label>Commission Boutique (%)<input name="boutiqueCommissionPercent" type="number" min="0" max="100" step="0.5" value="30"></label>
-   <label class="jj-inline-check"><input name="boutiqueSettlementReceived" type="checkbox"> <strong>La Boutique m’a remis ma part du paiement</strong></label>
-   <label>Date du règlement de la Boutique<input name="boutiqueSettlementDate" type="date"></label>
+   <div class="jj-boutique-settlement" id="jj-boutique-settlement" hidden><h3>🏪 Règlement avec la Boutique</h3>
+   <p class="small-hint">À cocher uniquement après que le client a payé à la Boutique ET que la Boutique t’a réellement remis ta part (après sa commission). Ce n’est pas la confirmation du paiement du client.</p>
+   <label class="jj-inline-check jj-boutique-settlement-check"><input name="boutiqueSettlementReceived" type="checkbox"> <span>Oui, j’ai reçu ma part de la Boutique</span></label>
+   <label>Date à laquelle j’ai reçu mon argent<input name="boutiqueSettlementDate" type="date"></label></div>
    </div><label>Notes / instructions (dimensions, personnalisation, conversation…)<textarea name="notes" maxlength="2000" rows="4" placeholder="Détails à ne pas oublier…"></textarea></label>
    <div class="jj-order-photo-grid">
     <div class="jj-order-photo-field"><strong>📷 Photo du produit demandé</strong><label class="jj-photo-upload">
@@ -1424,7 +1430,7 @@
   document.getElementById('custom-order-submit').textContent='💾 Enregistrer la commande';
   document.getElementById('custom-order-error').textContent='';
   const hint=document.getElementById('custom-order-edit-hint');if(hint)hint.hidden=true;
-  jjDimensionPreview();jjFilamentPurchaseToggle();jjResetOrderPhotoInputs();
+  jjDimensionPreview();jjFilamentPurchaseToggle();jjBoutiqueSettlementToggle();jjResetOrderPhotoInputs();
   dialog.showModal();dialog.scrollTop=0;
  }
  function editCustomOrder(id){
@@ -1439,7 +1445,7 @@
   f.elements.namedItem('boutiqueSettlementReceived').checked=!!row.boutiqueSettlementReceived;
   for(const k of ['height','diameter','length','width']){const inp=f.elements.namedItem('dimension_'+k);if(inp)inp.value=String(row.dimensionRaw?.[k]||'');}
   f.elements.namedItem('orderId').value=id;
-  jjDimensionPreview();jjFilamentPurchaseToggle();jjResetOrderPhotoInputs(row);
+  jjDimensionPreview();jjFilamentPurchaseToggle();jjBoutiqueSettlementToggle();jjResetOrderPhotoInputs(row);
   document.getElementById('custom-order-error').textContent='';
   document.getElementById('custom-order-form-title').textContent='✎ Modifier la commande '+(row.number||'');
   document.getElementById('custom-order-submit').textContent='💾 Enregistrer les modifications';
@@ -1474,9 +1480,13 @@
  document.getElementById('close-dialog').addEventListener('click',()=>dialog.close());
  document.getElementById('cancel-dialog').addEventListener('click',()=>dialog.close());
  document.getElementById('print-form').addEventListener('submit',savePrint);
+ document.addEventListener('click',e=>{
+  const dt=e.target.closest('#custom-order-form input[type=date]');if(!dt)return;
+  try{if(typeof dt.showPicker==='function')dt.showPicker();}catch(_){}
+ });
  document.addEventListener('submit',e=>{if(e.target.id==='custom-order-form')saveCustomOrder(e);});
  document.addEventListener('input',e=>{if(e.target.closest('#custom-order-form')&&(/^(dimension_|dimensionShape$|dimensionUnit$)/.test(e.target.name||'')))jjDimensionPreview();if(e.target.closest('#custom-order-form')&&['filamentPurchasePrice','filamentPurchaseTax','filamentPurchaseShipping','filamentChargePercent','price'].includes(e.target.name))jjFilamentPurchaseToggle();});
- document.addEventListener('change',e=>{if(e.target.closest('#custom-order-form')&&e.target.matches('input[type=file][name=photo], input[type=file][name=colorPhoto]'))jjUpdateOrderPhotoInput(e.target);if(e.target.closest('#custom-order-form')){if(['filamentPurchased','filamentPurchasePrice','filamentPurchaseTax','filamentPurchaseShipping','filamentChargePercent','filamentChargeMode'].includes(e.target.name))jjFilamentPurchaseToggle();if(e.target.name==='dimensionShape'||e.target.name==='dimensionUnit')jjDimensionPreview();}});
+ document.addEventListener('change',e=>{if(e.target.closest('#custom-order-form')&&e.target.matches('input[type=file][name=photo], input[type=file][name=colorPhoto]'))jjUpdateOrderPhotoInput(e.target);if(e.target.closest('#custom-order-form')){if(['filamentPurchased','filamentPurchasePrice','filamentPurchaseTax','filamentPurchaseShipping','filamentChargePercent','filamentChargeMode'].includes(e.target.name))jjFilamentPurchaseToggle();if(e.target.name==='dimensionShape'||e.target.name==='dimensionUnit')jjDimensionPreview();if(e.target.name==='paymentCollector')jjBoutiqueSettlementToggle();}});
  document.addEventListener('click',e=>{
   const hide=e.target.closest('[data-hide-duplicate-sale]'),restore=e.target.closest('[data-restore-duplicate-sale]');if(!hide&&!restore)return;
   const id=(hide||restore).dataset[hide?'hideDuplicateSale':'restoreDuplicateSale'];const sale=extras.sales.find(s=>s.id===id);if(!sale)return;
