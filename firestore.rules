@@ -129,6 +129,33 @@ service cloud.firestore {
           && (!('customerApproval' in request.resource.data) || request.resource.data.customerApproval in ['pending','approved','changes'])
           && (!('customerFeedback' in request.resource.data) || (request.resource.data.customerFeedback is string && request.resource.data.customerFeedback.size() <= 500))
           && request.resource.data.resolvedAt == request.time;
+        // v4.11.46 — édition simple du ticket par le propriétaire, avec capture JPEG et prix.
+        allow update: if isBoutiqueOwner(ownerUid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quoteTotal','quotePhoto','quoteNote','status','customerApproval','customerFeedback','resolvedAt'])
+          && resource.data.status != 'paid' && resource.data.status != 'rejected'
+          && request.resource.data.status == 'quoted'
+          && request.resource.data.quoteTotal is number && request.resource.data.quoteTotal > 0 && request.resource.data.quoteTotal <= 100000
+          && request.resource.data.quotePhoto is string && request.resource.data.quotePhoto.size() <= 150000
+          && request.resource.data.quotePhoto.matches('^data:image/jpeg;base64,.*$')
+          && request.resource.data.quoteNote is string && request.resource.data.quoteNote.size() <= 500
+          && request.resource.data.customerApproval == 'pending'
+          && request.resource.data.customerFeedback == ''
+          && request.resource.data.resolvedAt == request.time;
+        allow update: if isBoutiqueOwner(ownerUid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','customerApproval','approvalBy','approvalUpdatedAt','resolvedAt'])
+          && resource.data.status in ['pending','reviewed','quoted']
+          && request.resource.data.status == 'awaiting_payment'
+          && request.resource.data.customerApproval == 'approved'
+          && request.resource.data.approvalBy == 'JJ3D'
+          && resource.data.quoteTotal is number && resource.data.quoteTotal > 0
+          && ((resource.data.quotePhoto is string && resource.data.quotePhoto.matches('^data:image/jpeg;base64,.*$')) || (resource.data.photo is string && resource.data.photo.matches('^data:image/jpeg;base64,.*$')))
+          && request.resource.data.approvalUpdatedAt == request.time && request.resource.data.resolvedAt == request.time;
+        allow update: if isBoutiqueOwner(ownerUid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','paymentValidatedAt','resolvedAt'])
+          && resource.data.status in ['awaiting_payment','payment_reported']
+          && resource.data.customerApproval == 'approved'
+          && request.resource.data.status == 'paid'
+          && request.resource.data.paymentValidatedAt == request.time && request.resource.data.resolvedAt == request.time;
         // Admin may refresh the Boutique-visible quote/invoice summary while retaining the status.
         // Supplier costs, private invoice notes, and workspace data are never published.
         allow update: if isBoutiqueOwner(ownerUid)
@@ -152,7 +179,7 @@ service cloud.firestore {
           && request.resource.data.approvalUpdatedAt == request.time
           && (request.resource.data.status != 'awaiting_payment' ||
               (resource.data.quoteTotal is number && resource.data.quoteTotal > 0 &&
-               resource.data.quotePreviewUrl is string && resource.data.quotePreviewUrl.matches('^https://.+$')));
+               ((resource.data.quotePhoto is string && resource.data.quotePhoto.matches('^data:image/jpeg;base64,.*$')) || (resource.data.photo is string && resource.data.photo.matches('^data:image/jpeg;base64,.*$')))));
         // Un membre autorisé peut uniquement déclarer le paiement de sa propre demande,
         // sans pouvoir valider celui-ci ni changer le prix ou le client.
         allow update: if canViewBoutique(ownerUid) && resource.data.senderUid == request.auth.uid
@@ -163,9 +190,9 @@ service cloud.firestore {
           && request.resource.data.paymentMethod is string && request.resource.data.paymentMethod in ['Espèces','Virement Interac','Carte','Autre']
           && request.resource.data.paymentDate is string && request.resource.data.paymentDate.size() == 10
           && request.resource.data.paymentReportedAt == request.time;
-        // v4.11.43: both portals may delete an unpaid request; paid history is protected.
+        // v4.11.47: deletion syncs both portals; invoices/accounting stored separately are retained.
         allow delete: if isBoutiqueOwner(ownerUid) ||
-          (canViewBoutique(ownerUid) && resource.data.senderUid == request.auth.uid && resource.data.status != 'paid');
+          (canViewBoutique(ownerUid) && resource.data.senderUid == request.auth.uid);
       }
       // v4.11 — Commandes en une seule étape : boutique écrit, administrateur traite.
       match /orders/{orderId} {

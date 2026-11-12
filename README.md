@@ -1,16 +1,9 @@
-# JJ3D v4.11.45 — Approbation du prix ET du fichier 3D dans la Boutique
+# JJ3D v4.11.47 — Suppression synchronisée des demandes personnalisées
 
-Correction du flux de commandes personnalisées :
-1. Boutique : envoyer la demande → JJ3D : importer, renseigner le prix sur la facture et le **lien HTTPS du fichier / aperçu** dans Commandes personnalisées.
-2. JJ3D, Atelier > Demandes : « Envoyer prix et fichier à valider » publie l’offre.
-3. Boutique > Commandes spéciales > Mes demandes : voir facture, prix total, lien de fichier, **Approuver** ou **Demander une modification**.
-4. Après approbation seulement, Boutique : déclarer un paiement. JJ3D vérifie le paiement et libère l'impression.
-5. La tâche À imprimer demeure verrouillée jusqu’à cette vérification. La référence `Commande JJ-B-...` et l’horaire à préciser sont normaux : il faut saisir la durée de l'impression.
+Depuis **Atelier → Demandes**, clique **Supprimer des deux côtés** sur la demande, même si elle est marquée « Payée ». Le même bouton figure dans **Boutique → Mes demandes personnalisées**. La suppression du document partagé Firestore retire la demande des deux affichages. Les tâches d’impression associées sont aussi retirées de la file de l’Atelier par synchronisation.
 
-## Installation
-- Sauvegarder les données JSON avant mise à jour.
-- **IMPORTANT : republier `firestore.rules` dans Firebase Console → Firestore Database → Rules**, sinon les boutons de validation seront refusés par Firebase.
-- Mettre en ligne **tout le dossier** sur l'hébergement habituel. Forcer l’actualisation avec Ctrl+Shift+R, ou recharger l'application PWA.
-- Le fichier 3D n’est pas téléversé automatiquement : l’administrateur doit fournir un lien HTTPS accessible à la Boutique, par exemple vers une page d’aperçu ou un fichier partagé. Ne partage pas de lien privé.
-- L'aperçu de facture côté Boutique reste un résumé; les documents financiers privés et coûts fournisseurs ne sont pas exposés.
-- Pas de serveur de test Firebase dans cet environnement : le parcours doit être vérifié avec les deux comptes après déploiement.
+⚠️ Une demande réellement payée ne devrait pas être supprimée par erreur. Une confirmation spécifique apparaît. Les factures, paiements et rapports comptables déjà créés **ne sont pas effacés**.
+
+**Installation :** publier tous les fichiers et mettre à jour `firestore.rules` dans Firebase Console. Recharger l’application installée au besoin.
+
+**Notifications mobiles :** cette version ne crée pas de service Firebase Cloud Messaging. Les notifications push en arrière-plan ne sont pas encore prises en charge.

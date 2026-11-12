@@ -1094,7 +1094,7 @@
   jjBoutiqueFlowReply(r.id,'quoted','',{quoteTotal:total,quoteInvoiceNumber:inv.number||'',quotePreviewUrl:preview,quoteLines:lines,quoteInvoiceStatus:inv.status||'draft'});
   notify('✓ Proposition envoyée à la Boutique. La Boutique doit maintenant approuver le fichier et le prix.');
  }
- // v4.11.45 — import privé d'une demande Boutique, sans création anticipée d'impression ni de vente.
+ // v4.11.47 — import privé d'une demande Boutique, sans création anticipée d'impression ni de vente.
  async function jjImportBoutiqueRequest(r){
   if(!r||!r.id||!r.customer||!r.item){notify('Demande Boutique incomplète.',true);return;}
   const existing=customOrders().find(x=>x.boutiqueRequestId===r.id);
