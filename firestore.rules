@@ -121,11 +121,13 @@ service cloud.firestore {
           && request.resource.data.createdAt == request.time;
         allow get, list: if isBoutiqueOwner(ownerUid) || (canViewBoutique(ownerUid) && resource.data.senderUid == request.auth.uid);
         allow update: if isBoutiqueOwner(ownerUid)
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','resolvedAt','quoteTotal','quoteInvoiceNumber','quotePreviewUrl','quoteLines','quoteInvoiceStatus'])
-          && request.resource.data.status in ['accepted','rejected','reviewed','awaiting_payment','paid']
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','resolvedAt','quoteTotal','quoteInvoiceNumber','quotePreviewUrl','quoteLines','quoteInvoiceStatus','customerApproval','customerFeedback'])
+          && request.resource.data.status in ['accepted','rejected','reviewed','quoted','awaiting_payment','paid']
           && (!('quoteTotal' in request.resource.data) || (request.resource.data.quoteTotal is number && request.resource.data.quoteTotal >= 0 && request.resource.data.quoteTotal <= 100000))
           && (!('quoteInvoiceNumber' in request.resource.data) || (request.resource.data.quoteInvoiceNumber is string && request.resource.data.quoteInvoiceNumber.size() <= 60))
           && (!('quotePreviewUrl' in request.resource.data) || (request.resource.data.quotePreviewUrl is string && request.resource.data.quotePreviewUrl.size() <= 600))
+          && (!('customerApproval' in request.resource.data) || request.resource.data.customerApproval in ['pending','approved','changes'])
+          && (!('customerFeedback' in request.resource.data) || (request.resource.data.customerFeedback is string && request.resource.data.customerFeedback.size() <= 500))
           && request.resource.data.resolvedAt == request.time;
         // Admin may refresh the Boutique-visible quote/invoice summary while retaining the status.
         // Supplier costs, private invoice notes, and workspace data are never published.
@@ -139,6 +141,18 @@ service cloud.firestore {
           && request.resource.data.quoteDiscount is number && request.resource.data.quoteDiscount >= 0
           && request.resource.data.quoteShipping is number && request.resource.data.quoteShipping >= 0
           && request.resource.data.quoteTax is number && request.resource.data.quoteTax >= 0;
+        // Le compte Boutique ayant créé la demande peut approuver le prix ET le modèle,
+        // ou demander une révision. Aucun changement de prix ou fichier côté Boutique.
+        allow update: if canViewBoutique(ownerUid) && resource.data.senderUid == request.auth.uid
+          && resource.data.status == 'quoted'
+          && request.resource.data.status in ['awaiting_payment','reviewed']
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','customerApproval','customerFeedback','approvalUpdatedAt'])
+          && request.resource.data.customerApproval == (request.resource.data.status == 'awaiting_payment' ? 'approved' : 'changes')
+          && request.resource.data.customerFeedback is string && request.resource.data.customerFeedback.size() <= 500
+          && request.resource.data.approvalUpdatedAt == request.time
+          && (request.resource.data.status != 'awaiting_payment' ||
+              (resource.data.quoteTotal is number && resource.data.quoteTotal > 0 &&
+               resource.data.quotePreviewUrl is string && resource.data.quotePreviewUrl.matches('^https://.+$')));
         // Un membre autorisé peut uniquement déclarer le paiement de sa propre demande,
         // sans pouvoir valider celui-ci ni changer le prix ou le client.
         allow update: if canViewBoutique(ownerUid) && resource.data.senderUid == request.auth.uid

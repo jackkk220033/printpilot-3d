@@ -1081,14 +1081,20 @@
  function jjBoutiqueFlowReply(requestId,nextStatus,error='',quoteDetails=null){const iframe=document.getElementById('pp-atelier-frame');iframe?.contentWindow?.postMessage({source:'jj3d-admin-flow',requestId,nextStatus,error,quoteDetails},location.origin);}
  async function jjApproveBoutiqueQuote(r){
   const o=customOrders().find(x=>x.boutiqueRequestId===r?.id);
-  if(!o){jjBoutiqueFlowReply(r?.id,'','Importe d’abord cette demande.');return;}
-  if(o.clientApproval!=='approved'){jjBoutiqueFlowReply(r.id,'','Modifie la commande dans JJ3D : indique « Modèle et prix approuvés » avant de demander le paiement.');return;}
-  if(!(jjCustomOrderTotal(o)>0)){jjBoutiqueFlowReply(r.id,'','Indique un prix convenu supérieur à zéro dans la commande.');return;}
+  if(!o){jjBoutiqueFlowReply(r?.id,'','Importe d’abord cette demande dans Commandes personnalisées.');return;}
   const inv=(extras.invoices||[]).find(i=>i.customOrderId===o.id);
-  if(!inv||inv.status==='cancelled'){jjBoutiqueFlowReply(r.id,'','Prépare une facture brouillon valide avant paiement.');return;}
-  jjBoutiqueFlowReply(r.id,'awaiting_payment','',{quoteTotal:jjCustomOrderTotal(o),quoteInvoiceNumber:inv.number||'',quotePreviewUrl:o.previewUrl||'',quoteLines:(inv.lines||[]).slice(0,8).map(l=>({name:String(l.name||'').slice(0,160),qty:Math.max(1,Number(l.qty)||1),price:Math.max(0,Number(l.price)||0)})),quoteInvoiceStatus:inv.status||'draft'});notify('✓ Prix et lien d’aperçu disponibles côté Boutique. Le client doit payer là-bas.');
+  if(!inv||inv.status==='cancelled'){jjBoutiqueFlowReply(r.id,'','Enregistre une facture valide pour cette commande avant de publier l’offre.');return;}
+  const preview=String(o.previewUrl||'').trim();
+  if(!/^https:\/\/[^\s]+$/i.test(preview)){jjBoutiqueFlowReply(r.id,'','Dans Commandes personnalisées → Modifier, ajoute un lien HTTPS vers le fichier / aperçu 3D puis enregistre. La Boutique doit pouvoir voir le modèle.');return;}
+  const lines=(inv.lines||[]).slice(0,8).map(l=>({name:String(l.name||'').slice(0,160),qty:Math.max(1,Number(l.qty)||1),price:Math.max(0,Number(l.price)||0)}));
+  const subtotal=lines.reduce((sum,l)=>sum+l.qty*l.price,0),discount=Math.min(subtotal,Math.max(0,Number(inv.discount)||0));
+  const base=subtotal-discount+Math.max(0,Number(inv.shipping)||0);
+  const total=Math.round((base+base*Math.max(0,Math.min(100,Number(inv.taxRate)||0))/100)*100)/100;
+  if(!(total>0)){jjBoutiqueFlowReply(r.id,'','La facture doit avoir un total supérieur à 0 $ avant publication.');return;}
+  jjBoutiqueFlowReply(r.id,'quoted','',{quoteTotal:total,quoteInvoiceNumber:inv.number||'',quotePreviewUrl:preview,quoteLines:lines,quoteInvoiceStatus:inv.status||'draft'});
+  notify('✓ Proposition envoyée à la Boutique. La Boutique doit maintenant approuver le fichier et le prix.');
  }
- // v4.11.44 — import privé d'une demande Boutique, sans création anticipée d'impression ni de vente.
+ // v4.11.45 — import privé d'une demande Boutique, sans création anticipée d'impression ni de vente.
  async function jjImportBoutiqueRequest(r){
   if(!r||!r.id||!r.customer||!r.item){notify('Demande Boutique incomplète.',true);return;}
   const existing=customOrders().find(x=>x.boutiqueRequestId===r.id);
@@ -1106,7 +1112,7 @@
   if(!r?.id)return;
   const o=customOrders().find(x=>x.boutiqueRequestId===r.id);
   if(!o){notify('Importe cette demande dans Commandes personnalisées avant de valider le paiement.',true);return;}
-  if(o.clientApproval!=='approved'){notify('Le modèle et le prix doivent être confirmés avant de valider la commande.',true);return;}
+  if(r.customerApproval!=='approved'){notify('La Boutique doit approuver le modèle et le prix avant validation du paiement.',true);return;}
   const inv=(extras.invoices||[]).find(x=>x.customOrderId===o.id);
   if(!inv){notify('Facture liée introuvable.',true);return;}
   if(r.status!=='payment_reported'){notify('Aucun paiement déclaré par la Boutique.',true);return;}
@@ -1114,7 +1120,7 @@
   if(!confirm('As-tu réellement vérifié le paiement de '+o.customer+' reçu par la Boutique? Cela marquera la facture PAYÉE et autorisera la production.'))return;
   const when=new Date().toISOString(),date=String(r.paymentDate||when.slice(0,10));
   const updatedInvoice={...inv,status:'paid',paidDate:date,paymentMethod:'Boutique — '+String(r.paymentMethod||'non précisé'),updatedAt:when,history:[...(inv.history||[]),{at:when,action:'Paiement Boutique vérifié par administrateur',status:'paid'}]};
-  const updatedOrder={...o,productionHold:false,paymentValidatedAt:when,status:'approved',updatedAt:when};
+  const updatedOrder={...o,clientApproval:'approved',productionHold:false,paymentValidatedAt:when,status:'approved',updatedAt:when};
   if(!persistExtras({...extras,invoices:(extras.invoices||[]).map(x=>x.id===inv.id?updatedInvoice:x),customOrders:customOrders().map(x=>x.id===o.id?updatedOrder:x)})){notify('Impossible de valider le paiement.',true);return;}
   try{await window.JJ3DShareBoutiqueQuote?.(updatedOrder,updatedInvoice);}catch(e){notify('Paiement validé, mais facture Boutique non actualisée : '+e.message,true);}
   try{await window.JJ3DSyncOrderQueue?.(updatedOrder);}catch(e){notify('Facture payée, mais la tâche À imprimer doit être vérifiée : '+e.message,true);}

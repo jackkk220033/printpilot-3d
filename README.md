@@ -1,10 +1,16 @@
-# JJ3D v4.11.44 — suivi Boutique / facture / À imprimer
+# JJ3D v4.11.45 — Approbation du prix ET du fichier 3D dans la Boutique
 
-- Les fiches de demandes Boutique affichent le résumé de facture partagé (prix, lignes, statut, référence), sans les données comptables privées.
-- Lorsqu’une commande provenant de la Boutique est enregistrée dans l’administration, les données de facture partageables sont envoyées dans `customRequests` sur Firebase.
-- À l’arrivée d’une demande, le compte administrateur connecté crée une tâche de préproduction `🔒 En attente de validation` dans À imprimer ; elle est liée par ID et son démarrage est bloqué jusqu’au paiement confirmé. L’automatisation nécessite qu’au moins un espace administrateur soit ouvert/connecté. Si l’administration est fermée, la demande est conservée dans Firestore et la tâche sera créée lors de la prochaine connexion.
-- Lorsque la commande est importée, l’ancienne tâche de demande est réutilisée plutôt que dupliquée ; la validation du paiement libère la tâche.
-- Le formulaire Boutique et les notifications dans le navigateur restent disponibles. Les notifications push téléphone quand JJ3D est fermé requièrent encore Firebase Cloud Messaging et un service d’envoi serveur : elles ne sont PAS installées dans cette version.
-- IMPORTANT : publier `firestore.rules` dans Firebase Console > Firestore Database > Rules pour les nouveaux champs de résumé de facture.
-- Sauvegarder les données JSON avant mise à jour. Après publication GitHub Pages, faire Ctrl+Shift+R.
-- Les factures originales privées ne sont pas directement exposées ; l'aperçu Boutique n'est pas le PDF juridique complet.
+Correction du flux de commandes personnalisées :
+1. Boutique : envoyer la demande → JJ3D : importer, renseigner le prix sur la facture et le **lien HTTPS du fichier / aperçu** dans Commandes personnalisées.
+2. JJ3D, Atelier > Demandes : « Envoyer prix et fichier à valider » publie l’offre.
+3. Boutique > Commandes spéciales > Mes demandes : voir facture, prix total, lien de fichier, **Approuver** ou **Demander une modification**.
+4. Après approbation seulement, Boutique : déclarer un paiement. JJ3D vérifie le paiement et libère l'impression.
+5. La tâche À imprimer demeure verrouillée jusqu’à cette vérification. La référence `Commande JJ-B-...` et l’horaire à préciser sont normaux : il faut saisir la durée de l'impression.
+
+## Installation
+- Sauvegarder les données JSON avant mise à jour.
+- **IMPORTANT : republier `firestore.rules` dans Firebase Console → Firestore Database → Rules**, sinon les boutons de validation seront refusés par Firebase.
+- Mettre en ligne **tout le dossier** sur l'hébergement habituel. Forcer l’actualisation avec Ctrl+Shift+R, ou recharger l'application PWA.
+- Le fichier 3D n’est pas téléversé automatiquement : l’administrateur doit fournir un lien HTTPS accessible à la Boutique, par exemple vers une page d’aperçu ou un fichier partagé. Ne partage pas de lien privé.
+- L'aperçu de facture côté Boutique reste un résumé; les documents financiers privés et coûts fournisseurs ne sont pas exposés.
+- Pas de serveur de test Firebase dans cet environnement : le parcours doit être vérifié avec les deux comptes après déploiement.
