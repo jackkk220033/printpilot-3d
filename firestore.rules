@@ -100,6 +100,30 @@ service cloud.firestore {
       match /management/{docId} {
         allow read, write: if isBoutiqueOwner(ownerUid);
       }
+      // JJ3D v4.11.30 — demandes d'impression spéciales Boutique : destinées à l'admin uniquement.
+      match /customRequests/{requestId} {
+        allow create: if canViewBoutique(ownerUid)
+          && request.resource.data.keys().hasOnly(['customer','item','quantity','colors','dueAt','note','photo','senderUid','senderEmail','status','createdAt'])
+          && request.resource.data.keys().hasAll(['customer','item','quantity','colors','dueAt','note','photo','senderUid','senderEmail','status','createdAt'])
+          && request.resource.data.customer is string && request.resource.data.customer.size() >= 1 && request.resource.data.customer.size() <= 120
+          && request.resource.data.item is string && request.resource.data.item.size() >= 1 && request.resource.data.item.size() <= 160
+          && request.resource.data.quantity is int && request.resource.data.quantity >= 1 && request.resource.data.quantity <= 300
+          && request.resource.data.colors is string && request.resource.data.colors.size() <= 160
+          && request.resource.data.dueAt is string && request.resource.data.dueAt.size() <= 10
+          && request.resource.data.note is string && request.resource.data.note.size() <= 1000
+          && request.resource.data.photo is string && request.resource.data.photo.size() <= 150000
+          && (request.resource.data.photo == '' || request.resource.data.photo.matches('^data:image/jpeg;base64,.*$'))
+          && request.resource.data.senderUid == request.auth.uid
+          && request.resource.data.senderEmail == request.auth.token.email
+          && request.resource.data.status == 'pending'
+          && request.resource.data.createdAt == request.time;
+        allow get, list: if isBoutiqueOwner(ownerUid);
+        allow update: if isBoutiqueOwner(ownerUid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','resolvedAt'])
+          && request.resource.data.status in ['accepted','rejected']
+          && request.resource.data.resolvedAt == request.time;
+        allow delete: if isBoutiqueOwner(ownerUid);
+      }
       // v4.11 — Commandes en une seule étape : boutique écrit, administrateur traite.
       match /orders/{orderId} {
         allow create: if canViewBoutique(ownerUid)

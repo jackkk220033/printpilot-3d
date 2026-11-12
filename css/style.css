@@ -372,9 +372,23 @@ select[data-choice]{width:100%;min-width:0}
 .jj-mini-conditions{margin:12px 0;padding:10px 12px;background:#211b36;border:1px solid #66518d;border-radius:10px;color:#eee6ff;font-size:.84rem;line-height:1.6}
 @media(max-width:760px){.jj-order-info-grid{grid-template-columns:1fr}.jj-order-info{padding:14px}}
 
-/* JJ3D v4.11.29 : confirmation de publication visible, sans ouvrir le panneau cloud */
+/* JJ3D v4.11.31 : confirmation de publication visible, sans ouvrir le panneau cloud */
 .jj3d-sync-pill{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;background:#22304b;color:#c9d8ff;font-size:11px;font-weight:650;white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis}
 .jj3d-sync-pill[data-state="success"]{background:#183b35;color:#98efcb}
 .jj3d-sync-pill[data-state="error"]{background:#4d2435;color:#ffc0c7}
 .jj3d-sync-pill[data-state="pending"]{background:#483820;color:#ffe1a4}
 @media(max-width:640px){.jj3d-sync-pill{font-size:10px;max-width:130px;white-space:normal;line-height:1.1}}
+
+/* JJ3D v4.11.31: commandes personnalisées */
+.jj-custom-order-panel form{display:grid;gap:14px}.jj-custom-order-panel textarea{width:100%;min-height:95px}.jj-custom-order-panel input[type=file]{display:block;width:100%;margin-top:8px}.jj-custom-orders-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:16px}.jj-customer-order{min-width:0}.jj-customer-order .inventory-card-head{align-items:start}.jj-customer-order p{margin:8px 0;overflow-wrap:anywhere}.jj-customer-order .jj-custom-order-photo{width:100%;height:165px;display:grid;place-items:center;border-radius:12px;background:rgba(142,124,180,.12);overflow:hidden;color:#a8a5b5}.jj-custom-order-photo img{max-width:100%;width:100%;height:100%;object-fit:contain}.jj-customer-order .actions{display:flex;flex-wrap:wrap;gap:8px}.jj-customer-order .actions select{max-width:100%;min-width:140px}.jj-order-notes{white-space:pre-wrap;overflow-wrap:anywhere}
+
+/* JJ3D v4.11.31 — dimensions converties et photos des commandes */
+.jj-dimension-fieldset{border:1px solid var(--line,#4e465a);border-radius:14px;padding:14px;min-width:0}
+.jj-dimension-fieldset legend{font-weight:750;padding:0 8px}
+.jj-dimension-fieldset [hidden],.jj-custom-order-panel [hidden]{display:none!important}
+.jj-dimension-preview{display:block;padding:10px 12px;border-radius:9px;background:rgba(142,124,180,.13);margin-top:8px;overflow-wrap:anywhere}
+.jj-inline-check{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.jj-inline-check input[type=checkbox]{width:18px;height:18px;flex:none}
+.jj-order-photo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-width:0}
+.jj-order-photo-grid > *{min-width:0}
+@media(max-width:580px){.jj-order-photo-grid{grid-template-columns:1fr}}

@@ -9,7 +9,7 @@
  let editingPrintId=null;
  let photoDraft=null;
  let photoDb=null;
- let extras={products:[],hardware:[],sales:[],nonCommercial:[],printers:[],invoices:[],stockSlips:[],invoiceSettings:{},packingSlips:[]}; // réutilise la clé des versions précédentes
+ let extras={products:[],hardware:[],sales:[],nonCommercial:[],printers:[],invoices:[],stockSlips:[],invoiceSettings:{},packingSlips:[],customOrders:[]}; // réutilise la clé des versions précédentes
  const app = document.getElementById('app');
  const dialog = document.getElementById('roll-dialog');
  const form = document.getElementById('roll-form');
@@ -17,7 +17,7 @@
  let rolls = [];
  let search = '';
  let storageError = null;
- const pages = {'atelier-boutique':'Stock Boutique','atelier-demandes':'Demandes Boutique','atelier-queue':'À imprimer','atelier-filament':'Prévisions filament','atelier-labels':'Étiquettes QR','atelier-stats':'Statistiques atelier','atelier-maintenance':'Entretien','atelier-reports':'Rapports Boutique',dashboard:'Tableau de bord',filaments:'Filaments',produits:'Produits',impressions:'Impressions',horsproduction:'Personnel / Échecs / Tests',commandes:'Ventes',hardware:'Hardware',imprimantes:'Imprimantes',finances:'Finances',factures:'Factures',catalogue:'Catalogue à partager'};
+ const pages = {'sauvegardes':'Sauvegardes de sécurité','commandes-perso':'Commandes personnalisées','atelier-boutique':'Stock Boutique','atelier-demandes':'Demandes Boutique','atelier-queue':'À imprimer','atelier-filament':'Prévisions filament','atelier-labels':'Étiquettes QR','atelier-stats':'Statistiques atelier','atelier-maintenance':'Entretien','atelier-reports':'Rapports Boutique',dashboard:'Tableau de bord',filaments:'Filaments',produits:'Produits',impressions:'Impressions',horsproduction:'Personnel / Échecs / Tests',commandes:'Ventes',hardware:'Hardware',imprimantes:'Imprimantes',finances:'Finances',factures:'Factures',catalogue:'Catalogue à partager'};
  const esc = value => String(value ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const number = (n,d=0) => Number(n).toLocaleString('fr-CA',{minimumFractionDigits:d,maximumFractionDigits:d});
  const money = n => number(n,2)+' $';
@@ -28,7 +28,27 @@
   catch(e) { storageError = 'Impossible de lire le stockage de ce navigateur.'; console.error('PrintPilot load:',e); rolls=[]; }
  }
  function validPrint(p){return p&&typeof p.id==='string'&&Array.isArray(p.usage)&&p.usage.every(u=>typeof u.rollId==='string'&&Number.isFinite(Number(u.grams))&&Number(u.grams)>0)&&['active','cancelled','noncommercial'].includes(p.status);}
+ const BACKUP_KEY='jj3d-safety-history-v1';
+ function backupBeforeChange(){
+  try{const stateRaw=localStorage.getItem(STATE_KEY),extrasRaw=localStorage.getItem(EXTRA_KEY);if(!stateRaw||!extrasRaw)return;
+   const now=Date.now(),all=JSON.parse(localStorage.getItem(BACKUP_KEY)||'[]');
+   if(all[0]&&now-Date.parse(all[0].createdAt)<120000)return; // snapshots at most every two minutes
+   const record={id:'jj-backup-'+now,createdAt:new Date(now).toISOString(),state:JSON.parse(stateRaw),extras:JSON.parse(extrasRaw)};
+   if(!Array.isArray(all))return;all.unshift(record);localStorage.setItem(BACKUP_KEY,JSON.stringify(all.slice(0,8)));
+  }catch(e){console.warn('Copie de sécurité locale indisponible:',e);}
+ }
+ function backupsPage(){let records=[];try{records=JSON.parse(localStorage.getItem(BACKUP_KEY)||'[]');}catch(e){}
+ return header('SÉCURITÉ','Sauvegardes de sécurité','Retrouve les versions récentes conservées sur cet appareil. Elles ne remplacent PAS une sauvegarde externe.')+
+ `<div class="notice">🔐 Jusqu'à 8 états précédents sont conservés localement lors de tes modifications. Une suppression du navigateur ou un changement d'appareil peut les effacer. Exporte régulièrement un JSON complet.</div><div class="actions"><button type="button" class="primary-btn" id="export-full">↧ Exporter les données en JSON</button></div><section class="panel"><h2>Historique local (${records.length})</h2>${records.map(r=>`<article class="item"><strong>${esc(new Date(r.createdAt).toLocaleString('fr-CA',{dateStyle:'medium',timeStyle:'short'}))}</strong> — ${Number(r.extras?.products?.length)||0} produits, ${Number(r.extras?.customOrders?.length)||0} commandes personnalisées <button type="button" class="secondary-btn" data-restore-backup="${esc(r.id)}">Restaurer cette version</button></article>`).join('')||'<p>Aucune version disponible. Une sauvegarde est créée avant tes prochaines modifications.</p>'}</section>`;
+ }
+ function restoreBackup(id){let items=[];try{items=JSON.parse(localStorage.getItem(BACKUP_KEY)||'[]');}catch(e){}const record=items.find(x=>x.id===id);if(!record)return notify('Sauvegarde introuvable.',true);
+  if(!confirm('Cette restauration remplacera ton inventaire, tes commandes et tes factures actuels sur cet appareil et demandera une synchronisation Firebase. Exporte ton JSON avant de continuer. Restaurer?'))return;
+  const state=record.state,extra=record.extras;if(!Array.isArray(state?.rolls)||!Array.isArray(state?.prints)||!Array.isArray(extra?.products)||!Array.isArray(extra?.customOrders||[])){notify('Sauvegarde invalide.',true);return;}
+  if(persistWorkshop(state.rolls,state.prints,extra)){render();notify('✓ Restauration locale appliquée. Vérifie la confirmation Firebase.');}
+ }
+
  function persist(next, nextPrints=prints) {
+  backupBeforeChange();
   // Une seule écriture fait foi : pas de double déduction possible si une autre écriture échoue.
   const payload=JSON.stringify({version:2,rolls:next,prints:nextPrints});
   try {
@@ -42,6 +62,7 @@
   } catch(e) {storageError='Edge bloque la sauvegarde locale. Vérifie les autorisations de stockage.';console.error('PrintPilot save:',e);notify(storageError,true);return false;}
  }
  function persistWorkshop(nextRolls,nextPrints,nextExtras){
+  backupBeforeChange();
   // Une seule opération logique : bobines, journal et catalogue changent ensemble.
   // Ne notifier Firebase qu'après confirmation des deux écritures locales.
   const oldState=localStorage.getItem(STATE_KEY),oldExtra=localStorage.getItem(EXTRA_KEY);
@@ -103,10 +124,10 @@
  function productThumb(p,cls='photo-thumb'){return `<div class="${cls}" data-photo-shop="${esc(p.shopId)}" aria-label="Photo de ${esc(p.name)}">▧</div>`;}
  function thumb(id,cls='photo-thumb'){return `<div class="${cls}" data-photo-id="${esc(id)}" aria-label="Photo de l'impression">▧</div>`;}
  async function hydratePhotos(){
-   const elements=[...document.querySelectorAll('[data-photo-id], [data-photo-shop]')];
+   const elements=[...document.querySelectorAll('[data-photo-id], [data-photo-shop], [data-custom-order-photo], [data-custom-order-color-photo]')];
    await Promise.all(elements.map(async el=>{
      const product=el.dataset.photoShop?extras.products.find(p=>String(p.shopId)===el.dataset.photoShop):null;
-     const data=product?await getProductPhoto(product):await getPhoto('print:'+el.dataset.photoId);
+     const data=el.dataset.customOrderColorPhoto?await getPhoto('custom-order-color:'+el.dataset.customOrderColorPhoto):(el.dataset.customOrderPhoto?await getPhoto('custom-order:'+el.dataset.customOrderPhoto):(product?await getProductPhoto(product):await getPhoto('print:'+el.dataset.photoId)));
      if(!el.isConnected||!data)return;
      const img=document.createElement('img');img.src=data;img.alt='Photo';img.loading='lazy';el.replaceChildren(img);el.classList.add('has-photo');
    }));
@@ -457,7 +478,7 @@
  async function selectNewProductPhoto(file){if(!file)return;try{newProductPhotoDraft=await fileToPhoto(file);const img=document.createElement('img');img.src=newProductPhotoDraft;img.alt='Aperçu';document.getElementById('product-new-photo-preview').replaceChildren(img);}catch(e){notify(e.message,true);}}
 
  function hardwarePage(){const h=extras.hardware;return header('COMPOSANTS','Hardware et fournitures','Ajoute, modifie et surveille tes composants.',`<button type="button" class="primary-btn" id="add-hardware">＋ Ajouter du hardware</button>`)+warning()+`<div class="stats-grid three">${statCard('▣',number(h.length),'Types de composants')}${statCard('◉',number(h.reduce((a,r)=>a+safeNum(r.remaining),0)),'Pièces restantes')}${statCard('⚠',number(h.filter(r=>safeNum(r.remaining)<=safeNum(r.threshold)).length),'Stocks à surveiller')}</div><section class="panel"><div class="panel-head"><div><h2>Inventaire hardware</h2><p>Les changements sont sauvegardés dans ce navigateur.</p></div></div><div class="inventory-card-grid">${h.map(r=>`<article class="inventory-card"><div class="inventory-card-head"><div><h3>${esc(r.name||'Composant')}</h3><small>${esc(r.id||'')}</small></div><span class="pill ${safeNum(r.remaining)<=safeNum(r.threshold)?'low':'ok'}">${safeNum(r.remaining)<=safeNum(r.threshold)?'Stock faible':'En stock'}</span></div><div class="detail-grid"><div><small>Catégorie</small><strong>${esc(r.category||'—')}</strong></div><div><small>Restant</small><strong>${number(r.remaining)}</strong></div><div><small>Seuil bas</small><strong>${number(r.threshold)}</strong></div><div><small>Coût / pièce</small><strong>${money(r.unitCost)}</strong></div><div><small>Fournisseur</small><strong>${esc(r.supplier||'—')}</strong></div><div><small>Notes</small><strong>${esc(r.notes||'—')}</strong></div></div><div class="actions"><button type="button" class="secondary-btn" data-edit-hardware="${esc(r.id)}">Modifier</button><button type="button" class="secondary-btn danger" data-delete-hardware="${esc(r.id)}">Supprimer</button></div></article>`).join('')||'<p class="empty">Aucun hardware. Clique sur « Ajouter du hardware ».</p>'}</div></section>`;}
- function persistExtras(next){try{const str=JSON.stringify(next);localStorage.setItem(EXTRA_KEY,str);if(localStorage.getItem(EXTRA_KEY)!==str)throw Error('Échec de vérification');extras=next;queueMicrotask(()=>window.dispatchEvent(new Event('printpilot:changed')));return true;}catch(e){console.error('Sauvegarde hardware:',e);notify('Impossible de sauvegarder le hardware.',true);return false;}}
+ function persistExtras(next){backupBeforeChange();try{const str=JSON.stringify(next);localStorage.setItem(EXTRA_KEY,str);if(localStorage.getItem(EXTRA_KEY)!==str)throw Error('Échec de vérification');extras=next;queueMicrotask(()=>window.dispatchEvent(new Event('printpilot:changed')));return true;}catch(e){console.error('Sauvegarde hardware:',e);notify('Impossible de sauvegarder le hardware.',true);return false;}}
  function openHardware(id){const r=id?extras.hardware.find(x=>x.id===id):null;const f=document.getElementById('hardware-form');f.reset();document.getElementById('hardware-error').textContent='';document.getElementById('hardware-dialog-title').textContent=r?'Modifier du hardware':'Ajouter du hardware';if(r){for(const [k,v] of Object.entries(r)){const inp=f.elements.namedItem(k);if(inp)inp.value=v??'';}f.elements.namedItem('originalId').value=r.id;}else{f.elements.namedItem('originalId').value='';f.elements.namedItem('initial').value='1';f.elements.namedItem('remaining').value='1';f.elements.namedItem('threshold').value='5';f.elements.namedItem('unitCost').value='0';}document.getElementById('hardware-dialog').showModal();}
  function saveHardware(e){e.preventDefault();const f=e.currentTarget;const data=Object.fromEntries(new FormData(f));const originalId=data.originalId;const id=data.id.trim();const row={...(extras.hardware.find(r=>r.id===originalId)||{}),id,name:data.name.trim(),category:data.category.trim(),initial:Number(data.initial),remaining:Number(data.remaining),threshold:Number(data.threshold),unitCost:Number(data.unitCost),supplier:data.supplier.trim(),notes:data.notes.trim()};const err=document.getElementById('hardware-error');if(!id||!row.name||!Number.isFinite(row.initial)||row.initial<0||!Number.isFinite(row.remaining)||row.remaining<0||!Number.isFinite(row.threshold)||row.threshold<0||!Number.isFinite(row.unitCost)||row.unitCost<0){err.textContent='Vérifie le nom, la référence et les valeurs numériques (0 ou plus).';return;}if(extras.hardware.some(r=>r.id===id&&r.id!==originalId)){err.textContent='Cet ID existe déjà : choisis une référence unique.';return;}const next={...extras,hardware:originalId?extras.hardware.map(r=>r.id===originalId?row:r):[...extras.hardware,row]};if(!persistExtras(next))return;document.getElementById('hardware-dialog').close();render();notify('✓ Hardware enregistré.');}
  function deleteHardware(id){const r=extras.hardware.find(x=>x.id===id);if(!r||!confirm(`Supprimer ${r.name} (${id}) ?`))return;const next={...extras,hardware:extras.hardware.filter(x=>x.id!==id)};if(persistExtras(next)){render();notify('Hardware supprimé.');}}
@@ -521,7 +542,7 @@
   p.stock=safeNum(p.stock)+safeNum(old.quantity);const sales=extras.sales.map(x=>x.id===id?{...x,status:'cancelled',cancelledAt:new Date().toISOString()}:x);
   if(persistExtras({...extras,products,sales})){render();notify('✓ Vente annulée et stock produit rétabli.');}
  }
- function loadExtras(){try{const raw=localStorage.getItem(EXTRA_KEY);const obj=raw?JSON.parse(raw):{};extras={products:ensureShopIds(Array.isArray(obj.products)?obj.products:[]),hardware:Array.isArray(obj.hardware)?obj.hardware:[],sales:Array.isArray(obj.sales)?obj.sales:[],nonCommercial:Array.isArray(obj.nonCommercial)?obj.nonCommercial:[],printers:Array.isArray(obj.printers)?obj.printers:[],invoices:Array.isArray(obj.invoices)?obj.invoices:[],stockSlips:Array.isArray(obj.stockSlips)?obj.stockSlips:[],invoiceSettings:obj.invoiceSettings&&typeof obj.invoiceSettings==='object'?obj.invoiceSettings:{},packingSlips:Array.isArray(obj.packingSlips)?obj.packingSlips:[]};if(JSON.stringify(extras.products)!==JSON.stringify(obj.products||[])){try{localStorage.setItem(EXTRA_KEY,JSON.stringify(extras));}catch(e){console.warn('IDs numériques non persistés:',e);}}}catch(e){console.error('Extras invalides:',e);extras={products:[],hardware:[],sales:[],nonCommercial:[],printers:[],invoices:[],stockSlips:[],invoiceSettings:{},packingSlips:[]};}}
+ function loadExtras(){try{const raw=localStorage.getItem(EXTRA_KEY);const obj=raw?JSON.parse(raw):{};extras={products:ensureShopIds(Array.isArray(obj.products)?obj.products:[]),hardware:Array.isArray(obj.hardware)?obj.hardware:[],sales:Array.isArray(obj.sales)?obj.sales:[],nonCommercial:Array.isArray(obj.nonCommercial)?obj.nonCommercial:[],printers:Array.isArray(obj.printers)?obj.printers:[],invoices:Array.isArray(obj.invoices)?obj.invoices:[],stockSlips:Array.isArray(obj.stockSlips)?obj.stockSlips:[],invoiceSettings:obj.invoiceSettings&&typeof obj.invoiceSettings==='object'?obj.invoiceSettings:{},packingSlips:Array.isArray(obj.packingSlips)?obj.packingSlips:[],customOrders:Array.isArray(obj.customOrders)?obj.customOrders:[]};if(JSON.stringify(extras.products)!==JSON.stringify(obj.products||[])){try{localStorage.setItem(EXTRA_KEY,JSON.stringify(extras));}catch(e){console.warn('IDs numériques non persistés:',e);}}}catch(e){console.error('Extras invalides:',e);extras={products:[],hardware:[],sales:[],nonCommercial:[],printers:[],invoices:[],stockSlips:[],invoiceSettings:{},packingSlips:[],customOrders:[]};}}
  // Les produits importés du classeur représentent une production historique agrégée.
  // Ces chiffres sont affichés dans les stats, JAMAIS ajoutés au journal transactionnel
  // et JAMAIS déduits à nouveau de l'inventaire des bobines.
@@ -590,7 +611,8 @@
   const d=dashboardAnalytics(),m=d.m,p=d.prod;
   const stockDescription='Stock invendu = unités disponibles × prix actuel. Production totale = unités fabriquées × prix actuel (valeur théorique). Ventes = montants réellement enregistrés, indépendants du stock.';
   return header('VUE D’ENSEMBLE','Tableau de bord','Statistiques de ton atelier — calculs comparables à ton Excel.',importButton())
-  +warning()+(rolls.length?'<div class="notice">ⓘ &nbsp; Chiffres calculés depuis les données actuelles de PrintPilot (locales ou Firebase). Ton ancien Excel reste un instantané et peut différer après des nouvelles impressions ou ventes.</div>':excelNotice())
+  +warning()+(()=>{const open=customOrders().filter(x=>!['delivered','cancelled'].includes(x.status));const urgent=open.filter(x=>x.dueAt&&x.dueAt<=new Date(Date.now()+3*86400000).toLocaleDateString('en-CA'));return open.length?`<section class="panel jj-order-reminder"><h2>📝 ${open.length} commande(s) personnalisée(s) à suivre${urgent.length?' · ⚠ '+urgent.length+' proche(s) de la date souhaitée':''}</h2><p>Tu as ${open.length} commande(s) non terminée(s). ${urgent.length?'Vérifie les échéances proches!':''}</p><button type="button" class="primary-btn" data-go="commandes-perso">Voir mes commandes</button></section>`:'';})()
+  +(rolls.length?'<div class="notice">ⓘ &nbsp; Chiffres calculés depuis les données actuelles de PrintPilot (locales ou Firebase). Ton ancien Excel reste un instantané et peut différer après des nouvelles impressions ou ventes.</div>':excelNotice())
   +dashGroup('Production','Historique Excel + impressions ajoutées dans PrintPilot. La durée Excel est multipliée par la quantité imprimée.',[
    ['◷',clockDuration(p.minutes),'Temps de production réussie'],
    ['⚠',clockDuration(offMetrics().minutes),'Temps personnel / échecs / tests'],
@@ -848,7 +870,7 @@
   if(!persistExtras(next))throw Error('Échec de sauvegarde des nouveaux produits.');
   render();notify('✓ Correction appliquée. Vérifie la synchronisation Firebase et les statistiques.');
  }
- function exportFull(){const data={version:2,exportedAt:new Date().toISOString(),filaments:rolls,prints,products:extras.products,hardware:extras.hardware,sales:extras.sales,nonCommercial:extras.nonCommercial||[],printers:extras.printers||[],invoices:extras.invoices||[],stockSlips:extras.stockSlips||[],packingSlips:extras.packingSlips||[],invoiceSettings:extras.invoiceSettings||{}};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='printpilot-sauvegarde-complete.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);notify('Sauvegarde complète exportée.');}
+ function exportFull(){const data={version:2,exportedAt:new Date().toISOString(),filaments:rolls,prints,products:extras.products,hardware:extras.hardware,sales:extras.sales,nonCommercial:extras.nonCommercial||[],printers:extras.printers||[],invoices:extras.invoices||[],stockSlips:extras.stockSlips||[],packingSlips:extras.packingSlips||[],customOrders:extras.customOrders||[],invoiceSettings:extras.invoiceSettings||{}};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='printpilot-sauvegarde-complete.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);notify('Sauvegarde complète exportée.');}
  function financeProductRows(query=''){
   const products=commercialProducts().filter(p=>[p.shopId,p.id,p.name,p.category,p.colors].join(' ').toLowerCase().includes(String(query).toLowerCase()));
   if(!products.length)return '<p class="empty">Aucun produit correspondant.</p>';
@@ -859,12 +881,12 @@
      <div class="finance-card-head"><div class="finance-product-name"><span class="finance-shop-id">#${esc(p.shopId)}</span><div><strong>${esc(p.name)}</strong><small>ID Excel : ${esc(p.id)}</small></div></div><span class="finance-price">${money(p.price)}</span></div>
      <div class="finance-card-color"><span>Couleurs</span><b>${esc(p.colors||'—')}</b></div>
      <dl class="finance-cost-grid">
-       <div><dt>Filament</dt><dd>${money(p.filamentCost)}</dd></div>
+       <div><dt>Filament</dt><dd>${money(p.filamentCost)}</dd></div><div><dt>Tarif facturé pour les heures</dt><dd>${money((Number(p.timeDays)||0)*24*(Number(p.hourlyRate)||0))}</dd></div>
        <div><dt>Autres coûts</dt><dd>${money(p.otherCost)}</dd></div>
-       <div><dt>Coût unitaire</dt><dd>${money(p.unitCost)}</dd></div>
+       <div><dt>Coût matériel unitaire</dt><dd>${money(p.unitCost)}</dd></div>
        <div><dt>Commission (${number(rate*100,0)} %)</dt><dd>${money(commission)}</dd></div>
      </dl>
-     <div class="finance-card-footer"><div><span>Profit estimé / unité</span><strong>${money(profit)}</strong></div><div><span>En stock</span><strong>${number(p.stock)}</strong></div></div>
+     <div class="finance-card-footer"><div><span>Montant restant / unité (avant dépenses non saisies)</span><strong>${money(profit)}</strong></div><div><span>En stock</span><strong>${number(p.stock)}</strong></div></div>
    </article>`;
   }).join('')}</div>`;
  }
@@ -1087,7 +1109,109 @@
   document.getElementById('printer-history-dialog').showModal();
  }
   function placeholder(p){return header('PRINTPILOT 3D',pages[p], 'Une section du gestionnaire complet.')+`<section class="panel placeholder"><div class="placeholder-icon">⬡</div><h2>À venir</h2><p>On ajoutera ici les fonctionnalités de ${esc(pages[p].toLowerCase())}.</p><button type="button" class="primary-btn" data-go="filaments">Voir mes filaments</button></section>`;}
- function render(){const p=page();app.innerHTML=p.startsWith('atelier-')?atelierPanel(p):p==='dashboard'?dashboard():p==='filaments'?filaments():p==='produits'?productPage():p==='commandes'?salesPage():p==='hardware'?hardwarePage():p==='impressions'?printPage():p==='horsproduction'?offPage():p==='finances'?financePage():p==='factures'?window.JJ3DInvoices.page():p==='catalogue'?catalogPage():p==='imprimantes'?printerPage():placeholder(p);document.getElementById('page-name').textContent=pages[p];document.querySelectorAll('[data-page]').forEach(n=>{n.classList.toggle('active',n.dataset.page===p);n.setAttribute('aria-current',n.dataset.page===p?'page':'false')});document.getElementById('sidebar').classList.remove('open');document.querySelectorAll('#mobile-navigation [data-page]').forEach(n=>{n.classList.toggle('active',n.dataset.page===p);n.setAttribute('aria-current',n.dataset.page===p?'page':'false');});const filterCount=document.getElementById(p+'-count');if(filterCount&&uiFilters[p])filterCount.textContent=filteredProducts(p).length+' résultat(s)';document.body.classList.toggle('finance-view',p==='finances');document.querySelectorAll('.table-wrap table').forEach(table=>{const headers=[...table.querySelectorAll('thead th')].map(th=>th.textContent.trim());table.querySelectorAll('tbody tr').forEach(tr=>[...tr.children].forEach((td,i)=>td.setAttribute('data-label',headers[i]||'')));});hydratePhotos();}
+ 
+ // Commandes prises directement par l'atelier: privées, indépendantes des ventes déjà réalisées.
+ let editingCustomOrderId=null;
+ const customOrderStages={new:'Nouvelle demande',quoted:'Soumission envoyée',approved:'Confirmée',printing:'En production',ready:'Prête',delivered:'Remise / livrée',cancelled:'Annulée'};
+ const customOrders=()=>Array.isArray(extras.customOrders)?extras.customOrders:[];
+ // Dimensions : saisie naturelle 1', 6\", 1' 6\", 30 cm, 304.8 mm, 12 in.
+ function jjParseDimension(raw,defaultUnit='mm'){
+  const s=String(raw||'').trim().toLowerCase().replace(/,/g,'.').replace(/′/g,"'").replace(/[″“”]/g,'"');
+  if(!s)return null;
+  const footInch=/^\s*(?:(\d+(?:\.\d+)?)\s*(?:'|ft|feet|pieds?))\s*(?:(\d+(?:\.\d+)?)\s*(?:"|in|inch|inches|pouces?))?\s*$/i.exec(s);
+  if(footInch)return +(Number(footInch[1])*304.8+Number(footInch[2]||0)*25.4).toFixed(2);
+  const named=/^\s*(\d+(?:\.\d+)?)\s*(mm|millim[eè]tres?|cm|centim[eè]tres?|"|in|inch|inches|pouces?|ft|feet|pieds?|')\s*$/i.exec(s);
+  if(named){const unit=named[2];const factor=unit.startsWith('mm')||unit.startsWith('milli')?1:unit==='cm'||unit.startsWith('centi')?10:unit==='"'||unit==='in'||unit.startsWith('inch')||unit.startsWith('pouce')?25.4:304.8;return +(Number(named[1])*factor).toFixed(2);}
+  if(/^\d+(?:\.\d+)?$/.test(s)){const n=Number(s);const factor=defaultUnit==='cm'?10:defaultUnit==='in'?25.4:defaultUnit==='ft'?304.8:1;return +(n*factor).toFixed(2);}
+  return NaN;
+ }
+ function jjDimensionsFromForm(f){
+  const shape=f.elements.namedItem('dimensionShape').value,unit=f.elements.namedItem('dimensionUnit').value;
+  const names=shape==='cylinder'?['height','diameter']:['length','width','height'];
+  const raw={},mm={};
+  for(const name of names){const val=f.elements.namedItem('dimension_'+name).value.trim();raw[name]=val;const converted=jjParseDimension(val,unit);if(Number.isNaN(converted))throw Error('Dimension invalide : '+name+'. Exemples : 1\', 6", 15 cm, 304.8 mm.');if(converted!==null){if(converted<=0)throw Error('Les dimensions doivent être positives.');mm[name]=converted;}}
+  return {dimensionShape:shape,dimensionUnit:unit,dimensionRaw:raw,dimensionMm:mm};
+ }
+ function jjDimHtml(o){const raw=o.dimensionRaw||{},mm=o.dimensionMm||{},shape=o.dimensionShape||'cylinder';const keys=shape==='cylinder'?['height','diameter']:['length','width','height'];const labels={height:'Hauteur',diameter:'Diamètre',length:'Longueur',width:'Largeur'};const values=keys.filter(k=>raw[k]||mm[k]);return values.length?`<p><b>Dimensions :</b> ${values.map(k=>`${labels[k]} ${esc(raw[k]||'—')} → <strong>${esc(mm[k])} mm</strong>`).join(' · ')}</p>`:'';}
+ function jjDimensionPreview(){const f=document.getElementById('custom-order-form'),out=document.getElementById('custom-dimension-preview');if(!f||!out)return;const shape=f.elements.namedItem('dimensionShape').value;f.querySelectorAll('[data-dimension-key]').forEach(el=>el.hidden=(shape==='cylinder'?!['height','diameter'].includes(el.dataset.dimensionKey):el.dataset.dimensionKey==='diameter'));try{const d=jjDimensionsFromForm(f),keys=d.dimensionShape==='cylinder'?['height','diameter']:['length','width','height'];const labels={height:'Hauteur',diameter:'Diamètre',length:'Longueur',width:'Largeur'};out.textContent=keys.filter(k=>d.dimensionMm[k]!=null).map(k=>labels[k]+' : '+d.dimensionMm[k]+' mm').join(' · ')||'Entre tes mesures pour voir les millimètres.';out.classList.remove('form-error');}catch(e){out.textContent=e.message;out.classList.add('form-error');}}
+ function jjFilamentPurchaseToggle(){const f=document.getElementById('custom-order-form');if(!f)return;const yes=f.elements.namedItem('filamentPurchased').checked;const field=document.getElementById('custom-order-filament-cost-wrap');if(field)field.hidden=!yes;}
+ function customOrdersPage(){
+  const orders=customOrders().slice().sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
+  const active=orders.filter(x=>!['delivered','cancelled'].includes(x.status));
+  const now=new Date();const today=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,10);
+  return header('SUIVI CLIENTS','Commandes personnalisées','Enregistre ici les demandes reçues par téléphone, en personne ou sur Messenger. Rien ne sera oublié.')+
+   `<div class="stats-grid three">${statCard('📋',active.length,'Commandes actives')}${statCard('⏳',orders.filter(x=>x.status==='printing').length,'En production')}${statCard('🎁',orders.filter(x=>x.status==='ready').length,'Prêtes à remettre')}</div>`+
+   `<section class="panel jj-custom-order-panel"><div class="panel-head"><div><h2 id="custom-order-form-title">＋ Nouvelle commande personnalisée</h2><p>Remplis le formulaire maintenant, puis retrouve la commande ici sur tes autres appareils après synchronisation Firebase.</p></div></div>
+   <form id="custom-order-form"><input type="hidden" name="orderId"><div class="form-grid">
+   <label>Nom du client *<input name="customer" maxlength="120" required placeholder="Ex. Marie Tremblay"></label>
+   <label>Contact (téléphone, courriel ou Messenger)<input name="contact" maxlength="180" placeholder="Ex. Messenger — Marie"></label>
+   <label>Produit / projet demandé *<input name="item" maxlength="160" required placeholder="Ex. Vase personnalisé avec nom"></label>
+   <label>Produit existant (facultatif)<select name="productId"><option value="">Commande spéciale / hors catalogue</option>${extras.products.map(p=>`<option value="${esc(p.id)}">${esc(p.name)} · #${esc(p.shopId)}</option>`).join('')}</select></label>
+   <label>Quantité *<input name="quantity" type="number" min="1" max="999" value="1" required></label>
+   <label>Couleur(s) / filament<input name="colors" maxlength="160" placeholder="Ex. Noir et blanc, PLA"></label>
+   </div><fieldset class="jj-dimension-fieldset"><legend>📐 Dimensions du produit</legend><div class="form-grid">
+   <label>Forme<select name="dimensionShape"><option value="cylinder">Rond / vase : hauteur et diamètre</option><option value="box">Rectangulaire : longueur, largeur et hauteur</option></select></label>
+   <label>Unité si aucun symbole n’est écrit<select name="dimensionUnit"><option value="mm">Millimètres (mm)</option><option value="cm">Centimètres (cm)</option><option value="in">Pouces (in)</option><option value="ft">Pieds (ft)</option></select></label>
+   <label data-dimension-key="height">Hauteur<input name="dimension_height" inputmode="text" placeholder="Ex. 1' ou 304.8 mm"></label>
+   <label data-dimension-key="diameter">Diamètre<input name="dimension_diameter" inputmode="text" placeholder='Ex. 6" ou 15.24 cm'></label>
+   <label data-dimension-key="length" hidden>Longueur<input name="dimension_length" inputmode="text" placeholder='Ex. 12"'></label>
+   <label data-dimension-key="width" hidden>Largeur<input name="dimension_width" inputmode="text" placeholder='Ex. 6"'></label>
+   </div><p class="small-hint">Tu peux écrire <b>1'</b> pour un pied, <b>6"</b> pour six pouces ou <b>1' 6"</b> pour un pied et six pouces. Les millimètres sont calculés automatiquement.</p><output id="custom-dimension-preview" class="jj-dimension-preview" aria-live="polite">Entre tes mesures pour voir les millimètres.</output></fieldset>
+   <fieldset class="jj-dimension-fieldset"><legend>🎨 Filament acheté pour cette commande</legend>
+   <label class="jj-inline-check"><input name="filamentPurchased" type="checkbox" value="yes"> Oui, j’ai acheté du filament spécialement pour ce produit</label>
+   <label id="custom-order-filament-cost-wrap" hidden>Prix d’achat du filament ($)<input name="filamentPurchasePrice" type="number" min="0" step="0.01" placeholder="Ex. 24.99"></label>
+   <p class="small-hint">Décoche = Non. Le prix sert au suivi de l’achat; il n’est pas automatiquement soustrait en entier du profit de ce vase.</p></fieldset>
+   <div class="form-grid">
+   <label>Date de la demande<input name="orderedAt" type="date" value="${today}"></label>
+   <label>Date souhaitée par le client<input name="dueAt" type="date"></label>
+   <label>Prix total convenu ($)<input name="price" type="number" min="0" max="100000" step="0.01" placeholder="Ex. 35.00"></label>
+   <label>Acompte reçu ($)<input name="deposit" type="number" min="0" max="100000" step="0.01" placeholder="Ex. 10.00"></label>
+   <label>Mode de remise<select name="delivery"><option value="pickup">Ramassage</option><option value="boutique">Boutique</option><option value="shipping">Expédition</option><option value="other">À déterminer</option></select></label>
+   <label>État de la commande<select name="status">${Object.entries(customOrderStages).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join('')}</select></label>
+   </div><label>Notes / instructions (dimensions, personnalisation, conversation…)<textarea name="notes" maxlength="2000" rows="4" placeholder="Détails à ne pas oublier…"></textarea></label>
+   <div class="jj-order-photo-grid"><label>📷 Photo du produit demandé<input type="file" name="photo" accept="image/*"><small>Photo du vase, modèle ou capture d’écran (facultatif).</small></label>
+   <label>🎨 Photo de la couleur / du filament<input type="file" name="colorPhoto" accept="image/*"><small>Une deuxième photo séparée, pour retrouver la teinte exacte.</small></label></div>
+   <p class="small-hint">La photo est stockée séparément et synchronisée avec Firebase si tu es connecté. Cette commande ne retire pas automatiquement de stock et ne crée pas de facture avant ta confirmation.</p>
+   <p id="custom-order-error" class="form-error" role="alert"></p><div class="actions"><button class="primary-btn" type="submit" id="custom-order-submit">💾 Enregistrer la commande</button><button class="secondary-btn" type="button" id="custom-order-reset">Effacer / nouvelle commande</button></div></form></section>`+
+   `<section class="panel"><div class="panel-head"><div><h2>Mes commandes (${orders.length})</h2><p>Les commandes terminées restent dans l'historique.</p></div></div>
+   <div class="jj-custom-orders-grid">${orders.map(o=>`<article class="inventory-card jj-customer-order" data-custom-order-id="${esc(o.id)}"><div class="inventory-card-head"><div><small>${esc(o.number||'Commande')}</small><h3>${esc(o.item||'Projet')} × ${esc(o.quantity||1)}</h3></div><span class="pill ${o.status==='cancelled'?'low':'ok'}">${esc(customOrderStages[o.status]||o.status||'Nouvelle')}</span></div>
+   <div class="jj-order-photo-grid"><div><small>Modèle demandé</small><div class="jj-custom-order-photo" data-custom-order-photo="${esc(o.id)}">${o.hasPhoto?'📸 Chargement…':'Aucune photo'}</div></div><div><small>Couleur demandée</small><div class="jj-custom-order-photo" data-custom-order-color-photo="${esc(o.id)}">${o.hasColorPhoto?'🎨 Chargement…':'Aucune photo'}</div></div></div>
+   <p><b>Client :</b> ${esc(o.customer||'—')} · ${esc(o.contact||'')}</p>
+   <p><b>Couleur :</b> ${esc(o.colors||'À préciser')} · <b>Demandée :</b> ${esc(o.orderedAt||'—')} · <b>Souhaitée :</b> ${esc(o.dueAt||'—')}</p>
+   ${jjDimHtml(o)}
+   <p><b>Filament acheté spécialement :</b> ${o.filamentPurchased?'Oui · '+money(o.filamentPurchasePrice||0):'Non'}</p>
+   <p><b>Prix :</b> ${money(o.price||0)} · <b>Acompte :</b> ${money(o.deposit||0)} · <b>Solde :</b> ${money(Math.max(0,safeNum(o.price)-safeNum(o.deposit)))}</p>
+   <p class="jj-order-notes">${esc(o.notes||'')}</p><div class="actions"><button type="button" class="secondary-btn" data-edit-custom-order="${esc(o.id)}">✎ Modifier</button><button type="button" class="secondary-btn danger" data-delete-custom-order="${esc(o.id)}">Supprimer</button><select aria-label="Statut de la commande" data-custom-status="${esc(o.id)}">${Object.entries(customOrderStages).map(([k,v])=>`<option value="${k}" ${o.status===k?'selected':''}>${esc(v)}</option>`).join('')}</select></div></article>`).join('')||'<p class="empty">Aucune commande pour le moment. Ajoute celle qu’on vient de te demander dans le formulaire ci-dessus!</p>'}</div></section>`;
+ }
+ async function saveCustomOrder(event){
+  event.preventDefault();const f=event.currentTarget,e=document.getElementById('custom-order-error');e.textContent='';
+  const v=Object.fromEntries(new FormData(f));const qty=Number(v.quantity),price=v.price===''?0:Number(v.price),deposit=v.deposit===''?0:Number(v.deposit);
+  if(!v.customer.trim()||!v.item.trim()||!Number.isInteger(qty)||qty<1||qty>999||![price,deposit].every(n=>Number.isFinite(n)&&n>=0)||deposit>price){e.textContent='Vérifie le client, le produit, la quantité, le prix et l’acompte (qui ne peut dépasser le prix).';return;}
+  let dimensions;try{dimensions=jjDimensionsFromForm(f);}catch(error){e.textContent=error.message;return;}
+  const filamentPurchased=f.elements.namedItem('filamentPurchased').checked;
+  const filamentPurchasePrice=filamentPurchased?Number(v.filamentPurchasePrice||0):0;
+  if(!Number.isFinite(filamentPurchasePrice)||filamentPurchasePrice<0){e.textContent='Le prix du filament doit être positif.';return;}
+  const old=customOrders().find(x=>x.id===v.orderId);const now=new Date().toISOString(),id=old?.id||('CO-'+Date.now()+'-'+Math.random().toString(36).slice(2,7));
+  const row={...old,id,number:old?.number||'JJ-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-7),customer:v.customer.trim(),contact:v.contact.trim(),item:v.item.trim(),productId:v.productId,quantity:qty,colors:v.colors.trim(),orderedAt:v.orderedAt,dueAt:v.dueAt,price,deposit,delivery:v.delivery,status:v.status,notes:v.notes.trim(),createdAt:old?.createdAt||now,updatedAt:now,hasPhoto:old?.hasPhoto||false,hasColorPhoto:old?.hasColorPhoto||false,filamentPurchased,filamentPurchasePrice,...dimensions};
+  const next=old?customOrders().map(x=>x.id===id?row:x):[...customOrders(),row];
+  if(!persistExtras({...extras,customOrders:next})){e.textContent='Sauvegarde impossible.';return;}
+  const file=f.elements.namedItem('photo').files[0];
+  const colorFile=f.elements.namedItem('colorPhoto').files[0];
+  for(const [selected,key,flag,label] of [[file,'custom-order:'+id,'hasPhoto','produit'],[colorFile,'custom-order-color:'+id,'hasColorPhoto','couleur']]){
+   if(!selected)continue;
+   try{const src=await fileToPhoto(selected);await setPhoto(key,src);row[flag]=true;persistExtras({...extras,customOrders:next.map(x=>x.id===id?row:x)});}catch(err){notify('Commande enregistrée, mais photo '+label+' non synchronisée : '+err.message,true);}
+  }
+  editingCustomOrderId=null;render();notify('✓ Commande enregistrée! Retrouve-la dans Commandes personnalisées.');
+ }
+ function editCustomOrder(id){const row=customOrders().find(x=>x.id===id);if(!row)return;editingCustomOrderId=id;const f=document.getElementById('custom-order-form');for(const [k,v] of Object.entries(row)){const inp=f.elements.namedItem(k==='id'?'orderId':k);if(inp&&inp.type!=='file'&&k!=='filamentPurchased')inp.value=v??'';}
+  f.elements.namedItem('filamentPurchased').checked=!!row.filamentPurchased;
+  for(const [k,v] of Object.entries(row.dimensionRaw||{})){const inp=f.elements.namedItem('dimension_'+k);if(inp)inp.value=v||'';}
+  jjDimensionPreview();jjFilamentPurchaseToggle();
+  f.elements.namedItem('orderId').value=id;document.getElementById('custom-order-form-title').textContent='✎ Modifier la commande '+(row.number||'');document.getElementById('custom-order-submit').textContent='💾 Enregistrer les modifications';f.scrollIntoView({behavior:'smooth',block:'start'});}
+ function deleteCustomOrder(id){const row=customOrders().find(x=>x.id===id);if(!row||!confirm('Supprimer définitivement la commande « '+row.item+' » de '+row.customer+' ?'))return;if(persistExtras({...extras,customOrders:customOrders().filter(x=>x.id!==id)})){render();notify('Commande supprimée.');}}
+ function updateCustomOrderStatus(id,status){if(!Object.hasOwn(customOrderStages,status))return;const row=customOrders().find(x=>x.id===id);if(!row)return;if(persistExtras({...extras,customOrders:customOrders().map(x=>x.id===id?{...x,status,updatedAt:new Date().toISOString()}:x)})){render();notify('✓ Statut mis à jour.');}}
+
+ function render(){const p=page();app.innerHTML=p.startsWith('atelier-')?atelierPanel(p):p==='dashboard'?dashboard():p==='filaments'?filaments():p==='produits'?productPage():p==='commandes'?salesPage():p==='commandes-perso'?customOrdersPage():p==='sauvegardes'?backupsPage():p==='hardware'?hardwarePage():p==='impressions'?printPage():p==='horsproduction'?offPage():p==='finances'?financePage():p==='factures'?window.JJ3DInvoices.page():p==='catalogue'?catalogPage():p==='imprimantes'?printerPage():placeholder(p);document.getElementById('page-name').textContent=pages[p];document.querySelectorAll('[data-page]').forEach(n=>{n.classList.toggle('active',n.dataset.page===p);n.setAttribute('aria-current',n.dataset.page===p?'page':'false')});document.getElementById('sidebar').classList.remove('open');document.querySelectorAll('#mobile-navigation [data-page]').forEach(n=>{n.classList.toggle('active',n.dataset.page===p);n.setAttribute('aria-current',n.dataset.page===p?'page':'false');});const filterCount=document.getElementById(p+'-count');if(filterCount&&uiFilters[p])filterCount.textContent=filteredProducts(p).length+' résultat(s)';document.body.classList.toggle('finance-view',p==='finances');document.querySelectorAll('.table-wrap table').forEach(table=>{const headers=[...table.querySelectorAll('thead th')].map(th=>th.textContent.trim());table.querySelectorAll('tbody tr').forEach(tr=>[...tr.children].forEach((td,i)=>td.setAttribute('data-label',headers[i]||'')));});hydratePhotos();}
  function openRoll(id){form.reset();form.elements.namedItem('id').value='';document.getElementById('form-error').textContent='';document.getElementById('dialog-title').textContent=id?'Modifier le rouleau':'Ajouter un rouleau';if(id){const r=rolls.find(x=>x.id===id);if(!r)return;for(const [key,val] of Object.entries(r)){const input=form.elements.namedItem(key);if(input){if(key==='material'&&input.tagName==='SELECT'&&![...input.options].some(o=>o.value===String(val)))input.add(new Option(String(val),String(val)));input.value=val??'';}}}dialog.showModal();}
  function saveRoll(event){event.preventDefault();const vals=Object.fromEntries(new FormData(form).entries());const r={id:vals.id||`roll-${Date.now()}-${Math.random().toString(36).slice(2,9)}`,brand:String(vals.brand||'').trim(),color:String(vals.color||'').trim(),material:vals.material,code:String(vals.code||'').trim(),initial:Number(vals.initial),remaining:Number(vals.remaining),price:Number(vals.price),swatch:safeColor(vals.swatch)};const error=document.getElementById('form-error');if(!r.brand||!r.color||!rollOk(r)||!Number.isFinite(r.price)||r.price<0||vals.initial===''||vals.remaining===''||vals.price===''){error.textContent='Vérifie les champs : marque, couleur, poids et prix. Le poids restant ne peut pas dépasser le poids initial.';return;}const next=rolls.slice();const idx=next.findIndex(x=>x.id===r.id);if(idx>=0)next[idx]=r;else next.push(r);if(!persist(next)){error.textContent=storageError;return;}rolls=next;search='';dialog.close();render();notify('✓ Rouleau enregistré!');}
  function removeRoll(id){const r=rolls.find(x=>x.id===id);if(prints.some(p=>p.status==='active'&&p.usage.some(u=>u.rollId===id))){notify('Cette bobine est liée à une impression active. Annule d’abord cette impression.',true);return;}if(!r||!confirm(`Supprimer ${r.brand} — ${r.color} ?`))return;const next=rolls.filter(x=>x.id!==id);if(persist(next)){rolls=next;render();notify('Rouleau supprimé.');}}
@@ -1109,6 +1233,11 @@
  document.getElementById('close-dialog').addEventListener('click',()=>dialog.close());
  document.getElementById('cancel-dialog').addEventListener('click',()=>dialog.close());
  document.getElementById('print-form').addEventListener('submit',savePrint);
+ document.addEventListener('submit',e=>{if(e.target.id==='custom-order-form')saveCustomOrder(e);});
+ document.addEventListener('input',e=>{if(e.target.closest('#custom-order-form')&&(/^(dimension_|dimensionShape$|dimensionUnit$)/.test(e.target.name||'')))jjDimensionPreview();});
+ document.addEventListener('change',e=>{if(e.target.closest('#custom-order-form')){if(e.target.name==='filamentPurchased')jjFilamentPurchaseToggle();if(e.target.name==='dimensionShape'||e.target.name==='dimensionUnit')jjDimensionPreview();}});
+ document.addEventListener('click',e=>{const edit=e.target.closest('[data-edit-custom-order]'),del=e.target.closest('[data-delete-custom-order]');if(e.target.closest('[data-restore-backup]'))restoreBackup(e.target.closest('[data-restore-backup]').dataset.restoreBackup);else if(edit)editCustomOrder(edit.dataset.editCustomOrder);else if(del)deleteCustomOrder(del.dataset.deleteCustomOrder);else if(e.target.closest('#custom-order-reset')){editingCustomOrderId=null;render();}});
+ document.addEventListener('change',e=>{if(e.target.matches('[data-custom-status]'))updateCustomOrderStatus(e.target.dataset.customStatus,e.target.value);});
  document.getElementById('print-product').addEventListener('change',()=>{if(!editingPrintId){selectedProductInfo({prefillDuration:true});const p=extras.products.find(x=>String(x.id)===document.getElementById('print-product').value);suggestExcelUsage(p);suggestHardwareFromProduct();if(p?.printer)setChoiceValue(document.getElementById('print-form'),'printer',p.printer);refreshPrintCreation();}else{selectedProductInfo();refreshPrintCreation();}});
  document.getElementById('print-form').addEventListener('input',updatePrintCreationCost);document.getElementById('print-form').addEventListener('change',updatePrintCreationCost);
  document.getElementById('print-form').elements.namedItem('quantity').addEventListener('change',()=>{if(!editingPrintId){const p=extras.products.find(x=>String(x.id)===document.getElementById('print-product').value);if(p)suggestExcelUsage(p);suggestHardwareFromProduct();}});
@@ -1173,18 +1302,18 @@
  document.getElementById('today').textContent=new Intl.DateTimeFormat('fr-CA',{day:'numeric',month:'long',year:'numeric'}).format(new Date());
  // Interface volontairement limitée au jeu de données de l’atelier; pas de photos IndexedDB.
  window.PrintPilotCloudAdapter = {
-  exportState(){return {version:3,rolls:structuredClone(rolls),prints:structuredClone(prints),products:structuredClone(extras.products),hardware:structuredClone(extras.hardware),sales:structuredClone(extras.sales),...(offEntries().length?{nonCommercial:structuredClone(offEntries())}:{}),printers:structuredClone(extras.printers||[]),invoices:structuredClone(extras.invoices||[]),stockSlips:structuredClone(extras.stockSlips||[]),packingSlips:structuredClone(extras.packingSlips||[]),invoiceSettings:structuredClone(extras.invoiceSettings||{})};},
+  exportState(){return {version:3,rolls:structuredClone(rolls),prints:structuredClone(prints),products:structuredClone(extras.products),hardware:structuredClone(extras.hardware),sales:structuredClone(extras.sales),...(offEntries().length?{nonCommercial:structuredClone(offEntries())}:{}),printers:structuredClone(extras.printers||[]),invoices:structuredClone(extras.invoices||[]),stockSlips:structuredClone(extras.stockSlips||[]),packingSlips:structuredClone(extras.packingSlips||[]),customOrders:structuredClone(extras.customOrders||[]),invoiceSettings:structuredClone(extras.invoiceSettings||{})};},
   applyState(snapshot){
    if(!snapshot || !Array.isArray(snapshot.rolls) || !Array.isArray(snapshot.prints) || !Array.isArray(snapshot.products) || !Array.isArray(snapshot.hardware) || !Array.isArray(snapshot.sales)) throw Error('Sauvegarde cloud incomplète');
    if(!snapshot.rolls.every(rollOk)||!snapshot.prints.every(validPrint)) throw Error('Données de bobines ou impressions invalides');
    const oldState=localStorage.getItem(STATE_KEY),oldExtras=localStorage.getItem(EXTRA_KEY);
    try {
     const nextState=JSON.stringify({version:2,rolls:snapshot.rolls,prints:snapshot.prints});
-    const nextExtras=JSON.stringify({products:ensureShopIds(snapshot.products),hardware:snapshot.hardware,sales:snapshot.sales,nonCommercial:Array.isArray(snapshot.nonCommercial)?snapshot.nonCommercial:[],printers:Array.isArray(snapshot.printers)?snapshot.printers:[],invoices:Array.isArray(snapshot.invoices)?snapshot.invoices:[],stockSlips:Array.isArray(snapshot.stockSlips)?snapshot.stockSlips:(extras.stockSlips||[]),packingSlips:Array.isArray(snapshot.packingSlips)?snapshot.packingSlips:(extras.packingSlips||[]),invoiceSettings:snapshot.invoiceSettings&&typeof snapshot.invoiceSettings==='object'?snapshot.invoiceSettings:{}});
+    const nextExtras=JSON.stringify({products:ensureShopIds(snapshot.products),hardware:snapshot.hardware,sales:snapshot.sales,nonCommercial:Array.isArray(snapshot.nonCommercial)?snapshot.nonCommercial:[],printers:Array.isArray(snapshot.printers)?snapshot.printers:[],invoices:Array.isArray(snapshot.invoices)?snapshot.invoices:[],stockSlips:Array.isArray(snapshot.stockSlips)?snapshot.stockSlips:(extras.stockSlips||[]),packingSlips:Array.isArray(snapshot.packingSlips)?snapshot.packingSlips:(extras.packingSlips||[]),customOrders:Array.isArray(snapshot.customOrders)?snapshot.customOrders:(extras.customOrders||[]),invoiceSettings:snapshot.invoiceSettings&&typeof snapshot.invoiceSettings==='object'?snapshot.invoiceSettings:{}});
     localStorage.setItem(STATE_KEY,nextState);localStorage.setItem(EXTRA_KEY,nextExtras);
     if(localStorage.getItem(STATE_KEY)!==nextState || localStorage.getItem(EXTRA_KEY)!==nextExtras)throw Error('Écriture locale non confirmée');
    }catch(e){try{if(oldState===null)localStorage.removeItem(STATE_KEY);else localStorage.setItem(STATE_KEY,oldState);if(oldExtras===null)localStorage.removeItem(EXTRA_KEY);else localStorage.setItem(EXTRA_KEY,oldExtras);}catch(_){}throw e;}
-   rolls=snapshot.rolls.map(x=>({...x}));prints=snapshot.prints.map(x=>({...x}));extras={products:ensureShopIds(snapshot.products),hardware:snapshot.hardware,sales:snapshot.sales,nonCommercial:Array.isArray(snapshot.nonCommercial)?snapshot.nonCommercial:[],printers:Array.isArray(snapshot.printers)?snapshot.printers:[],invoices:Array.isArray(snapshot.invoices)?snapshot.invoices:[],stockSlips:Array.isArray(snapshot.stockSlips)?snapshot.stockSlips:(extras.stockSlips||[]),packingSlips:Array.isArray(snapshot.packingSlips)?snapshot.packingSlips:(extras.packingSlips||[]),invoiceSettings:snapshot.invoiceSettings&&typeof snapshot.invoiceSettings==='object'?snapshot.invoiceSettings:{}};
+   rolls=snapshot.rolls.map(x=>({...x}));prints=snapshot.prints.map(x=>({...x}));extras={products:ensureShopIds(snapshot.products),hardware:snapshot.hardware,sales:snapshot.sales,nonCommercial:Array.isArray(snapshot.nonCommercial)?snapshot.nonCommercial:[],printers:Array.isArray(snapshot.printers)?snapshot.printers:[],invoices:Array.isArray(snapshot.invoices)?snapshot.invoices:[],stockSlips:Array.isArray(snapshot.stockSlips)?snapshot.stockSlips:(extras.stockSlips||[]),packingSlips:Array.isArray(snapshot.packingSlips)?snapshot.packingSlips:(extras.packingSlips||[]),customOrders:Array.isArray(snapshot.customOrders)?snapshot.customOrders:(extras.customOrders||[]),invoiceSettings:snapshot.invoiceSettings&&typeof snapshot.invoiceSettings==='object'?snapshot.invoiceSettings:{}};
    search='';render();return true;
   },
   closeAllDialogs(){for(const d of document.querySelectorAll('dialog[open]'))d.close();}

@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#100c1f"><title>JJ3D v4.11.29 — Boutique</title>
-<link rel="stylesheet" href="css/boutique.css?v=4.11.29"><script defer src="js/firebase-config.js?v=4.8.1"></script><script type="module" src="js/boutique.js?v=4.11.29"></script><script defer src="js/dialog-dismiss.js?v=4.11.29"></script><link rel="manifest" href="manifest.webmanifest">
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#100c1f"><title>JJ3D v4.11.31 — Boutique</title>
+<link rel="stylesheet" href="css/boutique.css?v=4.11.31"><script defer src="js/firebase-config.js?v=4.8.1"></script><script type="module" src="js/boutique.js?v=4.11.31"></script><script defer src="js/dialog-dismiss.js?v=4.11.31"></script><link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="JJ3D">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<script defer src="js/pwa-install.js?v=4.11.29"></script>
+<script defer src="js/pwa-install.js?v=4.11.31"></script>
 <style id="jj3d-brand-styles">
 /* Identité JJ3D — texte et page de démarrage (sans modifier les modules métier). */
 #jj3d-splash {position:fixed;z-index:2147483647;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:radial-gradient(circle at 50% 38%,#312052,#110d20 65%,#090b17);color:#f8f5ff;font-family:system-ui,-apple-system,Segoe UI,sans-serif;opacity:1;transition:opacity .4s ease;pointer-events:auto}
@@ -30,7 +30,7 @@ if(document.readyState==='complete')setTimeout(removeSplash,650);else window.add
 setTimeout(removeSplash,4200)})();</script>
 <header class="header"><div class="brand"><img class="jj3d-header-logo" src="icons/splash-logo.png" alt="Logo JJ3D">JJ3D <span>BOUTIQUE</span></div><div class="account" id="who"></div></header>
 <main class="wrap"><section class="hero"><div><p class="eyebrow">ACCÈS BOUTIQUE · LECTURE SEULE</p><h1>Catalogue des produits</h1><p>Photos, prix, variantes et quantités disponibles.</p></div><button type="button" id="logout" hidden>Se déconnecter</button></section>
-<div id="message" role="status" aria-live="polite"></div>
+<div id="message" role="status" aria-live="polite"></div><div id="jj-boutique-alerts" class="jj-boutique-alerts" hidden aria-live="polite"></div>
 <nav id="boutique-tabs" class="boutique-tabs" hidden aria-label="Sections Boutique"><button type="button" data-btab="catalogue" class="selected">🛍 Catalogue</button><button type="button" data-btab="orders">🛒 Commander</button><button type="button" data-btab="planning">🖨 À venir</button><button type="button" data-btab="deliveries">📦 Livraisons</button></nav>
 <section id="login-panel" class="panel"><h2>Connexion à la boutique</h2><p>Utilise le compte que l'administrateur a autorisé.</p><form id="login-form"><label>Courriel de la boutique<input required name="email" type="email" autocomplete="username"></label><label>Mot de passe<input required name="password" type="password" autocomplete="current-password"></label><button type="submit">Se connecter</button></form></section>
 <section id="catalogue-panel" hidden><section class="jj-order-info" aria-label="Informations sur les commandes">
@@ -55,6 +55,7 @@ setTimeout(removeSplash,4200)})();</script>
  <div class="boutique-page-heading"><h2>🛒 Commander des impressions</h2><p>Choisis les articles et la quantité. Une seule confirmation et ta commande est envoyée à l’atelier automatiquement.</p></div>
  <div class="boutique-order-layout"><section class="panel boutique-order-products"><h3>Ajouter un produit</h3><label>Produit<select id="order-product"></select></label><label>Quantité<input id="order-qty" type="number" min="1" max="300" step="1" value="1"></label><button type="button" id="order-add">＋ Ajouter à ma commande</button></section>
  <section class="panel boutique-order-cart"><h3>Ma commande <span id="order-count">(0)</span></h3><div id="order-cart"></div><label>Un petit mot? (facultatif)<textarea id="order-note" maxlength="400" rows="2" placeholder="Ex. Pour la semaine prochaine"></textarea></label><button id="order-send" type="button">✓ Envoyer la commande</button><p id="order-status" class="send-status" role="status" aria-live="polite"></p></section></div>
+ <section class="panel jj-boutique-custom-request"><h3>✨ Demande d'impression personnalisée</h3><p>Une création qui n’est pas au catalogue? Envoie les détails à l’atelier, avec une photo de référence si tu en as une.</p><form id="custom-request-form"><label>Nom du client / personne qui demande<input name="customer" maxlength="120" required placeholder="Ex. Marie"></label><label>Projet à fabriquer<input name="item" maxlength="160" required placeholder="Ex. Plaque de porte personnalisée"></label><label>Quantité<input name="quantity" type="number" value="1" min="1" max="300" required></label><label>Couleurs / matière<input name="colors" maxlength="160" placeholder="Ex. Blanc et vert"></label><label>Date souhaitée<input name="dueAt" type="date"></label><label>Photo de référence (facultative)<input name="photo" type="file" accept="image/*"></label><label>Précisions<textarea name="notes" maxlength="1000" rows="3" placeholder="Dimensions, texte à écrire, détails…"></textarea></label><button type="submit">📨 Envoyer la demande personnalisée</button><p id="custom-request-status" class="send-status" role="status"></p></form></section>
  <p class="sub">Ceci est une demande de production, pas un paiement ni une vente. L’atelier confirmera la commande.</p>
 </section>
 <section id="planning-panel" hidden><div class="boutique-page-heading"><h2>🖨 Prochaines impressions</h2><p>Voici ce qui est prévu à l’atelier, avec l’avancement et les captures disponibles. La liste se met à jour automatiquement.</p></div><div id="planning-cards" class="cards"></div><p id="planning-empty" class="empty" hidden>Aucune impression planifiée pour le moment.</p></section>
