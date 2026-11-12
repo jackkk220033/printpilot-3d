@@ -1,9 +1,14 @@
-# JJ3D v4.11.47 — Suppression synchronisée des demandes personnalisées
+# JJ3D v4.11.48 — Récupération sécurisée des commandes
 
-Depuis **Atelier → Demandes**, clique **Supprimer des deux côtés** sur la demande, même si elle est marquée « Payée ». Le même bouton figure dans **Boutique → Mes demandes personnalisées**. La suppression du document partagé Firestore retire la demande des deux affichages. Les tâches d’impression associées sont aussi retirées de la file de l’Atelier par synchronisation.
+## Récupérer la commande de Lucie
+1. Publier ce dossier complet sur Firebase Hosting.
+2. Rafraîchir JJ3D et ouvrir **Commandes personnalisées**.
+3. La section **🛟 Commandes à récupérer** liste les factures qui portent une référence de commande disparue.
+4. Cliquer sur **Récupérer cette commande** en face de Lucie Gascon / JJ3D-2026-0003, puis confirmer.
+5. Vérifier les informations de la fiche, la facture et l'impression en pause.
 
-⚠️ Une demande réellement payée ne devrait pas être supprimée par erreur. Une confirmation spécifique apparaît. Les factures, paiements et rapports comptables déjà créés **ne sont pas effacés**.
+Le bouton ne crée aucune nouvelle facture ni aucune tâche d'impression. Il réutilise l'identifiant `customOrderId` de la facture lorsqu'il est disponible. Si cet identifiant manque, le rapprochement de la tâche Atelier devra être vérifié séparément. Les détails de commande non présents sur la facture ne peuvent pas être garantis (photos, dimensions, etc.).
 
-**Installation :** publier tous les fichiers et mettre à jour `firestore.rules` dans Firebase Console. Recharger l’application installée au besoin.
+**Important :** avant récupération, exporter les données complètes en JSON depuis **Sauvegardes de sécurité**. La synchronisation cloud doit être active et sans conflit. La suppression directe exige désormais de taper `SUPPRIMER` et garde une copie locale de la dernière commande supprimée.
 
-**Notifications mobiles :** cette version ne crée pas de service Firebase Cloud Messaging. Les notifications push en arrière-plan ne sont pas encore prises en charge.
+Cette version ne règle **pas encore** les notifications push en arrière-plan. Aucun changement Firestore Rules requis pour cette réparation.

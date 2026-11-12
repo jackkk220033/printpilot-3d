@@ -1198,6 +1198,51 @@
  let editingCustomOrderId=null;
  const customOrderStages={new:'Nouvelle demande',quoted:'Soumission envoyée',approved:'Confirmée',awaiting_payment:'Paiement à confirmer',printing:'En production',ready:'Prête',delivered:'Remise / livrée',cancelled:'Annulée'};
  const customOrders=()=>Array.isArray(extras.customOrders)?extras.customOrders:[];
+
+ // v4.11.48 — Recuperation prudente depuis les factures existantes.
+ // Ne modifie PAS la facture, la file d'impression ni les photos et ne fait aucune restauration automatique.
+ function missingCustomOrderInvoices(){
+  const orders=customOrders(), linked=new Set(orders.map(o=>String(o.id)));
+  const orderNumbers=new Set(orders.map(o=>String(o.number||'')).filter(Boolean));
+  return (extras.invoices||[]).filter(inv=>{
+   const original=String(inv.customOrderId||'').trim();
+   const nr=String(inv.notes||'').match(/Commande\s+(JJ-\d{4}-\d+)/i)?.[1]||'';
+   return (original||nr) && (!original||!linked.has(original)) && (!nr||!orderNumbers.has(nr)) && inv.status!=='cancelled';
+  });
+ }
+ function recoverCustomOrderFromInvoice(invoiceId){
+  const invoice=(extras.invoices||[]).find(i=>i.id===invoiceId);
+  if(!invoice||!missingCustomOrderInvoices().some(i=>i.id===invoiceId))return notify('Cette commande semble déjà récupérée. Recharge la page.',true);
+  const originalId=String(invoice.customOrderId||'').trim();
+  const number=String(invoice.notes||'').match(/Commande\s+(JJ-\d{4}-\d+)/i)?.[1]||('Commande liée à '+(invoice.number||'facture'));
+  const line=(invoice.lines||[])[0]||{};
+  const special=(invoice.lines||[]).find(l=>/filament achet[eé] sp[eé]cialement/i.test(String(l.name||'')));
+  const amount=Number(line.price)||0, specialAmount=special?(Number(special.price)||0)*(Number(special.qty)||1):0;
+  const color=String(invoice.notes||'').match(/(?:PLA\+?|PETG|TPU|ABS)\s*[·—-]\s*([^·]+)/i);
+  const material=String(invoice.notes||'').match(/\b(PLA\+?|PETG|TPU|ABS)\b/i);
+  const customer=String(invoice.clientName||'Client à préciser');
+  const label=String(line.name||'Commande à préciser').split(/\s+[—–-]\s+/)[0];
+  const quantity=Math.max(1,Math.round(Number(line.qty)||1));
+  const id=originalId||('CO-restore-'+invoice.id);
+  if(customOrders().some(o=>o.id===id||o.number===number))return notify('Commande déjà présente — aucune copie créée.',true);
+  const message=`Récupérer ${number} pour ${customer} depuis la facture ${invoice.number||''} ?\n\nLa facture originale et la tâche À imprimer NE seront PAS modifiées. Les autres commandes seront conservées. Vérifie les détails après récupération.`;
+  if(!confirm(message))return;
+  // Sauvegarde locale explicite avant toute tentative (sans remplacer l'inventaire).
+  try{const dump=JSON.stringify({at:new Date().toISOString(),invoice,customOrders:customOrders()});localStorage.setItem('jj3d-recovery-last-before-v4.11.48',dump);}catch(e){notify('Sauvegarde de précaution indisponible : exporte ton JSON avant de continuer.',true);return;}
+  const now=new Date().toISOString();
+  const row={id,number,customer,contact:String(invoice.clientEmail||''),item:label,quantity,
+   colors:color?color[1].trim():'',filamentType:material?material[1]:'',orderedAt:String(invoice.date||now.slice(0,10)),dueAt:String(invoice.due||''),
+   price:Math.max(0,amount*quantity),deposit:0,delivery:'pickup',status:'new',clientApproval:'pending',
+   paymentCollector:'direct',filamentPurchased:!!special,filamentChargePercent:special?50:0,
+   filamentPurchasePrice:special?specialAmount*2:0,filamentPurchaseTax:0,filamentPurchaseShipping:0,
+   filamentChargeMode:'extra',notes:'Commande récupérée depuis '+String(invoice.number||'facture')+'. Vérifier les informations manquantes. '+String(invoice.notes||''),
+   recoveredFromInvoiceId:invoice.id,recoveredAt:now,createdAt:String(invoice.createdAt||now),updatedAt:now,
+   hasPhoto:false,hasColorPhoto:false,productionHold:false};
+  const invoices=(extras.invoices||[]).map(i=>i.id===invoice.id?{...i,customOrderId:id}:i);
+  if(!persistExtras({...extras,customOrders:[...customOrders(),row],invoices}))return;
+  render();notify('✓ Commande '+number+' récupérée sans nouvelle facture ni nouvelle impression. Vérifie ses détails et la liaison avec À imprimer.');
+ }
+
  // Dimensions : saisie naturelle 1', 6\", 1' 6\", 30 cm, 304.8 mm, 12 in.
  function jjParseDimension(raw,defaultUnit='mm'){
   const s=String(raw||'').trim().toLowerCase().replace(/,/g,'.').replace(/′/g,"'").replace(/[″“”]/g,'"');
@@ -1268,6 +1313,7 @@
   return header('SUIVI CLIENTS','Commandes personnalisées','Enregistre ici les demandes reçues par téléphone, en personne ou sur Messenger. Rien ne sera oublié.')+
    `<div class="stats-grid three">${statCard('📋',active.length,'Commandes actives')}${statCard('⏳',orders.filter(x=>x.status==='printing').length,'En production')}${statCard('🎁',orders.filter(x=>x.status==='ready').length,'Prêtes à remettre')}</div>`+
    `<div class="jj-custom-orders-toolbar"><button type="button" class="primary-btn" id="custom-order-add">＋ Ajouter une commande</button><span class="small-hint">Retrouve et modifie tes commandes ci-dessous. Le formulaire s’ouvre seulement quand tu en as besoin.</span></div>`+
+   (missingCustomOrderInvoices().length?`<section class="panel" style="border-color:#d9a44a"><h2>🛟 Commandes à récupérer (${missingCustomOrderInvoices().length})</h2><p>Ces factures existent encore, mais leurs commandes personnalisées ne sont plus dans la liste. Récupère uniquement celles que tu reconnais. Les factures et les impressions existantes ne sont pas recréées.</p>${missingCustomOrderInvoices().map(i=>`<div class="item"><strong>${esc(i.clientName||'Client')} — ${esc(i.number||'Facture')}</strong> · ${esc((i.lines||[])[0]?.name||'Projet')} <button type="button" class="primary-btn" data-recover-custom-invoice="${esc(i.id)}">🛟 Récupérer cette commande</button></div>`).join('')}</section>`:'')+
    `<dialog id="custom-order-dialog" class="dialog jj-custom-order-panel jj-custom-order-dialog" aria-labelledby="custom-order-form-title"><div class="jj-custom-order-modal-heading"><div><h2 id="custom-order-form-title">＋ Nouvelle commande personnalisée</h2><p>Complète les détails de ton client, du projet et du filament. Tu pourras modifier la commande plus tard.</p></div><button type="button" class="close" id="custom-order-close" aria-label="Fermer le formulaire" title="Fermer">×</button></div>
    <form id="custom-order-form" novalidate><input type="hidden" name="orderId"><div class="form-grid">
    <label>Nom du client *<input name="customer" maxlength="120" required placeholder="Ex. Marie Tremblay"></label>
@@ -1464,7 +1510,15 @@
   if(dialog)dialog.scrollTop=0;
   f.elements.namedItem('customer')?.focus({preventScroll:true});
  }
- async function deleteCustomOrder(id){const row=customOrders().find(x=>x.id===id);if(!row||!confirm('Supprimer définitivement la commande « '+row.item+' » de '+row.customer+' ?'))return;if(persistExtras({...extras,customOrders:customOrders().filter(x=>x.id!==id)})){render();try{await window.JJ3DSyncOrderQueue?.({...row,status:'cancelled',deleted:true});notify('Commande supprimée et tâche liée annulée.');}catch(err){notify('Commande supprimée, mais tâche À imprimer à vérifier : '+(err.message||err),true);}}}
+ async function deleteCustomOrder(id){
+  const row=customOrders().find(x=>x.id===id);if(!row)return;
+  const typed=prompt('SUPPRESSION : '+row.number+' — '+row.customer+'\nPour supprimer uniquement CETTE commande, écris SUPPRIMER.\nLes factures et autres commandes restent intactes.');
+  if(typed!=='SUPPRIMER')return;
+  try{localStorage.setItem('jj3d-last-deleted-custom-order-v4.11.48',JSON.stringify({savedAt:new Date().toISOString(),row}));}catch(e){notify('Sauvegarde locale de la commande impossible : suppression annulée.',true);return;}
+  const next=customOrders().filter(x=>x.id!==id);
+  if(next.length!==customOrders().length-1){notify('Anomalie détectée : suppression annulée.',true);return;}
+  if(persistExtras({...extras,customOrders:next})){render();try{await window.JJ3DSyncOrderQueue?.({...row,status:'cancelled',deleted:true});notify('Commande '+row.number+' supprimée uniquement; factures conservées.');}catch(err){notify('Commande supprimée, mais tâche À imprimer à vérifier : '+(err.message||err),true);}}
+ }
  async function updateCustomOrderStatus(id,status){if(!Object.hasOwn(customOrderStages,status))return;const row=customOrders().find(x=>x.id===id);if(!row)return;const updated={...row,status,updatedAt:new Date().toISOString()};if(persistExtras({...extras,customOrders:customOrders().map(x=>x.id===id?updated:x)})){render();try{await window.JJ3DSyncOrderQueue?.(updated);notify('✓ Statut et tâche liée mis à jour.');}catch(err){notify('Statut sauvé, mais À imprimer non actualisé : '+(err.message||err),true);}}}
 
  function render(){const p=page();app.innerHTML=p.startsWith('atelier-')?atelierPanel(p):p==='dashboard'?dashboard():p==='filaments'?filaments():p==='produits'?productPage():p==='commandes'?salesPage():p==='commandes-perso'?customOrdersPage():p==='sauvegardes'?backupsPage():p==='hardware'?hardwarePage():p==='impressions'?printPage():p==='horsproduction'?offPage():p==='finances'?financePage():p==='factures'?window.JJ3DInvoices.page():p==='catalogue'?catalogPage():p==='imprimantes'?printerPage():placeholder(p);document.getElementById('page-name').textContent=pages[p];document.querySelectorAll('[data-page]').forEach(n=>{n.classList.toggle('active',n.dataset.page===p);n.setAttribute('aria-current',n.dataset.page===p?'page':'false')});document.getElementById('sidebar').classList.remove('open');document.querySelectorAll('#mobile-navigation [data-page]').forEach(n=>{n.classList.toggle('active',n.dataset.page===p);n.setAttribute('aria-current',n.dataset.page===p?'page':'false');});const filterCount=document.getElementById(p+'-count');if(filterCount&&uiFilters[p])filterCount.textContent=filteredProducts(p).length+' résultat(s)';document.body.classList.toggle('finance-view',p==='finances');document.querySelectorAll('.table-wrap table').forEach(table=>{const headers=[...table.querySelectorAll('thead th')].map(th=>th.textContent.trim());table.querySelectorAll('tbody tr').forEach(tr=>[...tr.children].forEach((td,i)=>td.setAttribute('data-label',headers[i]||'')));});hydratePhotos();}
@@ -1502,7 +1556,7 @@
   if(hide&&!confirm('Masquer cette vente directe du chiffre d’affaires? Vérifie qu’elle correspond vraiment à la vente de la facture. Aucune donnée ne sera supprimée et le stock restera inchangé.'))return;
   if(persistExtras({...extras,sales:extras.sales.map(s=>s.id===id?{...s,status:hide?'duplicate':'active',duplicateHiddenAt:hide?new Date().toISOString():''}:s)})){render();notify(hide?'Vente directe masquée, sans suppression.':'Vente rétablie.');}
  });
- document.addEventListener('click',e=>{const edit=e.target.closest('[data-edit-custom-order]'),del=e.target.closest('[data-delete-custom-order]');if(e.target.closest('[data-restore-backup]'))restoreBackup(e.target.closest('[data-restore-backup]').dataset.restoreBackup);else if(edit)editCustomOrder(edit.dataset.editCustomOrder);else if(e.target.closest('[data-invoice-custom-order]'))openCustomOrderInvoice(e.target.closest('[data-invoice-custom-order]').dataset.invoiceCustomOrder);else if(e.target.closest('[data-queue-custom-order]')){location.hash='#atelier-queue';notify('🖨️ Impression liée : voir la file À imprimer.');}else if(del)deleteCustomOrder(del.dataset.deleteCustomOrder);else if(e.target.closest('#custom-order-add'))openNewCustomOrder();else if(e.target.closest('#custom-order-reset, #custom-order-close')){editingCustomOrderId=null;document.getElementById('custom-order-dialog')?.close();}else if(e.target.id==='custom-order-dialog'){const dialog=e.target,r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom){editingCustomOrderId=null;dialog.close();}}});
+ document.addEventListener('click',e=>{const edit=e.target.closest('[data-edit-custom-order]'),del=e.target.closest('[data-delete-custom-order]');if(e.target.closest('[data-restore-backup]'))restoreBackup(e.target.closest('[data-restore-backup]').dataset.restoreBackup);else if(e.target.closest('[data-recover-custom-invoice]'))recoverCustomOrderFromInvoice(e.target.closest('[data-recover-custom-invoice]').dataset.recoverCustomInvoice);else if(edit)editCustomOrder(edit.dataset.editCustomOrder);else if(e.target.closest('[data-invoice-custom-order]'))openCustomOrderInvoice(e.target.closest('[data-invoice-custom-order]').dataset.invoiceCustomOrder);else if(e.target.closest('[data-queue-custom-order]')){location.hash='#atelier-queue';notify('🖨️ Impression liée : voir la file À imprimer.');}else if(del)deleteCustomOrder(del.dataset.deleteCustomOrder);else if(e.target.closest('#custom-order-add'))openNewCustomOrder();else if(e.target.closest('#custom-order-reset, #custom-order-close')){editingCustomOrderId=null;document.getElementById('custom-order-dialog')?.close();}else if(e.target.id==='custom-order-dialog'){const dialog=e.target,r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom){editingCustomOrderId=null;dialog.close();}}});
  document.addEventListener('change',e=>{if(e.target.matches('[data-custom-status]'))updateCustomOrderStatus(e.target.dataset.customStatus,e.target.value);});
  document.getElementById('print-product').addEventListener('change',()=>{if(!editingPrintId){selectedProductInfo({prefillDuration:true});const p=extras.products.find(x=>String(x.id)===document.getElementById('print-product').value);suggestExcelUsage(p);suggestHardwareFromProduct();if(p?.printer)setChoiceValue(document.getElementById('print-form'),'printer',p.printer);refreshPrintCreation();}else{selectedProductInfo();refreshPrintCreation();}});
  document.getElementById('print-form').addEventListener('input',updatePrintCreationCost);document.getElementById('print-form').addEventListener('change',updatePrintCreationCost);
