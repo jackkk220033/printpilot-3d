@@ -534,10 +534,10 @@ select[data-choice]{width:100%;min-width:0}
 @media(max-width:1080px){.jj-finance-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.jj-finance-insights{grid-template-columns:1fr}}
 @media(max-width:600px){.jj-finance-kpis{gap:9px}.jj-finance-kpi{padding:12px}.jj-finance-kpi strong{font-size:21px}.jj-finance-bar-row{grid-template-columns:69px minmax(0,1fr) 72px;gap:7px;font-size:11px}.jj-finance-bar-row>strong{font-size:11px}.jj-finance-controls .panel-head{align-items:stretch;flex-direction:column}.jj-finance-filters label{min-width:100%}.jj-finance-top-row>div:last-child{max-width:110px}}
 
-/* v4.11.64 — Corbeille et sauvegardes */
+/* v4.11.65 — Corbeille et sauvegardes */
 .jj3d-trash-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.jj3d-trash-row .actions{display:flex;gap:8px;flex-wrap:wrap}.jj3d-trash-row .small-hint{color:var(--muted,#8c91a4);font-size:.85rem;margin-top:4px}@media(max-width:620px){.jj3d-trash-row{align-items:stretch;flex-direction:column}.jj3d-trash-row .actions button{flex:1}}
 
-/* v4.11.64 — Fiches clients, en colonnes adaptatives */
+/* v4.11.65 — Fiches clients, en colonnes adaptatives */
 .jj-crm-panel{min-width:0}
 .jj-crm-search-label{display:block;max-width:480px;margin:12px 0 18px;font-weight:650}
 .jj-crm-search-label input{display:block;width:100%;margin-top:6px}

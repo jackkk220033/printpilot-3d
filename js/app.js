@@ -568,7 +568,7 @@
  function activeSales(){return extras.sales.filter(s=>!['cancelled','duplicate'].includes(s.status));}
  function salePrice(s){return safeNum(s.unitPrice);}
  function saleSummary(s){return {gross:activeSales().reduce((a,v)=>a+safeNum(v.gross),0),profit:activeSales().reduce((a,v)=>a+safeNum(v.profit),0)};}
- // v4.11.64 — CRM à lecture seule. Une fiche est une vue recalculée depuis les commandes
+ // v4.11.65 — CRM à lecture seule. Une fiche est une vue recalculée depuis les commandes
  // et les factures, non une seconde copie de données personnelles à synchroniser.
  let jjClientSearch='';
  let jjClientFocus='';

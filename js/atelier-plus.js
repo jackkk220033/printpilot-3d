@@ -1,4 +1,4 @@
-import {downloadQrLabel, downloadQrLabelsZip, downloadQrCatalogPdf} from './qr-batch.js?v=4.11.64';
+import {downloadQrLabel, downloadQrLabelsZip, downloadQrCatalogPdf} from './qr-batch.js?v=4.11.65';
 // PrintPilot 3D v4.9.1 — Atelier +. Private management, independent of commercial stock.
 const $=id=>document.getElementById(id), esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const cad=n=>new Intl.NumberFormat('fr-CA',{style:'currency',currency:'CAD'}).format(Number(n)||0);
