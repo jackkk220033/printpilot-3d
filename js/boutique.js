@@ -28,13 +28,20 @@ async function getCatalogue(user){
  detach=api.onSnapshot(reference,async snap=>{
   if(!snap.exists()){msg('Le catalogue n’a pas encore été publié par l’atelier.');products=[];render();return;}
   products=Array.isArray(snap.data().products)?snap.data().products:[];
-  fillCategories();render();msg('Catalogue publié · lecture seule',true);const targetProduct=new URL(location.href).searchParams.get('produit');if(targetProduct&&products.some(p=>p.id===targetProduct))setTimeout(()=>openProduct(targetProduct),50);
+  fillCategories();render();msg('Catalogue publié · lecture seule',true);const targetProduct=new URL(location.href).searchParams.get('produit');if(targetProduct&&products.some(p=>p.id===targetProduct)&&selectedProductId!==targetProduct)setTimeout(()=>{if(products.some(p=>p.id===targetProduct))openProduct(targetProduct);},50);
   updateOrderOptions();const selector=$('boutique-request-product');if(selector)selector.innerHTML=products.map(p=>'<option value="'+escapeHTML(p.id)+'">'+escapeHTML(p.name)+' (#'+escapeHTML(p.shopId)+')</option>').join('');
   // Les photos partagées se trouvent dans une collection distincte et sécurisée.
   for(const p of products){
    if(!current||current.uid!==user.uid)return;
    try{let photo=await api.getDoc(api.doc(db,'boutiques',owner,'photos',photoId('shop:'+p.shopId)));if(!photo.exists())photo=await api.getDoc(api.doc(db,'boutiques',owner,'photos',photoId('product:'+p.id)));
-    if(photo.exists()&&typeof photo.data().image==='string'&&photo.data().image.startsWith('data:image/jpeg;base64,')){images.set(p.id,photo.data().image);const el=[...document.querySelectorAll('[data-photo]')].find(e=>e.dataset.photo===p.id);if(el){const img=document.createElement('img');img.src=photo.data().image;img.alt='Photo de '+p.name;img.loading='lazy';el.replaceChildren(img);}}
+    if(photo.exists()&&typeof photo.data().image==='string'&&photo.data().image.startsWith('data:image/')){
+    const src=photo.data().image;images.set(p.id,src);
+    for(const el of [...document.querySelectorAll('[data-photo]')].filter(e=>e.dataset.photo===p.id)){
+     const img=document.createElement('img');img.src=src;img.alt='Photo de '+p.name;img.loading='lazy';el.replaceChildren(img);
+    }
+    // La fiche QR peut déjà être ouverte alors que les photos arrivent de Firebase.
+    if(selectedProductId===p.id&&$('product-dialog').open){const wrap=$('detail-photo');const img=document.createElement('img');img.src=src;img.alt='Photo de '+p.name;wrap.replaceChildren(img);}
+   }
    }catch(e){console.warn('Photo boutique:',p.id,e.code||e.message);}
   }
  },err=>msg('Accès refusé au catalogue : '+(err.code||err.message)));

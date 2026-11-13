@@ -16,7 +16,12 @@ button.danger-action:hover{background:#73313e;}
 .printlabel-brand{font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:#667085;margin-top:auto}
 .printlabel-qr{display:flex;flex-direction:column;gap:4px;align-items:center;justify-content:center;min-width:0}
 .printlabel-qr .qr{display:flex;align-items:center;justify-content:center;width:112px;height:112px;flex:none;padding:0;margin:0;background:white}
-.printlabel-qr .qr img,.printlabel-qr .qr canvas{display:block!important;width:112px!important;height:112px!important;max-width:none!important;object-fit:contain}
+.printlabel-qr .qr img,.printlabel-qr .qr canvas{width:112px!important;height:112px!important;max-width:none!important;object-fit:contain}
+/* qrcodejs crée à la fois un canvas et une image : ne jamais afficher les deux. */
+.printlabel-qr .qr canvas:has(+ img){display:none!important}
+.printlabel-qr .qr img{display:block!important}
+.printlabel-qr .qr canvas{display:block}
+.printlabel-qr .qr:has(img) canvas{display:none!important}
 .printlabel-qr small{color:#576074;font-size:9px;text-align:center}
 .labels-print-actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:8px}
 .labels-print-actions p{flex:1;min-width:220px}
