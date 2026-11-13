@@ -1404,7 +1404,7 @@
   }).join('');
   return `<section class="panel jj-board-panel" id="jj-order-board-panel" ${jjBoardView==='list'?'hidden':''}>
    <div class="panel-head"><div><h2>📋 Tableau de production</h2><p>Glisse une carte entre les colonnes sur ordinateur, ou utilise son menu « Changer d’étape » sur téléphone. Les factures ne sont jamais marquées payées automatiquement.</p></div></div>
-   <div class="jj-board-scroll" tabindex="0" aria-label="Tableau des commandes, défilement horizontal"><div class="jj-board-columns">${cols}</div></div>
+   <div class="jj-board-scroll" tabindex="0" aria-label="Tableau des commandes, colonnes adaptatives avec défilement vertical"><div class="jj-board-columns">${cols}</div></div>
   </section>`;
  }
  function customOrdersPage(){

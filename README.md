@@ -1,4 +1,4 @@
-# JJ3D v4.11.56 — Tableau visuel des commandes
+# JJ3D v4.11.57 — Tableau visuel des commandes
 
 Version complète pour remplacer la version précédente dans le dépôt GitHub Pages, sans modifier les données Firebase.
 
@@ -16,3 +16,9 @@ Version complète pour remplacer la version précédente dans le dépôt GitHub 
 - Sauvegarde JSON complète conseillée avant publication; ne supprime aucune donnée Firebase.
 - Cette version se concentre sur le Kanban. Finances, impression QR, sauvegardes et entretien feront l'objet de versions suivantes.
 - Les notifications push téléphone avec application fermée exigent toujours un service d'envoi serveur ; cette version ne change pas cette limitation.
+
+## v4.11.57 — tableau plus compact
+- Colonnes adaptatives qui passent sur plusieurs rangées selon la largeur disponible.
+- Défilement vertical normal de la page : plus de longue barre horizontale.
+- Glisser-déposer et changement de statut conservés.
+- Aucune migration de données Firebase.

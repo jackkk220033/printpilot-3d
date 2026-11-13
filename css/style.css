@@ -506,12 +506,12 @@ select[data-choice]{width:100%;min-width:0}
 /* v4.11.54 : suppression des alertes et activation push sur mobile */
 .jj3d-notify-item-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.jj3d-notify-item-actions button{background:transparent;border:1px solid #874c65;border-radius:8px;color:#ffc4cb;padding:7px 9px;font-size:12px;cursor:pointer}.jj3d-notify-item-actions button:hover{background:#572536}.jj3d-notify-actions button[data-jj3d-push]{background:#24425a;border-color:#457d99}.jj3d-notify-actions button[data-jj3d-clear],#jj3d-notify-clear{border-color:#88465a;color:#ffc7ce}
 
-/* v4.11.56 — tableau Kanban, utilisable sur ordinateur et mobile. */
+/* v4.11.57 — Kanban adaptatif avec défilement vertical, sans barre horizontale. */
 .jj-board-view-controls{display:flex;gap:8px;flex-wrap:wrap}.jj-board-view-controls [aria-pressed="true"]{border-color:#9b75f7;background:rgba(147,103,244,.22);color:inherit;font-weight:750}
 .jj-board-panel[hidden],#jj-order-list-panel[hidden]{display:none!important}
-.jj-board-scroll{overflow-x:auto;overscroll-behavior-x:contain;padding:4px 3px 15px;scrollbar-width:thin}
-.jj-board-columns{display:flex;gap:14px;align-items:stretch;min-height:240px}
-.jj-board-column{width:282px;flex:0 0 282px;min-width:0;background:rgba(120,110,160,.09);border:1px solid rgba(155,145,200,.17);border-radius:16px;transition:background .12s,border-color .12s}
+.jj-board-scroll{width:100%;min-width:0;overflow-x:visible;padding:4px 0 12px}
+.jj-board-columns{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,255px),1fr));gap:14px;align-items:start;min-height:240px}
+.jj-board-column{width:100%;min-width:0;background:rgba(120,110,160,.09);border:1px solid rgba(155,145,200,.17);border-radius:16px;transition:background .12s,border-color .12s}
 .jj-board-column.jj-drop-target{background:rgba(121,87,218,.22);border-color:#a489ff}
 .jj-board-column-head{display:grid;grid-template-columns:1fr auto;gap:4px;padding:15px 12px 10px;border-bottom:1px solid rgba(155,145,200,.15)}
 .jj-board-column-head small{grid-column:1/-1;color:var(--muted,#a9a4bd)}
@@ -524,4 +524,4 @@ select[data-choice]{width:100%;min-width:0}
 .jj-board-card-footer{display:flex;justify-content:space-between;align-items:center;gap:5px;flex-wrap:wrap}.jj-board-card-footer small{font-size:11px;color:var(--muted,#a9a4bd)}
 .jj-board-status-label{display:grid;gap:3px;font-size:11px;color:var(--muted,#a9a4bd)}.jj-board-status-label select{width:100%;min-width:0;margin:0}.jj-board-edit{width:100%;justify-content:center}
 .jj-board-empty{font-size:12px;text-align:center;padding:20px 10px;border:1px dashed rgba(155,145,200,.3);border-radius:10px;color:var(--muted,#a9a4bd)}
-@media(max-width:650px){.jj-board-column{width:min(78vw,290px);flex-basis:min(78vw,290px)}.jj-board-scroll{margin-inline:-4px}.jj-board-panel{padding:12px}.jj-board-view-controls{width:100%}.jj-board-view-controls button{flex:1}}
+@media(max-width:650px){.jj-board-columns{grid-template-columns:1fr;gap:12px}.jj-board-scroll{margin-inline:0}.jj-board-panel{padding:12px}.jj-board-view-controls{width:100%}.jj-board-view-controls button{flex:1}}
