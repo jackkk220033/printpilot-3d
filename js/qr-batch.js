@@ -1,4 +1,4 @@
-// JJ3D v4.11.69 — Export PNG + ZIP local : aucune donnée envoyée à un service externe.
+// JJ3D v4.11.70 — Export PNG + ZIP local : aucune donnée envoyée à un service externe.
 const utf8 = new TextEncoder();
 function safeName(value) { return String(value ?? '').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,74) || 'article'; }
 function saveFile(blob, filename) { const uri=URL.createObjectURL(blob), a=document.createElement('a');a.href=uri;a.download=filename;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(uri),15000); }
@@ -15,7 +15,7 @@ function zipFiles(entries){const parts=[],central=[];let offset=0;const u16=(v)=
 export async function downloadQrLabelsZip(products,urlFor,progress){const rows=[];const used=new Set();for(let i=0;i<products.length;i++){const p=products[i],png=await pngFor(p,urlFor(p));let name=filename(p),iSuffix=1;while(used.has(name))name=filename(p).replace(/\.png$/,`-${iSuffix++}.png`);used.add(name);rows.push({name,data:new Uint8Array(await png.arrayBuffer())});progress?.(i+1,products.length);if(i%8===7)await new Promise(r=>setTimeout(r,0));}saveFile(zipFiles(rows),'JJ3D-QR-tous-les-produits.zip');}
 
 
-// v4.11.69 — Catalogue A4 PDF directement depuis l'inventaire actuel; sans serveur ni ecriture Firebase.
+// v4.11.70 — Catalogue A4 PDF directement depuis l'inventaire actuel; sans serveur ni ecriture Firebase.
 export async function downloadQrCatalogPdf(products,urlFor,progress){
  const Pdf=window.jspdf?.jsPDF;
  if(!Pdf)throw new Error('Le module PDF ne s’est pas chargé. Vérifie ta connexion et recharge la page.');
