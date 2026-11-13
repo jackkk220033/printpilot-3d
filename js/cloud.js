@@ -46,7 +46,7 @@ function setUnreadBadge(count){ppUnreadCount=count;showNotificationLocations();
   el.setAttribute('aria-label', count+' message(s) non lu(s)');
  });
 }
-function stopUnreadBadge(){jj3dWatchPrevious.clear();window.JJ3DNotifications?.connect('');if(specialRequestsUnsub){specialRequestsUnsub();specialRequestsUnsub=null;}jj3dNotificationSeen=null;if(deliveryReceiptsUnsub){deliveryReceiptsUnsub();deliveryReceiptsUnsub=null;}window.JJ3DDeliveryReceipts=[];if(invoiceOrdersUnsub){invoiceOrdersUnsub();invoiceOrdersUnsub=null;}setInvoiceOrders([],false);if(unreadUnsub){unreadUnsub();unreadUnsub=null;}if(requestsUnsub){requestsUnsub();requestsUnsub=null;}if(ordersUnsub){ordersUnsub();ordersUnsub=null;}setUnreadBadge(0);setRequestBadge(0);setOrderBadge(0);}
+function stopUnreadBadge(){jj3dWatchPrevious.clear();window.JJ3DNotifications?.connect('');window.JJ3DPush?.detach();if(specialRequestsUnsub){specialRequestsUnsub();specialRequestsUnsub=null;}jj3dNotificationSeen=null;if(deliveryReceiptsUnsub){deliveryReceiptsUnsub();deliveryReceiptsUnsub=null;}window.JJ3DDeliveryReceipts=[];if(invoiceOrdersUnsub){invoiceOrdersUnsub();invoiceOrdersUnsub=null;}setInvoiceOrders([],false);if(unreadUnsub){unreadUnsub();unreadUnsub=null;}if(requestsUnsub){requestsUnsub();requestsUnsub=null;}if(ordersUnsub){ordersUnsub();ordersUnsub=null;}setUnreadBadge(0);setRequestBadge(0);setOrderBadge(0);}
 
 let photoCache=new Map();
 const photoId=key=>Array.from(new TextEncoder().encode(key),b=>b.toString(16).padStart(2,'0')).join('');
@@ -504,6 +504,8 @@ if(!configOK){
    authArea.hidden=Boolean(user);accountArea.hidden=!user;
    if(!user){setStatus('☁ Déconnecté. Connecte-toi pour synchroniser.');return;}
    window.JJ3DNotifications?.connect(user.uid);
+   window.JJ3DNotifications?.attachCloud(db,{onSnapshot,collection,doc,updateDoc,deleteDoc},user.uid);
+   window.JJ3DPush?.attach(auth,db,user);
    bLink.value=boutiqueLink();
    accountLabel.textContent=`Compte privé : ${user.email || user.uid}`;
    setStatus('☁ Connecté : choisis une copie locale ou cloud.');

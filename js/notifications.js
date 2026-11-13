@@ -1,66 +1,31 @@
-/* JJ3D v4.11.53 — Notifications vues et nettoyées automatiquement. */
+/* JJ3D v4.11.54 — notifications supprimables + synchronisation Firebase + badges PWA. */
 (()=>{'use strict';
- const prefix='jj3d-notifications-v1:';let owner='',entries=[];
- const byId=id=>document.getElementById(id);
- const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- function save(){if(!owner)return;try{localStorage.setItem(prefix+owner,JSON.stringify(entries.slice(0,100)));}catch(e){console.warn('Sauvegarde des notifications:',e);}}
- function setRead(predicate){let changed=false;entries.forEach(x=>{if(!x.read&&predicate(x)){x.read=true;changed=true;}});if(changed){save();render();}}
- function onPageViewed(page){if(page==='atelier-demandes'||page==='commandes-perso')setRead(x=>x.link!=='messages.html');else render();}
- function itemHtml(x){let when='';try{when=new Date(x.at).toLocaleString('fr-CA');}catch(_){}const isMessage=x.link==='messages.html';return `<div class="jj3d-notify-item ${x.read?'':'unread'}" role="listitem"><b>${esc(x.title)}</b><span>${esc(x.message)}</span><time>${esc(when)}</time><a href="${isMessage?'messages.html':'#atelier-demandes'}" data-notif-id="${esc(x.id)}">Voir ${isMessage?'le message':'la demande'}</a></div>`;}
- function render(){const list=byId('jj3d-notify-items'),bell=byId('jj3d-live-bell-count'),button=byId('jj3d-live-bell');const unread=entries.filter(x=>!x.read).length;if(bell)bell.textContent=unread>99?'99+':String(unread);
-  document.querySelectorAll('[data-jj3d-notif-count]').forEach(el=>{el.textContent=unread>99?'99+':String(unread);el.hidden=unread===0;});
-  if(button)button.classList.toggle('is-alert',unread>0);
-  document.title=document.title.replace(/^\(\d+\) /,'');if(unread)document.title='('+unread+') '+document.title;
-  const content=entries.length?entries.map(itemHtml).join(''):'<p class="jj3d-notify-none">Aucune notification pour le moment.</p>';
-  if(list)list.innerHTML=content;const full=byId('jj3d-notify-page-items');if(full)full.innerHTML=content;
- }
- function connect(uid){owner=String(uid||'');entries=[];if(owner)try{const a=JSON.parse(localStorage.getItem(prefix+owner)||'[]');if(Array.isArray(a))entries=a.filter(x=>x&&typeof x.id==='string').slice(0,100);}catch(_){}render();}
- function notify({id,title,message,link='#atelier-demandes'}){if(!owner||!id||entries.some(x=>x.id===id))return;
-  entries.unshift({id:String(id),title:String(title||'JJ3D'),message:String(message||''),link:link==='messages.html'?'messages.html':'#atelier-demandes',at:Date.now(),read:false});entries=entries.slice(0,100);save();render();
-  if(document.hidden&&'Notification'in window&&Notification.permission==='granted'){
-   const options={body:String(message||''),icon:'icons/icon-192.png',tag:'jj3d-'+String(id).slice(0,70)};
-   if(navigator.serviceWorker?.ready)navigator.serviceWorker.ready.then(reg=>reg.showNotification(String(title||'JJ3D'),options)).catch(()=>{try{new Notification(String(title||'JJ3D'),options)}catch(_){}});
-   else try{new Notification(String(title||'JJ3D'),options)}catch(_){}
-  }
- }
- // Every live Firestore snapshot is authoritative for items that should still trigger alerts.
- // Removed / accepted / read requests are considered handled, so the unread badge clears.
- function syncCollection(name,rows,options={}){
-  if(!owner||!['messages','requests','orders','customRequests'].includes(name))return;
-  const live=new Set(rows.map(r=>String(r.id)));
-  let changed=false;
-  entries.forEach(x=>{
-   if(x.read||!x.id.startsWith(name+':'))return;
-   // Exact record IDs can contain ':'; match the known inserted created/status IDs by prefix.
-   let linked=false;
-   for(const id of live){if(x.id.startsWith(name+':'+id+':')){linked=true;break;}}
-   if(!linked){x.read=true;changed=true;}
-  });
-  // Visiting an order/demand page counts as viewing its incoming alerts.
-  const page=(location.hash||'').replace(/^#/,'');
-  if(page==='atelier-demandes'||page==='commandes-perso')entries.forEach(x=>{if(x.link!=='messages.html'&&!x.read){x.read=true;changed=true;}});
-  if(changed)save();render();
- }
- window.JJ3DNotifications={connect,notify,render,onPageViewed,syncCollection};
- document.addEventListener('DOMContentLoaded',()=>{
-  const bell=byId('jj3d-live-bell'),panel=byId('jj3d-notify-panel');if(!bell||!panel)return;
-  bell.addEventListener('click',()=>{const show=panel.hidden;panel.hidden=!show;bell.setAttribute('aria-expanded',String(show));render();});
-  byId('jj3d-notify-close')?.addEventListener('click',()=>{panel.hidden=true;bell.setAttribute('aria-expanded','false');});
-  function readAll(){setRead(()=>true);}
-  byId('jj3d-notify-read')?.addEventListener('click',readAll);
-  async function askPermission(){const status=byId('jj3d-notify-status');const pageStatus=document.querySelector('[data-jj3d-permission]');const show=t=>{if(status)status.textContent=t;if(pageStatus)pageStatus.textContent=t;};
-   if(!('Notification'in window)){show('Ce navigateur ne prend pas en charge les notifications.');return;}
-   if(!isSecureContext){show('Les notifications nécessitent une connexion HTTPS.');return;}
-   try{const permission=await Notification.requestPermission();show(permission==='granted'?'✓ Notifications autorisées quand JJ3D est ouvert.':permission==='denied'?'Notifications bloquées dans les paramètres du navigateur.':'Autorisation non accordée.');}catch(err){show('Autorisation impossible : '+err.message);}
-  }
-  byId('jj3d-notify-enable')?.addEventListener('click',askPermission);
-  document.addEventListener('click',e=>{
-   if(e.target.closest('[data-jj3d-enable]'))askPermission();
-   if(e.target.closest('[data-jj3d-read]'))readAll();
-   const a=e.target.closest('[data-notif-id]');if(a){const x=entries.find(x=>x.id===a.dataset.notifId);if(x)setRead(y=>y.id===x.id);panel.hidden=true;bell.setAttribute('aria-expanded','false');}
-   if(!panel.hidden&&!panel.contains(e.target)&&!bell.contains(e.target)){panel.hidden=true;bell.setAttribute('aria-expanded','false');}
-  });
-  window.addEventListener('storage',e=>{if(owner&&e.key===prefix+owner){try{const a=JSON.parse(e.newValue||'[]');if(Array.isArray(a)){entries=a;render();}}catch(_){}}});
-  render();
- });
+const prefix='jj3d-notifications-v1:';let owner='',local=[],cloudItems=[],cloudReady=false,db=null,api=null,unsub=null;
+const byId=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const merged=()=>{const byKey=new Map();for(const x of local)byKey.set(x.id,x);for(const x of cloudItems)byKey.set(x.id,x);return [...byKey.values()].sort((a,b)=>Number(b.at||0)-Number(a.at||0)).slice(0,200)};
+function save(){if(!owner)return;try{localStorage.setItem(prefix+owner,JSON.stringify(local.slice(0,100)))}catch(e){console.warn('Notifications locales',e)}}
+function showStatus(t){for(const e of [byId('jj3d-notify-status'),document.querySelector('[data-jj3d-permission]')])if(e)e.textContent=t;}
+function badge(n){if('setAppBadge' in navigator){Promise.resolve(n?navigator.setAppBadge(n):navigator.clearAppBadge()).catch(()=>{});}navigator.serviceWorker?.controller?.postMessage({type:'JJ3D_BADGE',count:n});}
+function render(){const items=merged(),unread=items.filter(x=>!x.read).length;const bell=byId('jj3d-live-bell-count'),button=byId('jj3d-live-bell');if(bell)bell.textContent=unread>99?'99+':String(unread);
+document.querySelectorAll('[data-jj3d-notif-count]').forEach(el=>{el.textContent=unread>99?'99+':String(unread);el.hidden=!unread});if(button)button.classList.toggle('is-alert',unread>0);
+document.title=document.title.replace(/^\(\d+\) /,'');if(unread)document.title='('+unread+') '+document.title;badge(unread);
+const html=items.length?items.map(x=>{let when='';try{when=new Date(x.at).toLocaleString('fr-CA')}catch(_){}const msg=x.link==='messages.html';return `<div class="jj3d-notify-item ${x.read?'':'unread'}" role="listitem"><b>${esc(x.title)}</b><span>${esc(x.message)}</span><time>${esc(when)}</time><div class="jj3d-notify-item-actions"><a href="${msg?'messages.html':'#atelier-demandes'}" data-notif-id="${esc(x.id)}">Voir ${msg?'le message':'la demande'}</a><button type="button" data-notif-delete="${esc(x.id)}" aria-label="Supprimer cette notification" title="Supprimer">🗑️ Supprimer</button></div></div>`}).join(''):'<p class="jj3d-notify-none">Aucune notification pour le moment.</p>';
+for(const el of [byId('jj3d-notify-items'),byId('jj3d-notify-page-items')])if(el)el.innerHTML=html;
+}
+async function apply(change,id){const x=merged().find(x=>x.id===id);if(!x)return;if(x.docId&&db&&api){try{if(change==='delete')await api.deleteDoc(api.doc(db,'workspaces',owner,'notifications',x.docId));else await api.updateDoc(api.doc(db,'workspaces',owner,'notifications',x.docId),{read:true});}catch(e){showStatus('Modification Firebase impossible : '+e.message);return}}
+local=local.filter(t=>t.id!==id);if(change==='read'&&!x.docId)local.unshift({...x,read:true});if(x.docId&&change==='read'){cloudItems=cloudItems.map(t=>t.id===id?{...t,read:true}:t)}else if(x.docId&&change==='delete'){cloudItems=cloudItems.filter(t=>t.id!==id)}save();render();}
+async function readAll(){for(const x of merged().filter(x=>!x.read))await apply('read',x.id)}
+async function clearAll(){if(!confirm('Supprimer toutes les notifications de cet historique? Les commandes et factures ne seront pas touchées.'))return;for(const x of [...merged()])await apply('delete',x.id)}
+function onPageViewed(page){if(page==='atelier-demandes'||page==='commandes-perso'){for(const x of merged().filter(x=>!x.read&&x.link!=='messages.html'))apply('read',x.id)}else render()}
+function notify({id,title,message,link='#atelier-demandes'}){if(!owner||!id||merged().some(x=>x.id===id))return;local.unshift({id:String(id),title:String(title||'JJ3D'),message:String(message||''),link:link==='messages.html'?'messages.html':'#atelier-demandes',at:Date.now(),read:false});local=local.slice(0,100);save();render();if(document.hidden&&'Notification'in window&&Notification.permission==='granted'){navigator.serviceWorker?.ready.then(reg=>reg.showNotification(String(title||'JJ3D'),{body:String(message||''),icon:'icons/icon-192.png',tag:'jj3d-'+String(id).slice(0,70)})).catch(()=>{});}}
+function syncCollection(name,rows){if(!owner)return;const ids=new Set(rows.map(r=>String(r.id)));let changed=false;for(const x of local){if(x.read||!x.id.startsWith(name+':'))continue;if(![...ids].some(id=>x.id.startsWith(name+':'+id+':'))){x.read=true;changed=true}}if(changed)save();render()}
+function connect(uid){if(unsub){unsub();unsub=null}owner=String(uid||'');cloudReady=false;db=null;api=null;cloudItems=[];local=[];if(owner)try{const arr=JSON.parse(localStorage.getItem(prefix+owner)||'[]');if(Array.isArray(arr))local=arr.filter(x=>x&&typeof x.id==='string').slice(0,100)}catch(_){}render()}
+function attachCloud(firestore,sdk,uid){if(!uid||uid!==owner)return;if(unsub)unsub();db=firestore;api=sdk;unsub=api.onSnapshot(api.collection(db,'workspaces',owner,'notifications'),snap=>{cloudItems=snap.docs.map(d=>({docId:d.id,id:String(d.data().eventKey||d.id),title:String(d.data().title||'JJ3D'),message:String(d.data().message||''),at:Number(d.data().at?.toMillis?.()||Date.now()),read:!!d.data().read,link:d.data().link==='messages.html'?'messages.html':'#atelier-demandes'}));cloudReady=true;const remoteIds=new Set(cloudItems.map(x=>x.id));local=local.filter(x=>!remoteIds.has(x.id));save();render()},err=>{console.warn('Lecture notifications Firestore',err);showStatus('Historique local disponible. Synchronisation Firebase : '+(err.code||err.message))})}
+async function askPermission(){if(!('Notification'in window)){showStatus('Notifications non prises en charge sur ce navigateur.');return}if(!isSecureContext){showStatus('HTTPS est obligatoire.');return}try{const p=await Notification.requestPermission();showStatus(p==='granted'?'✓ Notifications autorisées. Pour les alertes avec JJ3D fermé, active aussi « Notifications sur téléphone ».':p==='denied'?'Autorisation bloquée dans les réglages du téléphone.':'Autorisation non accordée.')}catch(e){showStatus(e.message)}}
+window.JJ3DNotifications={connect,attachCloud,notify,render,onPageViewed,syncCollection,askPermission};
+document.addEventListener('DOMContentLoaded',()=>{const bell=byId('jj3d-live-bell'),panel=byId('jj3d-notify-panel');bell?.addEventListener('click',()=>{panel.hidden=!panel.hidden;bell.setAttribute('aria-expanded',String(!panel.hidden));render()});byId('jj3d-notify-close')?.addEventListener('click',()=>{panel.hidden=true;bell.setAttribute('aria-expanded','false')});
+byId('jj3d-notify-read')?.addEventListener('click',readAll);byId('jj3d-notify-clear')?.addEventListener('click',clearAll);byId('jj3d-notify-enable')?.addEventListener('click',askPermission);
+document.addEventListener('click',e=>{if(e.target.closest('[data-jj3d-enable]'))askPermission();if(e.target.closest('[data-jj3d-read]'))readAll();if(e.target.closest('[data-jj3d-clear]'))clearAll();const del=e.target.closest('[data-notif-delete]');if(del){e.preventDefault();e.stopPropagation();apply('delete',del.dataset.notifDelete);return}const a=e.target.closest('[data-notif-id]');if(a){apply('read',a.dataset.notifId);if(panel){panel.hidden=true;bell?.setAttribute('aria-expanded','false')}}if(panel&&!panel.hidden&&!panel.contains(e.target)&&!bell?.contains(e.target)){panel.hidden=true;bell?.setAttribute('aria-expanded','false')}});
+window.addEventListener('storage',e=>{if(owner&&e.key===prefix+owner){try{const a=JSON.parse(e.newValue||'[]');if(Array.isArray(a)){local=a;render()}}catch(_){}}});render()});
 })();

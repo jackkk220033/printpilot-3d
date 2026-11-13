@@ -9,3 +9,7 @@ window.PRINTPILOT_FIREBASE_CONFIG = {
   appId: "1:1039447948278:web:97dd2bd97d9dd17ce765d7",
   measurementId: "G-SZ4BYNHT3X"
 };
+
+// Firebase Console → Project settings → Cloud Messaging → Web Push certificates → Public key.
+// Cle publique seulement, jamais une cle privee ou un fichier de service account.
+window.JJ3D_WEB_PUSH_VAPID_PUBLIC_KEY = "";
