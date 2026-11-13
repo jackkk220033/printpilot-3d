@@ -1,11 +1,12 @@
-# JJ3D v4.11.60 — QR de tous les produits en téléchargement
+# JJ3D v4.11.61 — Catalogue QR PDF automatique
 
-Site complet, basé sur v4.11.59. Les vues Kanban, finances, Boutique, impressions et permissions Firebase restent inchangées.
+Version complète à publier (ZIP avec toutes les pages, images, scripts et fichiers Firebase existants) basée sur v4.11.60.
 
-Dans **Atelier → Étiquettes QR**, une nouvelle section montre chaque produit commercial (et variante) avec son QR et un bouton **PNG**. Le bouton **Télécharger tous les QR — ZIP** génère un fichier image pour chaque produit en une seule opération. Les images portent ID, nom et prix, et sont fabriquées localement par le navigateur, sans nouveau service ou abonnement.
+**Nouveau :** Atelier → Étiquettes QR → « Télécharger le catalogue QR — PDF ».
+JJ3D lit la liste de produits/variantes courants de Firestore et produit directement dans le navigateur un PDF A4 avec une couverture d’instructions puis **4 fiches QR par page**, incluant nom, ID et prix. Lorsqu’un nouveau produit est créé, il sera inclus lors du prochain téléchargement. Pas de mise à jour manuelle du document.
 
-Les QR utilisent les liens Boutique existants avec ID du produit : seuls les comptes autorisés peuvent voir la fiche et ses photos. Les photos ne sont pas intégrées au PNG, elles apparaissent sur la fiche après connexion. Les exports ne modifient pas les stocks ni les données Firebase.
+Le téléchargement PNG individuel et ZIP des PNG reste identique. Les QR ouvrent la fiche Boutique (compte autorisé requis) où la personne peut laisser un message « Vendu ». Les QR ne déclenchent **pas** automatiquement une vente ni une modification de stock ; c’est le fonctionnement actuel de la messagerie Boutique.
 
-Le ZIP est au format standard non compressé (images PNG déjà compressées). Une connexion Internet demeure nécessaire au chargement de la librairie QRCodeJS utilisée par le site. La version Boutique et les onglets passent tous à 4.11.60.
+Bibliothèque de création PDF : jsPDF 2.5.2 via CDN ; la connexion Internet est nécessaire pour charger la bibliothèque ainsi que QRCodeJS. Aucune donnée n’est envoyée au CDN lors de la génération du PDF. Les numéros de version Atelier/Boutique/Factures/Messages ont été harmonisés à v4.11.61. Le Kanban et les finances existants sont conservés.
 
-Avant de publier, exportez votre sauvegarde JSON. La syntaxe des scripts a été vérifiée; l’utilisation réelle dans Firebase doit être testée sur vos appareils.
+Avant publication, sauvegarder le JSON JJ3D. Syntaxe JS vérifiée ; le téléchargement et les QR doivent être testés avec votre navigateur et vos données Firebase.
