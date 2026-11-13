@@ -35,7 +35,7 @@ function jj3dTrackCollection(name,snapshot,options={}){
  if(previous){for(const [id,r] of current){const old=previous.get(id);const state=String(r.status||'');const oldState=String(old?.status||'');
    if(!old){window.JJ3DNotifications?.notify({id:name+':'+id+':created',title:options.title||'JJ3D — Boutique',message:(options.newMessage||'Nouvel élément Boutique')+(r.item||r.productName||r.name?' · '+String(r.item||r.productName||r.name).slice(0,90):''),link:options.link||'#atelier-demandes'});}
    else if(options.trackStatus&&oldState!==state){window.JJ3DNotifications?.notify({id:name+':'+id+':'+state,title:options.title||'JJ3D — Boutique',message:(options.changeMessage||'Mise à jour Boutique')+' · '+String(r.item||r.productName||r.name||id).slice(0,70)+' ('+state+')',link:options.link||'#atelier-demandes'});}
-  }}jj3dWatchPrevious.set(name,current);
+  }}window.JJ3DNotifications?.syncCollection(name,rows,options);jj3dWatchPrevious.set(name,current);
 }
 function setRequestBadge(count){ppRequestCount=count;updateRequestBadges();}
 function setOrderBadge(count){ppOrderCount=count;updateRequestBadges();}
@@ -523,8 +523,6 @@ if(!configOK){
       const list=snapshot.docs.map(d=>({id:d.id,...d.data()}));
       const seen=new Map(list.map(r=>[r.id,String(r.status||'')]));
       const count=list.filter(r=>['pending','payment_reported'].includes(r.status)).length;
-      const bell=document.getElementById('jj3d-live-bell-count');if(bell)bell.textContent=String(count);
-      const link=document.getElementById('jj3d-live-bell');if(link){link.classList.toggle('is-alert',count>0);link.title=count?`${count} demande(s) spéciale(s) à traiter`:'Aucune demande spéciale en attente';}
       jjPendingCustomTickets=list;jjScheduleCustomReconcile();
       if(jj3dNotificationSeen){const fresh=list.filter(r=>!jj3dNotificationSeen.has(r.id));const changed=list.filter(r=>jj3dNotificationSeen.has(r.id)&&jj3dNotificationSeen.get(r.id)!==r.status);
         if(fresh.length||changed.length){const msg=fresh.length?`🔔 ${fresh.length} nouvelle(s) demande(s) spéciale(s) reçue(s)`:`🔔 Mise à jour Boutique : ${changed[0].item||'Projet'} (${changed[0].status})`;
