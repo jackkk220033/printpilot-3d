@@ -1,20 +1,20 @@
-# JJ3D v4.11.62 — Corbeille locale et sauvegardes renforcées
+# JJ3D v4.11.63 — Entretien des imprimantes
 
-Version complète basée sur v4.11.61. Les modules Kanban, Finances, Boutique et QR sont conservés.
+Version complète fondée sur v4.11.62, avec Kanban, Finances, Boutique, QR et Sauvegardes conservés.
 
-## Nouveautés
-- Dans **Sauvegardes** : liste des éléments récupérables, bouton **Récupérer**, suppression définitive, vider et exporter la corbeille.
-- Suppression récupérable pour **commandes personnalisées enregistrées dans JJ3D**, **bobines**, **accessoires hardware** et **entrées Personnel/Échecs/Tests**.
-- Récupération ciblée qui refuse d'écraser un élément existant portant le même ID.
-- Le JSON complet inclut désormais `localTrash` en archive de référence.
-- Avant de restaurer un état complet, un JSON de sécurité des données actuelles est automatiquement téléchargé (vérifier les téléchargements).
-- Toutes les pages, y compris Boutique, portent la version 4.11.62.
+## Améliorations dans Atelier > Entretien
+- Tableau de bord : nombre d'entretiens, échéances en retard, échéances dans les sept prochains jours et date du dernier entretien.
+- Journal complet : graissage, nettoyage, calibration, changement de buse, courroies, extrudeur, réparations et diagnostics.
+- Enregistrement des coûts, des heures manuelles et des notes.
+- Fréquence optionnelle en **jours**. JJ3D calcule le prochain rappel depuis l'entretien le plus récent de chaque type et imprimante.
+- Filtre de l'historique par imprimante et export CSV.
+- Les anciennes fiches d'entretien restent compatibles, sans conversion destructrice.
+- Version 4.11.63 affichée sur la Boutique et les autres pages.
 
 ## Limites importantes
-- **La corbeille est locale au navigateur** (localStorage). Elle n'est pas synchronisée entre appareils. Le JSON exporté contient la corbeille à titre d'archive mais sa réimportation n'est pas automatisée.
-- Les suppressions réalisées directement dans le portail Boutique, les demandes/commandes de Firestore, les factures et les produits ne sont pas encore couvertes par cette corbeille. Les factures ne sont pas effacées par la suppression locale d'une commande personnalisée.
-- Les photos Cloud/IndexedDB sont stockées séparément et ne sont pas incluses dans la sauvegarde JSON.
-- La restauration complète reste risquée car elle peut écraser des modifications récentes ou synchroniser d'anciens états : utiliser de préférence « Récupérer ».
-- Les tests sont limités aux vérifications statiques (syntaxe JS, présence des assets). Aucun test d'écriture réelle sur Firebase n'a été effectué.
-
-**Avant de publier**, exporter une sauvegarde JSON depuis le site actuel. La publication GitHub Pages remplace les fichiers du site mais ne devrait pas modifier les enregistrements Firebase directement.
+- Les rappels sont uniquement affichés **dans le site** (pas de push lorsque le téléphone est fermé).
+- Les intervalles en jours sont facultatifs; si aucun n'est défini, aucun rappel n'est créé.
+- Les heures réelles d'imprimante restent manuelles : aucun accès direct à Anycubic/Klipper.
+- L'entretien est enregistré dans Firestore sous le document Atelier déjà utilisé. Aucun nouveau service ni frais.
+- Tester l'enregistrement et l'export dans l'application publiée; seuls les tests statiques ont été effectués ici.
+- Sauvegarder les données JSON avant publication.
