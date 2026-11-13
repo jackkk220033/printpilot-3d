@@ -65,7 +65,7 @@ function setBoutiqueTab(next){if(!['home','catalogue','orders','planning','speci
 $('boutique-tabs').addEventListener('click',e=>{const b=e.target.closest('[data-btab]');if(b)setBoutiqueTab(b.dataset.btab);});document.querySelectorAll('.jj-pro-actions [data-btab]').forEach(b=>b.addEventListener('click',()=>setBoutiqueTab(b.dataset.btab))); 
 function updateOrderOptions(){const select=$('order-product');if(!select)return;const previous=select.value;select.replaceChildren(...products.map(p=>new Option(`${p.name} — ${p.colors||''} (#${p.shopId||'—'})`,p.id)));if(products.some(p=>p.id===previous))select.value=previous;}
 function renderCart(){const el=$('order-cart');$('order-count').textContent=`(${cart.reduce((a,x)=>a+x.quantity,0)} unités)`;el.innerHTML=cart.length?cart.map((item,i)=>`<div class="cart-row"><div><strong>${escapeHTML(item.name)}</strong><small> ${escapeHTML(item.colors||'')} · ${item.quantity} unité(s)</small></div><button type="button" data-remove-cart="${i}" aria-label="Retirer">✕</button></div>`).join(''):'<p class="sub">Aucun produit ajouté.</p>';$('order-send').disabled=cart.length===0;}
-// v4.11.72 Boutique PRO — toutes les déclarations utilisent la collection requests existante.
+// v4.11.74 Boutique PRO — toutes les déclarations utilisent la collection requests existante.
 // Le registre officiel reste privé à l'Atelier. L'historique sur cet appareil confirme seulement les envois.
 let cashCart=[];
 const localHistoryKey=()=>`jj3d-boutique-envois-v4.11.72:${owner}:${current?.uid||'anon'}`;
@@ -248,7 +248,7 @@ async function sendNote(form,product){
  }catch(err){status.classList.add('error');status.textContent='Envoi impossible : '+(err.code||err.message)+'. Ton texte n’a pas été supprimé.';console.error('Message Boutique:',err);}
  finally{button.disabled=false;}
 }
-// v4.11.72 — Le QR ouvre déjà la bonne fiche : déclaration de vente en un geste.
+// v4.11.74 — Le QR ouvre déjà la bonne fiche : déclaration de vente en un geste.
 // Uniquement une demande Firestore; aucune modification directe du stock, aucun doublon dans le grand livre.
 $('jj-quick-sold')?.addEventListener('click',async()=>{
  const b=$('jj-quick-sold'),el=$('jj-quick-status'),p=products.find(x=>x.id===selectedProductId);

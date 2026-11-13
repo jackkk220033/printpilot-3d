@@ -568,7 +568,7 @@
  function activeSales(){return extras.sales.filter(s=>!['cancelled','duplicate'].includes(s.status));}
  function salePrice(s){return safeNum(s.unitPrice);}
  function saleSummary(s){return {gross:activeSales().reduce((a,v)=>a+safeNum(v.gross),0),profit:activeSales().reduce((a,v)=>a+safeNum(v.profit),0)};}
- // v4.11.72 — CRM à lecture seule. Une fiche est une vue recalculée depuis les commandes
+ // v4.11.74 — CRM à lecture seule. Une fiche est une vue recalculée depuis les commandes
  // et les factures, non une seconde copie de données personnelles à synchroniser.
  let jjClientSearch='';
  let jjClientFocus='';
@@ -1098,7 +1098,7 @@
   return filters+kpis+charts+caution;
  }
  function exportFinanceSales(){const sales=financeSelectedSales();const rows=[['Date','Produit','Canal','Quantité','Vente hors taxes','Coût enregistré','Commission','Profit estimé','Source','ID'],...sales.map(s=>[s.date||s.createdAt||'',s.product||'',s.channel||'Direct',safeNum(s.quantity).toFixed(2),safeNum(s.gross).toFixed(2),safeNum(s.cost).toFixed(2),safeNum(s.commission).toFixed(2),safeNum(s.profit).toFixed(2),s.source||'',s.id||''])];const csv='\uFEFF'+rows.map(r=>r.map(x=>'"'+String(x??'').replaceAll('"','""')+'"').join(';')).join('\r\n');downloadText('jj3d-finances-ventes-'+new Date().toISOString().slice(0,10)+'.csv',csv,'text/csv;charset=utf-8');notify('✓ Ventes filtrées exportées en CSV.');}
- // v4.11.72 — PDFs générés localement, sans écriture en base de données.
+ // v4.11.74 — PDFs générés localement, sans écriture en base de données.
  function jjPdf(){const cls=window.jspdf?.jsPDF;if(!cls){notify('Générateur PDF indisponible. Vérifie ta connexion Internet.',true);return null;}return new cls({unit:'mm',format:'a4'});}
  function jjPdfHead(pdf,heading,sub){pdf.setFillColor(33,22,62);pdf.rect(0,0,210,37,'F');pdf.setTextColor(255,255,255);pdf.setFont('helvetica','bold');pdf.setFontSize(22);pdf.text('JJ3D',15,16);pdf.setFontSize(14);pdf.text(heading,15,26);pdf.setFont('helvetica','normal');pdf.setFontSize(9);pdf.text(sub,195,26,{align:'right'});pdf.setTextColor(34,32,45);return 47;}
  function jjPdfLine(pdf,left,right,y){pdf.setFont('helvetica','normal');pdf.setFontSize(10);const label=pdf.splitTextToSize(String(left||''),118);pdf.text(label,15,y);pdf.setFont('helvetica','bold');pdf.text(String(right||''),195,y,{align:'right'});return y+Math.max(8,4.8*label.length);}
