@@ -1,4 +1,4 @@
-/* JJ3D v4.11.71 — Gestion PRO (sans dépendances, Firebase via workspace existant). */
+/* JJ3D v4.11.72 — Gestion PRO (sans dépendances, Firebase via workspace existant). */
 (()=>{'use strict';
  let bridge=null, tab='prix';
  const names={prix:'💰 Prix',planning:'📅 Planning',variantes:'🎨 Variantes',qualite:'✅ Qualité',achats:'🛒 Achats',promos:'🏷 Promotions',journal:'📜 Journal'};

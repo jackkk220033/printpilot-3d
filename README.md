@@ -1,4 +1,4 @@
-# JJ3D v4.11.71 — Gestion PRO : 7 améliorations
+# JJ3D v4.11.72 — Gestion PRO : 7 améliorations
 
 **Fichier complet** à décompresser et publier sur GitHub Pages. Même numéro de version sur toutes les pages, y compris Boutique. Aucun abonnement requis.
 
@@ -20,3 +20,15 @@
 
 ## Vérifications
 Tests syntaxiques JavaScript et intégrité du ZIP. Pas de tests live sur le compte Firebase ni sur smartphone.
+
+
+## v4.11.72 — Boutique PRO
+- Accueil Boutique : stock catalogue publié, nombre de produits, prochaines productions et bons à recevoir, nouveautés et raccourcis.
+- Caisse Boutique : panier multi-articles, recherche par nom/ID, photos, quantités et total indicatif.
+- Depuis les fiches produit / QR : ajouter à la caisse sans saisir le nom.
+- Envoi de chaque ligne du panier comme demande de vente existante Firestore : pas de déduction automatique ni double caisse. En cas de succès partiel, seules les lignes non envoyées restent pour nouvelle tentative.
+- Historique des déclarations envoyées affiché **localement et uniquement sur le même appareil**; les validations officielles restent dans l'Atelier, les règles Firestore n'autorisant pas la Boutique à consulter le registre des demandes.
+- Réception des bons existante conservée : les envois ne se transforment pas en ventes.
+- Numéro de version synchronisé sur Atelier, Boutique, autres pages.
+- Sauvegarder les données JSON avant publication.
+- Réception : bouton « Tout reçu » qui préremplit les quantités dans le formulaire existant; la validation administrateur demeure obligatoire.
