@@ -1,20 +1,20 @@
-# JJ3D v4.11.63 — Entretien des imprimantes
+# JJ3D v4.11.64 — Fiches clients et suivi des factures
 
-Version complète fondée sur v4.11.62, avec Kanban, Finances, Boutique, QR et Sauvegardes conservés.
+Version complète fondée sur v4.11.63, avec Kanban, Finances, Boutique, QR, Sauvegardes et Entretien conservés.
 
-## Améliorations dans Atelier > Entretien
-- Tableau de bord : nombre d'entretiens, échéances en retard, échéances dans les sept prochains jours et date du dernier entretien.
-- Journal complet : graissage, nettoyage, calibration, changement de buse, courroies, extrudeur, réparations et diagnostics.
-- Enregistrement des coûts, des heures manuelles et des notes.
-- Fréquence optionnelle en **jours**. JJ3D calcule le prochain rappel depuis l'entretien le plus récent de chaque type et imprimante.
-- Filtre de l'historique par imprimante et export CSV.
-- Les anciennes fiches d'entretien restent compatibles, sans conversion destructrice.
-- Version 4.11.63 affichée sur la Boutique et les autres pages.
+## Nouveauté : Outils et statistiques > Clients
+- Répertoire des clients calculé automatiquement depuis les commandes personnalisées et factures existantes.
+- Recherche par nom, courriel, téléphone ou produit de commande.
+- Fiche détaillée : historique des commandes, factures, statut, total factures payées et non payées.
+- Export CSV compatible Excel.
+- Accès rapide aux sections Commandes personnalisées (soumissions existantes) et Factures.
+- Adapté à l'ordinateur et au téléphone, sans grand défilement horizontal.
+- Version v4.11.64 synchronisée dans l'Atelier, la Boutique, les titres HTML et les caches PWA.
 
-## Limites importantes
-- Les rappels sont uniquement affichés **dans le site** (pas de push lorsque le téléphone est fermé).
-- Les intervalles en jours sont facultatifs; si aucun n'est défini, aucun rappel n'est créé.
-- Les heures réelles d'imprimante restent manuelles : aucun accès direct à Anycubic/Klipper.
-- L'entretien est enregistré dans Firestore sous le document Atelier déjà utilisé. Aucun nouveau service ni frais.
-- Tester l'enregistrement et l'export dans l'application publiée; seuls les tests statiques ont été effectués ici.
-- Sauvegarder les données JSON avant publication.
+## Précisions importantes
+- Aucune migration Firebase ni réécriture de commandes et factures : la vue Clients est en lecture seule.
+- Les clients sont regroupés selon le **nom normalisé** (accents et casse ignorés); deux personnes portant le même nom pourraient être fusionnées visuellement. Leurs données enregistrées ne sont jamais fusionnées.
+- Les ventes Excel et ventes directes sans identité client ne sont pas rattachées à un client.
+- Les totaux sur la page Clients sont les montants des factures TTC. Les profits et revenus hors taxes restent dans Finances.
+- Cette version n'automatise pas encore les devis ni les envois de courriel; les soumissions existantes restent dans Commandes personnalisées.
+- Avant publication, exporter une sauvegarde JSON. Tester en situation réelle : seules des vérifications statiques sont possibles ici.

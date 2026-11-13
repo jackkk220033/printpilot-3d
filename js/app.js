@@ -17,7 +17,7 @@
  let rolls = [];
  let search = '';
  let storageError = null;
- const pages = {'notifications':'Notifications','sauvegardes':'Sauvegardes de sécurité','commandes-perso':'Commandes personnalisées','atelier-boutique':'Stock Boutique','atelier-demandes':'Demandes Boutique','atelier-queue':'À imprimer','atelier-filament':'Prévisions filament','atelier-labels':'Étiquettes QR','atelier-stats':'Statistiques atelier','atelier-maintenance':'Entretien','atelier-reports':'Rapports Boutique',dashboard:'Tableau de bord',filaments:'Filaments',produits:'Produits',impressions:'Impressions',horsproduction:'Personnel / Échecs / Tests',commandes:'Ventes',hardware:'Hardware',imprimantes:'Imprimantes',finances:'Finances',factures:'Factures',catalogue:'Catalogue à partager'};
+ const pages = {'notifications':'Notifications','sauvegardes':'Sauvegardes de sécurité','clients':'Clients et suivi','commandes-perso':'Commandes personnalisées','atelier-boutique':'Stock Boutique','atelier-demandes':'Demandes Boutique','atelier-queue':'À imprimer','atelier-filament':'Prévisions filament','atelier-labels':'Étiquettes QR','atelier-stats':'Statistiques atelier','atelier-maintenance':'Entretien','atelier-reports':'Rapports Boutique',dashboard:'Tableau de bord',filaments:'Filaments',produits:'Produits',impressions:'Impressions',horsproduction:'Personnel / Échecs / Tests',commandes:'Ventes',hardware:'Hardware',imprimantes:'Imprimantes',finances:'Finances',factures:'Factures',catalogue:'Catalogue à partager'};
  const esc = value => String(value ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const number = (n,d=0) => Number(n).toLocaleString('fr-CA',{minimumFractionDigits:d,maximumFractionDigits:d});
  const money = n => number(n,2)+' $';
@@ -568,6 +568,90 @@
  function activeSales(){return extras.sales.filter(s=>!['cancelled','duplicate'].includes(s.status));}
  function salePrice(s){return safeNum(s.unitPrice);}
  function saleSummary(s){return {gross:activeSales().reduce((a,v)=>a+safeNum(v.gross),0),profit:activeSales().reduce((a,v)=>a+safeNum(v.profit),0)};}
+ // v4.11.64 — CRM à lecture seule. Une fiche est une vue recalculée depuis les commandes
+ // et les factures, non une seconde copie de données personnelles à synchroniser.
+ let jjClientSearch='';
+ let jjClientFocus='';
+ const jjClientText=x=>String(x??'').trim().replace(/\s+/g,' ');
+ const jjClientKey=name=>jjClientText(name).toLocaleLowerCase('fr-CA').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+ const jjClientMoney=n=>Math.max(0,Number(n)||0);
+ function jjInvoiceTotal(inv){
+  const subtotal=(Array.isArray(inv.lines)?inv.lines:[]).reduce((sum,line)=>sum+jjClientMoney(line.qty)*jjClientMoney(line.price),0);
+  const discount=Math.min(subtotal,jjClientMoney(inv.discount));
+  const taxable=subtotal-discount+jjClientMoney(inv.shipping);
+  return Math.round((taxable+taxable*jjClientMoney(inv.taxRate)/100)*100)/100;
+ }
+ function jjClientRecords(){
+  const map=new Map();
+  const ensure=(rawName,email)=>{
+   const name=jjClientText(rawName);
+   if(!name)return null;
+   const key=jjClientKey(name);
+   if(!map.has(key))map.set(key,{key,name,email:'',phone:'',orders:[],invoices:[],paid:0,due:0,latest:''});
+   const c=map.get(key);
+   if(!c.email&&email)c.email=jjClientText(email);
+   return c;
+  };
+  for(const order of (extras.customOrders||[])){
+   const c=ensure(order.customer,order.email);if(!c)continue;
+   c.orders.push(order);
+   if(!c.phone&&order.phone)c.phone=jjClientText(order.phone);
+   if(!c.email&&order.contact&&String(order.contact).includes('@')){
+    const matched=String(order.contact).match(/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/);if(matched)c.email=matched[0];
+   }
+   const date=jjClientText(order.updatedAt||order.orderedAt||order.createdAt);
+   if(date>c.latest)c.latest=date;
+  }
+  for(const invoice of (extras.invoices||[])){
+   const c=ensure(invoice.clientName,invoice.clientEmail);if(!c)continue;
+   const amount=jjInvoiceTotal(invoice);
+   c.invoices.push({...invoice,jjAmount:amount});
+   if(invoice.status==='paid')c.paid+=amount;
+   else if(!['cancelled','paid'].includes(invoice.status))c.due+=amount;
+   const date=jjClientText(invoice.paidDate||invoice.date);
+   if(date>c.latest)c.latest=date;
+  }
+  return Array.from(map.values()).sort((a,b)=>b.latest.localeCompare(a.latest)||a.name.localeCompare(b.name,'fr'));
+ }
+ function jjClientCsv(){
+  const rows=[['Client','Courriel','Téléphone','Commandes personnalisées','Factures','Factures payées (CAD, taxes incluses)','Factures non payées (CAD, taxes incluses)','Dernière activité'],...jjClientRecords().map(c=>[c.name,c.email,c.phone,c.orders.length,c.invoices.length,c.paid.toFixed(2),c.due.toFixed(2),c.latest.slice(0,10)])];
+  const csv='\uFEFF'+rows.map(r=>r.map(value=>'"'+String(value??'').replaceAll('"','""')+'"').join(';')).join('\r\n');
+  downloadText('JJ3D-clients-'+new Date().toISOString().slice(0,10)+'.csv',csv,'text/csv;charset=utf-8');
+  notify('✓ Fiches clients exportées en CSV.');
+ }
+ function jjClientDetails(c){
+  if(!c)return '';
+  const invoices=c.invoices.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+  const orders=c.orders.slice().sort((a,b)=>String(b.orderedAt||b.createdAt||'').localeCompare(String(a.orderedAt||a.createdAt||'')));
+  const date=raw=>esc(String(raw||'').slice(0,10)||'Date inconnue');
+  return `<section class="panel jj-crm-detail"><div class="panel-head"><div><p class="eyebrow">FICHE CLIENT</p><h2>${esc(c.name)}</h2><p>${esc(c.email||'Courriel non enregistré')}${c.phone?' · '+esc(c.phone):''}</p></div><button type="button" class="secondary-btn" data-jj-client-close>Fermer</button></div>
+   <div class="stats-grid three">${statCard('✓',money(c.paid),'Factures payées TTC')}${statCard('◷',money(c.due),'Factures non payées TTC')}${statCard('▣',String(c.orders.length),'Commandes personnalisées')}</div>
+   <h3>🧾 Factures (${invoices.length})</h3>
+   <div class="jj-crm-history">${invoices.map(i=>`<article class="jj-crm-history-row"><div><strong>${esc(i.number||'Facture')}</strong><small>${date(i.date)} · ${esc(({paid:'Payée',draft:'Brouillon',sent:'Envoyée',cancelled:'Annulée'})[i.status]||i.status||'Statut inconnu')}</small></div><strong>${money(i.jjAmount)}</strong></article>`).join('')||'<p class="empty">Aucune facture enregistrée.</p>'}</div>
+   <h3>📦 Commandes (${orders.length})</h3>
+   <div class="jj-crm-history">${orders.map(o=>`<article class="jj-crm-history-row"><div><strong>${esc(o.number||o.item||'Commande')}</strong><small>${date(o.orderedAt||o.createdAt)} · ${esc(o.item||'Produit non précisé')} · ${esc(o.status||'À traiter')}</small></div><span>Qté ${number(o.quantity||1)}</span></article>`).join('')||'<p class="empty">Aucune commande personnalisée enregistrée.</p>'}</div>
+   <div class="actions"><button type="button" class="secondary-btn" data-go="factures">Voir les factures</button><button type="button" class="secondary-btn" data-go="commandes-perso">Voir les commandes</button></div>
+  </section>`;
+ }
+ function jjClientList(){
+  const all=jjClientRecords();
+  const q=jjClientKey(jjClientSearch);
+  const filtered=all.filter(c=>!q||[c.name,c.email,c.phone,...c.orders.map(o=>o.item||'')].some(x=>jjClientKey(x).includes(q)));
+  const selected=all.find(c=>c.key===jjClientFocus);
+  return `<div class="jj-crm-grid">${filtered.map(c=>`<article class="jj-crm-card"><div><strong>${esc(c.name)}</strong><small>${esc(c.email||'Aucun courriel')}${c.phone?' · '+esc(c.phone):''}</small></div><div class="jj-crm-numbers"><span>${c.orders.length} commande(s)</span><span>${c.invoices.length} facture(s)</span></div><div class="jj-crm-amounts"><span>Payées <strong>${money(c.paid)}</strong></span><span>Non payées <strong>${money(c.due)}</strong></span></div><button type="button" class="secondary-btn" data-jj-client-open="${esc(c.key)}">Voir la fiche →</button></article>`).join('')||'<p class="empty">Aucun client trouvé. Les fiches apparaissent depuis les factures et les commandes personnalisées.</p>'}</div>
+   <div id="jj-crm-focus">${jjClientDetails(selected)}</div>`;
+ }
+ function jjClientsPage(){
+  const all=jjClientRecords();
+  const invoices=(extras.invoices||[]).filter(i=>i.status!=='cancelled');
+  const paid=invoices.filter(i=>i.status==='paid').reduce((sum,i)=>sum+jjInvoiceTotal(i),0);
+  const outstanding=invoices.filter(i=>i.status!=='paid').reduce((sum,i)=>sum+jjInvoiceTotal(i),0);
+  return header('RELATIONS CLIENTS','Clients et suivi','Historique créé automatiquement depuis tes commandes et factures.',`<button type="button" id="jj-crm-export" class="secondary-btn">↧ Export CSV clients</button>`)
+  +`<div class="notice">🔒 Espace administrateur seulement. Ces fiches sont calculées depuis tes données JJ3D existantes : aucun nouveau client n’est créé dans Firebase. Deux personnes portant exactement le même nom peuvent être regroupées; vérifie leurs coordonnées. Les ventes directes sans client ne sont pas attribuées automatiquement. Les montants affichés ici sont ceux des <b>factures, taxes incluses</b>, pas le chiffre d’affaires hors taxes du tableau Finances.</div>`
+  +`<div class="stats-grid three">${statCard('♙',number(all.length),'Clients identifiés')}${statCard('✓',money(paid),'Factures payées TTC')}${statCard('◷',money(outstanding),'Factures non payées TTC')}</div>`
+  +`<section class="panel jj-crm-panel"><div class="panel-head"><div><h2>👥 Répertoire des clients</h2><p>Un contact, toutes ses commandes personnalisées et factures.</p></div></div><label class="jj-crm-search-label">Rechercher un client <input id="jj-crm-search" class="table-filter" type="search" value="${esc(jjClientSearch)}" placeholder="Nom, courriel, téléphone ou produit…" autocomplete="off"></label><div id="jj-crm-results">${jjClientList()}</div></section>`
+  +`<section class="panel"><h2>💬 Soumissions</h2><p>Pour éviter les doublons, les soumissions et les approbations de prix restent dans la section <b>Commandes personnalisées</b>. Après approbation, tu peux préparer la facture dans <b>Factures</b>.</p><div class="actions"><button type="button" class="secondary-btn" data-go="commandes-perso">Voir les soumissions</button><button type="button" class="secondary-btn" data-go="factures">Gérer les factures</button></div></section>`;
+ }
  function salesPage(){
   const sales=extras.sales.slice().reverse(), active=activeSales(), gross=active.reduce((a,v)=>a+safeNum(v.gross),0), commission=active.reduce((a,v)=>a+safeNum(v.commission),0), profit=active.reduce((a,v)=>a+safeNum(v.profit),0);
   return header('VENTES','Ventes et commandes','Enregistre chaque vente, suis tes profits et ajuste automatiquement ton stock.',`<button type="button" class="primary-btn" id="add-sale">＋ Enregistrer une vente</button>`)+warning()
@@ -1734,7 +1818,7 @@
  }
  async function updateCustomOrderStatus(id,status){if(!Object.hasOwn(customOrderStages,status))return;const row=customOrders().find(x=>x.id===id);if(!row)return;const updated={...row,status,updatedAt:new Date().toISOString()};if(persistExtras({...extras,customOrders:customOrders().map(x=>x.id===id?updated:x)})){render();try{await window.JJ3DSyncOrderQueue?.(updated);notify('✓ Statut et tâche liée mis à jour.');}catch(err){notify('Statut sauvé, mais À imprimer non actualisé : '+(err.message||err),true);}}}
 
- function render(){const p=page();app.innerHTML=p.startsWith('atelier-')?atelierPanel(p):p==='dashboard'?dashboard():p==='notifications'?'<div class="page-header"><div><div class="eyebrow">CENTRE DE NOTIFICATIONS</div><h1>🔔 Notifications</h1><p>Demandes, commandes et messages Boutique.</p></div></div><section class="panel jj3d-notify-page"><div class="jj3d-notify-actions"><button type="button" data-jj3d-enable>Activer les alertes du navigateur</button><button type="button" data-jj3d-read>Tout marquer comme lu</button><button type="button" data-jj3d-clear>🗑 Supprimer toutes les notifications</button><button type="button" data-jj3d-push>📱 Activer les notifications sur téléphone</button></div><p data-jj3d-permission></p><div id="jj3d-notify-page-items"></div><p class="jj3d-notify-footnote" data-jj3d-push-status>Pour les alertes sur téléphone, active Firebase Cloud Messaging et autorise les notifications.</p></section>':p==='filaments'?filaments():p==='produits'?productPage():p==='commandes'?salesPage():p==='commandes-perso'?customOrdersPage():p==='sauvegardes'?backupsPage():p==='hardware'?hardwarePage():p==='impressions'?printPage():p==='horsproduction'?offPage():p==='finances'?financePage():p==='factures'?window.JJ3DInvoices.page():p==='catalogue'?catalogPage():p==='imprimantes'?printerPage():placeholder(p);document.getElementById('page-name').textContent=pages[p];window.JJ3DNotifications?.onPageViewed(p);document.querySelectorAll('[data-page]').forEach(n=>{n.classList.toggle('active',n.dataset.page===p);n.setAttribute('aria-current',n.dataset.page===p?'page':'false')});document.getElementById('sidebar').classList.remove('open');document.querySelectorAll('#mobile-navigation [data-page]').forEach(n=>{n.classList.toggle('active',n.dataset.page===p);n.setAttribute('aria-current',n.dataset.page===p?'page':'false');});const filterCount=document.getElementById(p+'-count');if(filterCount&&uiFilters[p])filterCount.textContent=filteredProducts(p).length+' résultat(s)';document.body.classList.toggle('finance-view',p==='finances');document.querySelectorAll('.table-wrap table').forEach(table=>{const headers=[...table.querySelectorAll('thead th')].map(th=>th.textContent.trim());table.querySelectorAll('tbody tr').forEach(tr=>[...tr.children].forEach((td,i)=>td.setAttribute('data-label',headers[i]||'')));});hydratePhotos();}
+ function render(){const p=page();app.innerHTML=p.startsWith('atelier-')?atelierPanel(p):p==='dashboard'?dashboard():p==='notifications'?'<div class="page-header"><div><div class="eyebrow">CENTRE DE NOTIFICATIONS</div><h1>🔔 Notifications</h1><p>Demandes, commandes et messages Boutique.</p></div></div><section class="panel jj3d-notify-page"><div class="jj3d-notify-actions"><button type="button" data-jj3d-enable>Activer les alertes du navigateur</button><button type="button" data-jj3d-read>Tout marquer comme lu</button><button type="button" data-jj3d-clear>🗑 Supprimer toutes les notifications</button><button type="button" data-jj3d-push>📱 Activer les notifications sur téléphone</button></div><p data-jj3d-permission></p><div id="jj3d-notify-page-items"></div><p class="jj3d-notify-footnote" data-jj3d-push-status>Pour les alertes sur téléphone, active Firebase Cloud Messaging et autorise les notifications.</p></section>':p==='filaments'?filaments():p==='produits'?productPage():p==='commandes'?salesPage():p==='commandes-perso'?customOrdersPage():p==='sauvegardes'?backupsPage():p==='hardware'?hardwarePage():p==='impressions'?printPage():p==='horsproduction'?offPage():p==='finances'?financePage():p==='clients'?jjClientsPage():p==='factures'?window.JJ3DInvoices.page():p==='catalogue'?catalogPage():p==='imprimantes'?printerPage():placeholder(p);document.getElementById('page-name').textContent=pages[p];window.JJ3DNotifications?.onPageViewed(p);document.querySelectorAll('[data-page]').forEach(n=>{n.classList.toggle('active',n.dataset.page===p);n.setAttribute('aria-current',n.dataset.page===p?'page':'false')});document.getElementById('sidebar').classList.remove('open');document.querySelectorAll('#mobile-navigation [data-page]').forEach(n=>{n.classList.toggle('active',n.dataset.page===p);n.setAttribute('aria-current',n.dataset.page===p?'page':'false');});const filterCount=document.getElementById(p+'-count');if(filterCount&&uiFilters[p])filterCount.textContent=filteredProducts(p).length+' résultat(s)';document.body.classList.toggle('finance-view',p==='finances');document.querySelectorAll('.table-wrap table').forEach(table=>{const headers=[...table.querySelectorAll('thead th')].map(th=>th.textContent.trim());table.querySelectorAll('tbody tr').forEach(tr=>[...tr.children].forEach((td,i)=>td.setAttribute('data-label',headers[i]||'')));});hydratePhotos();}
  function openRoll(id){form.reset();form.elements.namedItem('id').value='';document.getElementById('form-error').textContent='';document.getElementById('dialog-title').textContent=id?'Modifier le rouleau':'Ajouter un rouleau';if(id){const r=rolls.find(x=>x.id===id);if(!r)return;for(const [key,val] of Object.entries(r)){const input=form.elements.namedItem(key);if(input){if(key==='material'&&input.tagName==='SELECT'&&![...input.options].some(o=>o.value===String(val)))input.add(new Option(String(val),String(val)));input.value=val??'';}}}dialog.showModal();}
  function saveRoll(event){event.preventDefault();const vals=Object.fromEntries(new FormData(form).entries());const r={id:vals.id||`roll-${Date.now()}-${Math.random().toString(36).slice(2,9)}`,brand:String(vals.brand||'').trim(),color:String(vals.color||'').trim(),material:vals.material,code:String(vals.code||'').trim(),initial:Number(vals.initial),remaining:Number(vals.remaining),price:Number(vals.price),swatch:safeColor(vals.swatch)};const error=document.getElementById('form-error');if(!r.brand||!r.color||!rollOk(r)||!Number.isFinite(r.price)||r.price<0||vals.initial===''||vals.remaining===''||vals.price===''){error.textContent='Vérifie les champs : marque, couleur, poids et prix. Le poids restant ne peut pas dépasser le poids initial.';return;}const next=rolls.slice();const idx=next.findIndex(x=>x.id===r.id);if(idx>=0)next[idx]=r;else next.push(r);if(!persist(next)){error.textContent=storageError;return;}rolls=next;search='';dialog.close();render();notify('✓ Rouleau enregistré!');}
  function removeRoll(id){const r=rolls.find(x=>x.id===id);if(prints.some(p=>p.status==='active'&&p.usage.some(u=>u.rollId===id))){notify('Cette bobine est liée à une impression active. Annule d’abord cette impression.',true);return;}if(!r||!confirm(`Mettre ${r.brand} — ${r.color} à la corbeille ?`))return;const arc=archiveBeforeRemoval('roll',r);if(!arc)return;const next=rolls.filter(x=>x.id!==id);if(persist(next)){rolls=next;render();notify('Bobine placée dans la corbeille.');}else undoArchive(arc.trashId); }
@@ -1769,6 +1853,8 @@
   if(hide&&!confirm('Masquer cette vente directe du chiffre d’affaires? Vérifie qu’elle correspond vraiment à la vente de la facture. Aucune donnée ne sera supprimée et le stock restera inchangé.'))return;
   if(persistExtras({...extras,sales:extras.sales.map(s=>s.id===id?{...s,status:hide?'duplicate':'active',duplicateHiddenAt:hide?new Date().toISOString():''}:s)})){render();notify(hide?'Vente directe masquée, sans suppression.':'Vente rétablie.');}
  });
+ document.addEventListener('input',e=>{if(e.target.id==='jj-crm-search'){jjClientSearch=e.target.value;const area=document.getElementById('jj-crm-results');if(area)area.innerHTML=jjClientList();}});
+ document.addEventListener('click',e=>{if(e.target.closest('#jj-crm-export'))jjClientCsv();else if(e.target.closest('[data-jj-client-open]')){jjClientFocus=e.target.closest('[data-jj-client-open]').dataset.jjClientOpen;const area=document.getElementById('jj-crm-results');if(area)area.innerHTML=jjClientList();document.getElementById('jj-crm-focus')?.scrollIntoView({behavior:'smooth',block:'nearest'});}else if(e.target.closest('[data-jj-client-close]')){jjClientFocus='';const area=document.getElementById('jj-crm-results');if(area)area.innerHTML=jjClientList();}});
  document.addEventListener('click',e=>{const rec=e.target.closest('[data-recover-trash]'),del=e.target.closest('[data-forget-trash]');if(rec)recoverTrash(rec.dataset.recoverTrash);else if(del)forgetTrash(del.dataset.forgetTrash);else if(e.target.closest('#clear-trash'))clearTrash();else if(e.target.closest('#export-trash'))downloadTrash();});
  document.addEventListener('click',e=>{const edit=e.target.closest('[data-edit-custom-order]'),del=e.target.closest('[data-delete-custom-order]');if(e.target.closest('[data-restore-backup]'))restoreBackup(e.target.closest('[data-restore-backup]').dataset.restoreBackup);else if(e.target.closest('[data-recover-custom-invoice]'))recoverCustomOrderFromInvoice(e.target.closest('[data-recover-custom-invoice]').dataset.recoverCustomInvoice);else if(edit)editCustomOrder(edit.dataset.editCustomOrder);else if(e.target.closest('[data-invoice-custom-order]'))openCustomOrderInvoice(e.target.closest('[data-invoice-custom-order]').dataset.invoiceCustomOrder);else if(e.target.closest('[data-queue-custom-order]')){location.hash='#atelier-queue';notify('🖨️ Impression liée : voir la file À imprimer.');}else if(del)deleteCustomOrder(del.dataset.deleteCustomOrder);else if(e.target.closest('#custom-order-add'))openNewCustomOrder();else if(e.target.closest('#custom-order-reset, #custom-order-close')){editingCustomOrderId=null;document.getElementById('custom-order-dialog')?.close();}else if(e.target.id==='custom-order-dialog'){const dialog=e.target,r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom){editingCustomOrderId=null;dialog.close();}}});
  document.addEventListener('click',e=>{

@@ -534,5 +534,27 @@ select[data-choice]{width:100%;min-width:0}
 @media(max-width:1080px){.jj-finance-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.jj-finance-insights{grid-template-columns:1fr}}
 @media(max-width:600px){.jj-finance-kpis{gap:9px}.jj-finance-kpi{padding:12px}.jj-finance-kpi strong{font-size:21px}.jj-finance-bar-row{grid-template-columns:69px minmax(0,1fr) 72px;gap:7px;font-size:11px}.jj-finance-bar-row>strong{font-size:11px}.jj-finance-controls .panel-head{align-items:stretch;flex-direction:column}.jj-finance-filters label{min-width:100%}.jj-finance-top-row>div:last-child{max-width:110px}}
 
-/* v4.11.63 — Corbeille et sauvegardes */
+/* v4.11.64 — Corbeille et sauvegardes */
 .jj3d-trash-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.jj3d-trash-row .actions{display:flex;gap:8px;flex-wrap:wrap}.jj3d-trash-row .small-hint{color:var(--muted,#8c91a4);font-size:.85rem;margin-top:4px}@media(max-width:620px){.jj3d-trash-row{align-items:stretch;flex-direction:column}.jj3d-trash-row .actions button{flex:1}}
+
+/* v4.11.64 — Fiches clients, en colonnes adaptatives */
+.jj-crm-panel{min-width:0}
+.jj-crm-search-label{display:block;max-width:480px;margin:12px 0 18px;font-weight:650}
+.jj-crm-search-label input{display:block;width:100%;margin-top:6px}
+.jj-crm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:14px}
+.jj-crm-card{min-width:0;padding:17px;border:1px solid var(--border,#494456);border-radius:15px;background:var(--card-bg,rgba(255,255,255,.035));display:flex;flex-direction:column;gap:13px}
+.jj-crm-card strong{overflow-wrap:anywhere}
+.jj-crm-card small{display:block;margin-top:5px;opacity:.72;overflow-wrap:anywhere}
+.jj-crm-numbers,.jj-crm-amounts{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between}
+.jj-crm-numbers{font-size:.85rem;opacity:.75}
+.jj-crm-amounts{gap:6px 12px}
+.jj-crm-amounts span{display:flex;flex-direction:column;gap:3px;font-size:.77rem;opacity:.82}
+.jj-crm-amounts strong{font-size:1.07rem;opacity:1}
+.jj-crm-card button{margin-top:auto}
+.jj-crm-detail{margin-top:20px}
+.jj-crm-detail h3{margin:20px 0 10px}
+.jj-crm-history{display:grid;gap:8px}
+.jj-crm-history-row{display:flex;justify-content:space-between;gap:15px;align-items:center;padding:12px;border:1px solid var(--border,#494456);border-radius:10px}
+.jj-crm-history-row small{display:block;opacity:.7;margin-top:5px}
+.jj-crm-history-row strong{overflow-wrap:anywhere}
+@media(max-width:600px){.jj-crm-history-row{align-items:flex-start;flex-direction:column}}
