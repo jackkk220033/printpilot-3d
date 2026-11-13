@@ -29,6 +29,49 @@
  }
  function validPrint(p){return p&&typeof p.id==='string'&&Array.isArray(p.usage)&&p.usage.every(u=>typeof u.rollId==='string'&&Number.isFinite(Number(u.grams))&&Number(u.grams)>0)&&['active','cancelled','noncommercial'].includes(p.status);}
  const BACKUP_KEY='jj3d-safety-history-v1';
+ const TRASH_KEY='jj3d-recycle-bin-v1';
+ const TRASH_LIMIT=60;
+ function trashItems(){try{const a=JSON.parse(localStorage.getItem(TRASH_KEY)||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
+ function writeTrash(items){try{localStorage.setItem(TRASH_KEY,JSON.stringify(items.slice(0,TRASH_LIMIT)));return true;}catch(e){notify('Espace insuffisant pour protéger cet élément dans la corbeille : suppression annulée.',true);return false;}}
+ function archiveBeforeRemoval(kind,item){
+  const record={trashId:'trash-'+Date.now()+'-'+Math.random().toString(36).slice(2,10),kind,removedAt:new Date().toISOString(),item:structuredClone(item)};
+  return writeTrash([record,...trashItems()])?record:null;
+ }
+ function undoArchive(trashId){const previous=trashItems();writeTrash(previous.filter(x=>x.trashId!==trashId));}
+ function recoverTrash(trashId){
+  const all=trashItems(),rec=all.find(x=>x.trashId===trashId);if(!rec)return notify('Élément introuvable dans la corbeille.',true);
+  const {kind,item}=rec;if(!item||typeof item!=='object'||!item.id)return notify('Données de la corbeille invalides.',true);
+  let ok=false;
+  if(kind==='customOrder'){
+   if((extras.customOrders||[]).some(x=>x.id===item.id))return notify('Cette commande existe déjà. Rien n’a été remplacé.',true);
+   if(!confirm('Récupérer uniquement la commande '+String(item.number||item.id)+' ? Les factures et les autres commandes ne changeront pas.'))return;
+   ok=persistExtras({...extras,customOrders:[...(extras.customOrders||[]),item]});
+  }else if(kind==='hardware'){
+   if(extras.hardware.some(x=>x.id===item.id))return notify('Cet accessoire existe déjà.',true);
+   ok=persistExtras({...extras,hardware:[...extras.hardware,item]});
+  }else if(kind==='roll'){
+   if(rolls.some(x=>x.id===item.id))return notify('Cette bobine existe déjà.',true);
+   ok=persist([...rolls,item]);if(ok)rolls=[...rolls,item];
+  }else if(kind==='offEntry'){
+   if(offEntries().some(x=>x.id===item.id))return notify('Cette entrée existe déjà.',true);
+   ok=persistWorkshop(rolls,prints,{...extras,nonCommercial:[...offEntries(),item]});
+  }else return notify('Type de récupération non pris en charge.',true);
+  if(!ok)return;
+  if(!writeTrash(all.filter(x=>x.trashId!==trashId)))notify('Élément restauré, mais le nettoyage de la corbeille a échoué.',true);
+  render();notify('✓ Élément récupéré sans écraser les autres données.');
+ }
+ function forgetTrash(trashId){
+  const all=trashItems(),rec=all.find(x=>x.trashId===trashId);if(!rec)return;
+  if(!confirm('Effacer définitivement cet élément de la corbeille de ce navigateur ?'))return;
+  if(writeTrash(all.filter(x=>x.trashId!==trashId))){render();notify('Élément retiré de la corbeille.');}
+ }
+ function clearTrash(){const all=trashItems();if(!all.length)return;if(!confirm('Vider définitivement les '+all.length+' élément(s) de la corbeille locale ?'))return;
+  if(writeTrash([])){render();notify('Corbeille locale vidée.');}
+ }
+ function trashLabel(rec){const x=rec.item||{};return String(rec.kind==='customOrder'?'Commande '+(x.number||'')+' — '+(x.customer||x.item||''):rec.kind==='hardware'?'Accessoire '+(x.name||''):rec.kind==='roll'?'Bobine '+(x.brand||'')+' — '+(x.color||''):rec.kind==='offEntry'?'Hors production '+(x.name||''):'Élément');}
+ function downloadTrash(){const data={kind:'jj3d-corbeille-locale',version:1,exportedAt:new Date().toISOString(),entries:trashItems()};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='JJ3D-corbeille-'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);notify('Export de la corbeille créé.');}
+
  function backupBeforeChange(){
   try{const stateRaw=localStorage.getItem(STATE_KEY),extrasRaw=localStorage.getItem(EXTRA_KEY);if(!stateRaw||!extrasRaw)return;
    const now=Date.now(),all=JSON.parse(localStorage.getItem(BACKUP_KEY)||'[]');
@@ -38,11 +81,16 @@
   }catch(e){console.warn('Copie de sécurité locale indisponible:',e);}
  }
  function backupsPage(){let records=[];try{records=JSON.parse(localStorage.getItem(BACKUP_KEY)||'[]');}catch(e){}
- return header('SÉCURITÉ','Sauvegardes de sécurité','Retrouve les versions récentes conservées sur cet appareil. Elles ne remplacent PAS une sauvegarde externe.')+
- `<div class="notice">🔐 Jusqu'à 8 états précédents sont conservés localement lors de tes modifications. Une suppression du navigateur ou un changement d'appareil peut les effacer. Exporte régulièrement un JSON complet.</div><div class="actions"><button type="button" class="primary-btn" id="export-full">↧ Exporter les données en JSON</button></div><section class="panel"><h2>Historique local (${records.length})</h2>${records.map(r=>`<article class="item"><strong>${esc(new Date(r.createdAt).toLocaleString('fr-CA',{dateStyle:'medium',timeStyle:'short'}))}</strong> — ${Number(r.extras?.products?.length)||0} produits, ${Number(r.extras?.customOrders?.length)||0} commandes personnalisées <button type="button" class="secondary-btn" data-restore-backup="${esc(r.id)}">Restaurer cette version</button></article>`).join('')||'<p>Aucune version disponible. Une sauvegarde est créée avant tes prochaines modifications.</p>'}</section>`;
+  const discarded=trashItems();const names={customOrder:'Commande personnalisée',hardware:'Accessoire',roll:'Bobine',offEntry:'Hors production'};
+  return header('SÉCURITÉ','Sauvegardes et corbeille','Récupère un élément supprimé sans remplacer tes données actuelles.')+
+ `<div class="notice">🛡️ La corbeille et les 8 instantanés sont conservés <strong>sur cet appareil uniquement</strong>. Ils ne remplacent pas une sauvegarde externe et ne protègent pas les suppressions faites dans un autre navigateur ou directement dans la Boutique Firebase. Exporte régulièrement un JSON.</div>
+ <section class="panel"><div class="panel-head"><div><h2>🗑 Corbeille locale (${discarded.length})</h2><p>Commandes personnalisées, bobines, accessoires et entrées hors production supprimés ici. La récupération ne remplace aucune autre donnée.</p></div></div><div class="actions"><button type="button" class="secondary-btn" id="export-trash">↧ Exporter la corbeille</button><button type="button" class="secondary-btn" id="clear-trash" ${discarded.length?'':'disabled'}>Vider la corbeille</button></div>
+ ${discarded.map(r=>`<article class="item jj3d-trash-row"><div><strong>${esc(trashLabel(r))}</strong><div class="small-hint">${esc(names[r.kind]||r.kind)} · Supprimé le ${esc(new Date(r.removedAt).toLocaleString('fr-CA',{dateStyle:'medium',timeStyle:'short'}))}</div></div><div class="actions"><button type="button" class="secondary-btn" data-recover-trash="${esc(r.trashId)}">↶ Récupérer</button><button type="button" class="secondary-btn" data-forget-trash="${esc(r.trashId)}">Effacer</button></div></article>`).join('')||'<p>Ta corbeille est vide. Les prochaines suppressions prises en charge apparaîtront ici.</p>'}</section>
+ <section class="panel"><h2>📦 Sauvegardes</h2><p>Le JSON complet conserve ton inventaire, les ventes, factures et la corbeille. Les photos stockées séparément dans Firebase / IndexedDB ne sont pas intégrées à ce JSON.</p><div class="actions"><button type="button" class="primary-btn" id="export-full">↧ Exporter les données en JSON</button></div></section>
+ <section class="panel"><h2>🕒 Historique local (${records.length})</h2><div class="notice">⚠ Restaurer un état complet remplace les données courantes sur cet appareil. Privilégie la récupération ciblée ci-dessus; exporte un JSON avant une restauration complète.</div>${records.map(r=>`<article class="item"><strong>${esc(new Date(r.createdAt).toLocaleString('fr-CA',{dateStyle:'medium',timeStyle:'short'}))}</strong> — ${Number(r.extras?.products?.length)||0} produits, ${Number(r.extras?.customOrders?.length)||0} commandes personnalisées <button type="button" class="secondary-btn" data-restore-backup="${esc(r.id)}">Restaurer tout (risqué)</button></article>`).join('')||'<p>Aucune version disponible. Une sauvegarde est créée avant tes prochaines modifications.</p>'}</section>`;
  }
  function restoreBackup(id){let items=[];try{items=JSON.parse(localStorage.getItem(BACKUP_KEY)||'[]');}catch(e){}const record=items.find(x=>x.id===id);if(!record)return notify('Sauvegarde introuvable.',true);
-  if(!confirm('Cette restauration remplacera ton inventaire, tes commandes et tes factures actuels sur cet appareil et demandera une synchronisation Firebase. Exporte ton JSON avant de continuer. Restaurer?'))return;
+  if(!confirm('ATTENTION : cette restauration remplace les données actuelles de cet appareil et peut se synchroniser avec Firebase. Un export JSON de sécurité sera téléchargé automatiquement. Continuer ?'))return;exportFull();
   const state=record.state,extra=record.extras;if(!Array.isArray(state?.rolls)||!Array.isArray(state?.prints)||!Array.isArray(extra?.products)||!Array.isArray(extra?.customOrders||[])){notify('Sauvegarde invalide.',true);return;}
   if(persistWorkshop(state.rolls,state.prints,extra)){render();notify('✓ Restauration locale appliquée. Vérifie la confirmation Firebase.');}
  }
@@ -514,7 +562,7 @@
  function persistExtras(next){backupBeforeChange();try{next=reconcileInvoiceSales(next);const str=JSON.stringify(next);localStorage.setItem(EXTRA_KEY,str);if(localStorage.getItem(EXTRA_KEY)!==str)throw Error('Échec de vérification');extras=next;queueMicrotask(()=>window.dispatchEvent(new Event('printpilot:changed')));return true;}catch(e){console.error('Sauvegarde hardware:',e);notify('Impossible de sauvegarder le hardware.',true);return false;}}
  function openHardware(id){const r=id?extras.hardware.find(x=>x.id===id):null;const f=document.getElementById('hardware-form');f.reset();document.getElementById('hardware-error').textContent='';document.getElementById('hardware-dialog-title').textContent=r?'Modifier du hardware':'Ajouter du hardware';if(r){for(const [k,v] of Object.entries(r)){const inp=f.elements.namedItem(k);if(inp)inp.value=v??'';}f.elements.namedItem('originalId').value=r.id;}else{f.elements.namedItem('originalId').value='';f.elements.namedItem('initial').value='1';f.elements.namedItem('remaining').value='1';f.elements.namedItem('threshold').value='5';f.elements.namedItem('unitCost').value='0';}document.getElementById('hardware-dialog').showModal();}
  function saveHardware(e){e.preventDefault();const f=e.currentTarget;const data=Object.fromEntries(new FormData(f));const originalId=data.originalId;const id=data.id.trim();const row={...(extras.hardware.find(r=>r.id===originalId)||{}),id,name:data.name.trim(),category:data.category.trim(),initial:Number(data.initial),remaining:Number(data.remaining),threshold:Number(data.threshold),unitCost:Number(data.unitCost),supplier:data.supplier.trim(),notes:data.notes.trim()};const err=document.getElementById('hardware-error');if(!id||!row.name||!Number.isFinite(row.initial)||row.initial<0||!Number.isFinite(row.remaining)||row.remaining<0||!Number.isFinite(row.threshold)||row.threshold<0||!Number.isFinite(row.unitCost)||row.unitCost<0){err.textContent='Vérifie le nom, la référence et les valeurs numériques (0 ou plus).';return;}if(extras.hardware.some(r=>r.id===id&&r.id!==originalId)){err.textContent='Cet ID existe déjà : choisis une référence unique.';return;}const next={...extras,hardware:originalId?extras.hardware.map(r=>r.id===originalId?row:r):[...extras.hardware,row]};if(!persistExtras(next))return;document.getElementById('hardware-dialog').close();render();notify('✓ Hardware enregistré.');}
- function deleteHardware(id){const r=extras.hardware.find(x=>x.id===id);if(!r||!confirm(`Supprimer ${r.name} (${id}) ?`))return;const next={...extras,hardware:extras.hardware.filter(x=>x.id!==id)};if(persistExtras(next)){render();notify('Hardware supprimé.');}}
+ function deleteHardware(id){const r=extras.hardware.find(x=>x.id===id);if(!r||!confirm(`Mettre ${r.name} (${id}) à la corbeille ?`))return;const arc=archiveBeforeRemoval('hardware',r);if(!arc)return;const next={...extras,hardware:extras.hardware.filter(x=>x.id!==id)};if(persistExtras(next)){render();notify('Accessoire placé dans la corbeille.');}else undoArchive(arc.trashId); }
 
  // Chaque vente nouvelle porte un ID immutable; les ventes Excel restent historiques et non modifiables.
  function activeSales(){return extras.sales.filter(s=>!['cancelled','duplicate'].includes(s.status));}
@@ -903,7 +951,7 @@
   if(!persistExtras(next))throw Error('Échec de sauvegarde des nouveaux produits.');
   render();notify('✓ Correction appliquée. Vérifie la synchronisation Firebase et les statistiques.');
  }
- function exportFull(){const data={version:2,exportedAt:new Date().toISOString(),filaments:rolls,prints,products:extras.products,hardware:extras.hardware,sales:extras.sales,nonCommercial:extras.nonCommercial||[],printers:extras.printers||[],invoices:extras.invoices||[],stockSlips:extras.stockSlips||[],packingSlips:extras.packingSlips||[],customOrders:extras.customOrders||[],invoiceSettings:extras.invoiceSettings||{}};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='printpilot-sauvegarde-complete.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);notify('Sauvegarde complète exportée.');}
+ function exportFull(){const data={version:2,exportedAt:new Date().toISOString(),filaments:rolls,prints,products:extras.products,hardware:extras.hardware,sales:extras.sales,nonCommercial:extras.nonCommercial||[],printers:extras.printers||[],invoices:extras.invoices||[],stockSlips:extras.stockSlips||[],packingSlips:extras.packingSlips||[],customOrders:extras.customOrders||[],invoiceSettings:extras.invoiceSettings||{},localTrash:trashItems()};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='printpilot-sauvegarde-complete.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);notify('Sauvegarde complète exportée.');}
  function financeProductRows(query=''){
   const products=commercialProducts().filter(p=>[p.shopId,p.id,p.name,p.category,p.colors].join(' ').toLowerCase().includes(String(query).toLowerCase()));
   if(!products.length)return '<p class="empty">Aucun produit correspondant.</p>';
@@ -1067,10 +1115,11 @@
    ?'Cette entrée provient d’un produit ou d’une impression déjà comptabilisée. La supprimer ne remettra PAS le produit en vente, ne réactivera PAS l’impression, et ne modifiera PAS le filament.'
    :'Les heures seront retirées du suivi. Le filament réellement consommé RESTERA déduit. Pour corriger une erreur de saisie de filament, utilise plutôt « Annuler et restituer ». ';
   if(!confirm('Supprimer définitivement « '+ev.name+' » ?\n\n'+warning))return;
+  const arc=archiveBeforeRemoval('offEntry',ev);if(!arc)return;
   const remaining=offEntries().filter(x=>x.id!==id);
   if(persistWorkshop(rolls,prints,{...extras,nonCommercial:remaining})){
-   render();notify('✓ Entrée supprimée; stock et bobines inchangés.');
-  }else notify('Impossible de supprimer cette entrée.',true);
+   render();notify('✓ Entrée placée dans la corbeille; stock et bobines inchangés.');
+  }else {undoArchive(arc.trashId);notify('Impossible de supprimer cette entrée.',true);}
  }
  function restoreOff(id){
   const ev=offEntries().find(x=>x.id===id);if(!ev)return;
@@ -1678,17 +1727,17 @@
   const row=customOrders().find(x=>x.id===id);if(!row)return;
   const typed=prompt('SUPPRESSION : '+row.number+' — '+row.customer+'\nPour supprimer uniquement CETTE commande, écris SUPPRIMER.\nLes factures et autres commandes restent intactes.');
   if(typed!=='SUPPRIMER')return;
-  try{localStorage.setItem('jj3d-last-deleted-custom-order-v4.11.54',JSON.stringify({savedAt:new Date().toISOString(),row}));}catch(e){notify('Sauvegarde locale de la commande impossible : suppression annulée.',true);return;}
+  const archived=archiveBeforeRemoval('customOrder',row);if(!archived)return;
   const next=customOrders().filter(x=>x.id!==id);
-  if(next.length!==customOrders().length-1){notify('Anomalie détectée : suppression annulée.',true);return;}
-  if(persistExtras({...extras,customOrders:next})){render();try{await window.JJ3DSyncOrderQueue?.({...row,status:'cancelled',deleted:true});notify('Commande '+row.number+' supprimée uniquement; factures conservées.');}catch(err){notify('Commande supprimée, mais tâche À imprimer à vérifier : '+(err.message||err),true);}}
+  if(next.length!==customOrders().length-1){undoArchive(archived.trashId);notify('Anomalie détectée : suppression annulée.',true);return;}
+  if(persistExtras({...extras,customOrders:next})){render();try{await window.JJ3DSyncOrderQueue?.({...row,status:'cancelled',deleted:true});notify('Commande '+row.number+' placée dans la corbeille; factures conservées.');}catch(err){notify('Commande en corbeille, mais tâche À imprimer à vérifier : '+(err.message||err),true);}}else undoArchive(archived.trashId);
  }
  async function updateCustomOrderStatus(id,status){if(!Object.hasOwn(customOrderStages,status))return;const row=customOrders().find(x=>x.id===id);if(!row)return;const updated={...row,status,updatedAt:new Date().toISOString()};if(persistExtras({...extras,customOrders:customOrders().map(x=>x.id===id?updated:x)})){render();try{await window.JJ3DSyncOrderQueue?.(updated);notify('✓ Statut et tâche liée mis à jour.');}catch(err){notify('Statut sauvé, mais À imprimer non actualisé : '+(err.message||err),true);}}}
 
  function render(){const p=page();app.innerHTML=p.startsWith('atelier-')?atelierPanel(p):p==='dashboard'?dashboard():p==='notifications'?'<div class="page-header"><div><div class="eyebrow">CENTRE DE NOTIFICATIONS</div><h1>🔔 Notifications</h1><p>Demandes, commandes et messages Boutique.</p></div></div><section class="panel jj3d-notify-page"><div class="jj3d-notify-actions"><button type="button" data-jj3d-enable>Activer les alertes du navigateur</button><button type="button" data-jj3d-read>Tout marquer comme lu</button><button type="button" data-jj3d-clear>🗑 Supprimer toutes les notifications</button><button type="button" data-jj3d-push>📱 Activer les notifications sur téléphone</button></div><p data-jj3d-permission></p><div id="jj3d-notify-page-items"></div><p class="jj3d-notify-footnote" data-jj3d-push-status>Pour les alertes sur téléphone, active Firebase Cloud Messaging et autorise les notifications.</p></section>':p==='filaments'?filaments():p==='produits'?productPage():p==='commandes'?salesPage():p==='commandes-perso'?customOrdersPage():p==='sauvegardes'?backupsPage():p==='hardware'?hardwarePage():p==='impressions'?printPage():p==='horsproduction'?offPage():p==='finances'?financePage():p==='factures'?window.JJ3DInvoices.page():p==='catalogue'?catalogPage():p==='imprimantes'?printerPage():placeholder(p);document.getElementById('page-name').textContent=pages[p];window.JJ3DNotifications?.onPageViewed(p);document.querySelectorAll('[data-page]').forEach(n=>{n.classList.toggle('active',n.dataset.page===p);n.setAttribute('aria-current',n.dataset.page===p?'page':'false')});document.getElementById('sidebar').classList.remove('open');document.querySelectorAll('#mobile-navigation [data-page]').forEach(n=>{n.classList.toggle('active',n.dataset.page===p);n.setAttribute('aria-current',n.dataset.page===p?'page':'false');});const filterCount=document.getElementById(p+'-count');if(filterCount&&uiFilters[p])filterCount.textContent=filteredProducts(p).length+' résultat(s)';document.body.classList.toggle('finance-view',p==='finances');document.querySelectorAll('.table-wrap table').forEach(table=>{const headers=[...table.querySelectorAll('thead th')].map(th=>th.textContent.trim());table.querySelectorAll('tbody tr').forEach(tr=>[...tr.children].forEach((td,i)=>td.setAttribute('data-label',headers[i]||'')));});hydratePhotos();}
  function openRoll(id){form.reset();form.elements.namedItem('id').value='';document.getElementById('form-error').textContent='';document.getElementById('dialog-title').textContent=id?'Modifier le rouleau':'Ajouter un rouleau';if(id){const r=rolls.find(x=>x.id===id);if(!r)return;for(const [key,val] of Object.entries(r)){const input=form.elements.namedItem(key);if(input){if(key==='material'&&input.tagName==='SELECT'&&![...input.options].some(o=>o.value===String(val)))input.add(new Option(String(val),String(val)));input.value=val??'';}}}dialog.showModal();}
  function saveRoll(event){event.preventDefault();const vals=Object.fromEntries(new FormData(form).entries());const r={id:vals.id||`roll-${Date.now()}-${Math.random().toString(36).slice(2,9)}`,brand:String(vals.brand||'').trim(),color:String(vals.color||'').trim(),material:vals.material,code:String(vals.code||'').trim(),initial:Number(vals.initial),remaining:Number(vals.remaining),price:Number(vals.price),swatch:safeColor(vals.swatch)};const error=document.getElementById('form-error');if(!r.brand||!r.color||!rollOk(r)||!Number.isFinite(r.price)||r.price<0||vals.initial===''||vals.remaining===''||vals.price===''){error.textContent='Vérifie les champs : marque, couleur, poids et prix. Le poids restant ne peut pas dépasser le poids initial.';return;}const next=rolls.slice();const idx=next.findIndex(x=>x.id===r.id);if(idx>=0)next[idx]=r;else next.push(r);if(!persist(next)){error.textContent=storageError;return;}rolls=next;search='';dialog.close();render();notify('✓ Rouleau enregistré!');}
- function removeRoll(id){const r=rolls.find(x=>x.id===id);if(prints.some(p=>p.status==='active'&&p.usage.some(u=>u.rollId===id))){notify('Cette bobine est liée à une impression active. Annule d’abord cette impression.',true);return;}if(!r||!confirm(`Supprimer ${r.brand} — ${r.color} ?`))return;const next=rolls.filter(x=>x.id!==id);if(persist(next)){rolls=next;render();notify('Rouleau supprimé.');}}
+ function removeRoll(id){const r=rolls.find(x=>x.id===id);if(prints.some(p=>p.status==='active'&&p.usage.some(u=>u.rollId===id))){notify('Cette bobine est liée à une impression active. Annule d’abord cette impression.',true);return;}if(!r||!confirm(`Mettre ${r.brand} — ${r.color} à la corbeille ?`))return;const arc=archiveBeforeRemoval('roll',r);if(!arc)return;const next=rolls.filter(x=>x.id!==id);if(persist(next)){rolls=next;render();notify('Bobine placée dans la corbeille.');}else undoArchive(arc.trashId); }
  function exportData(){const blob=new Blob([JSON.stringify({version:1,exportedAt:new Date().toISOString(),filaments:rolls},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='printpilot-filaments.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);notify('Export JSON créé.');}
  // LISTENER DIRECT permanent : il n'est jamais détruit lors d'un render().
  form.addEventListener('submit',saveRoll);
@@ -1720,6 +1769,7 @@
   if(hide&&!confirm('Masquer cette vente directe du chiffre d’affaires? Vérifie qu’elle correspond vraiment à la vente de la facture. Aucune donnée ne sera supprimée et le stock restera inchangé.'))return;
   if(persistExtras({...extras,sales:extras.sales.map(s=>s.id===id?{...s,status:hide?'duplicate':'active',duplicateHiddenAt:hide?new Date().toISOString():''}:s)})){render();notify(hide?'Vente directe masquée, sans suppression.':'Vente rétablie.');}
  });
+ document.addEventListener('click',e=>{const rec=e.target.closest('[data-recover-trash]'),del=e.target.closest('[data-forget-trash]');if(rec)recoverTrash(rec.dataset.recoverTrash);else if(del)forgetTrash(del.dataset.forgetTrash);else if(e.target.closest('#clear-trash'))clearTrash();else if(e.target.closest('#export-trash'))downloadTrash();});
  document.addEventListener('click',e=>{const edit=e.target.closest('[data-edit-custom-order]'),del=e.target.closest('[data-delete-custom-order]');if(e.target.closest('[data-restore-backup]'))restoreBackup(e.target.closest('[data-restore-backup]').dataset.restoreBackup);else if(e.target.closest('[data-recover-custom-invoice]'))recoverCustomOrderFromInvoice(e.target.closest('[data-recover-custom-invoice]').dataset.recoverCustomInvoice);else if(edit)editCustomOrder(edit.dataset.editCustomOrder);else if(e.target.closest('[data-invoice-custom-order]'))openCustomOrderInvoice(e.target.closest('[data-invoice-custom-order]').dataset.invoiceCustomOrder);else if(e.target.closest('[data-queue-custom-order]')){location.hash='#atelier-queue';notify('🖨️ Impression liée : voir la file À imprimer.');}else if(del)deleteCustomOrder(del.dataset.deleteCustomOrder);else if(e.target.closest('#custom-order-add'))openNewCustomOrder();else if(e.target.closest('#custom-order-reset, #custom-order-close')){editingCustomOrderId=null;document.getElementById('custom-order-dialog')?.close();}else if(e.target.id==='custom-order-dialog'){const dialog=e.target,r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom){editingCustomOrderId=null;dialog.close();}}});
  document.addEventListener('click',e=>{
   const button=e.target.closest('[data-jj-orders-view]');if(!button)return;

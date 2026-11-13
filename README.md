@@ -1,12 +1,20 @@
-# JJ3D v4.11.61 — Catalogue QR PDF automatique
+# JJ3D v4.11.62 — Corbeille locale et sauvegardes renforcées
 
-Version complète à publier (ZIP avec toutes les pages, images, scripts et fichiers Firebase existants) basée sur v4.11.60.
+Version complète basée sur v4.11.61. Les modules Kanban, Finances, Boutique et QR sont conservés.
 
-**Nouveau :** Atelier → Étiquettes QR → « Télécharger le catalogue QR — PDF ».
-JJ3D lit la liste de produits/variantes courants de Firestore et produit directement dans le navigateur un PDF A4 avec une couverture d’instructions puis **4 fiches QR par page**, incluant nom, ID et prix. Lorsqu’un nouveau produit est créé, il sera inclus lors du prochain téléchargement. Pas de mise à jour manuelle du document.
+## Nouveautés
+- Dans **Sauvegardes** : liste des éléments récupérables, bouton **Récupérer**, suppression définitive, vider et exporter la corbeille.
+- Suppression récupérable pour **commandes personnalisées enregistrées dans JJ3D**, **bobines**, **accessoires hardware** et **entrées Personnel/Échecs/Tests**.
+- Récupération ciblée qui refuse d'écraser un élément existant portant le même ID.
+- Le JSON complet inclut désormais `localTrash` en archive de référence.
+- Avant de restaurer un état complet, un JSON de sécurité des données actuelles est automatiquement téléchargé (vérifier les téléchargements).
+- Toutes les pages, y compris Boutique, portent la version 4.11.62.
 
-Le téléchargement PNG individuel et ZIP des PNG reste identique. Les QR ouvrent la fiche Boutique (compte autorisé requis) où la personne peut laisser un message « Vendu ». Les QR ne déclenchent **pas** automatiquement une vente ni une modification de stock ; c’est le fonctionnement actuel de la messagerie Boutique.
+## Limites importantes
+- **La corbeille est locale au navigateur** (localStorage). Elle n'est pas synchronisée entre appareils. Le JSON exporté contient la corbeille à titre d'archive mais sa réimportation n'est pas automatisée.
+- Les suppressions réalisées directement dans le portail Boutique, les demandes/commandes de Firestore, les factures et les produits ne sont pas encore couvertes par cette corbeille. Les factures ne sont pas effacées par la suppression locale d'une commande personnalisée.
+- Les photos Cloud/IndexedDB sont stockées séparément et ne sont pas incluses dans la sauvegarde JSON.
+- La restauration complète reste risquée car elle peut écraser des modifications récentes ou synchroniser d'anciens états : utiliser de préférence « Récupérer ».
+- Les tests sont limités aux vérifications statiques (syntaxe JS, présence des assets). Aucun test d'écriture réelle sur Firebase n'a été effectué.
 
-Bibliothèque de création PDF : jsPDF 2.5.2 via CDN ; la connexion Internet est nécessaire pour charger la bibliothèque ainsi que QRCodeJS. Aucune donnée n’est envoyée au CDN lors de la génération du PDF. Les numéros de version Atelier/Boutique/Factures/Messages ont été harmonisés à v4.11.61. Le Kanban et les finances existants sont conservés.
-
-Avant publication, sauvegarder le JSON JJ3D. Syntaxe JS vérifiée ; le téléchargement et les QR doivent être testés avec votre navigateur et vos données Firebase.
+**Avant de publier**, exporter une sauvegarde JSON depuis le site actuel. La publication GitHub Pages remplace les fichiers du site mais ne devrait pas modifier les enregistrements Firebase directement.
