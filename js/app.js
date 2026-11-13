@@ -1369,13 +1369,51 @@
    return {...same,id:same?.id||'inv-'+crypto.randomUUID(),number,date:same?.date||date,due:same?.due||o.dueAt||date,status:'draft',customOrderId:o.id,clientName:o.customer,clientEmail:same?.clientEmail||email,clientAddress:same?.clientAddress||'',lines:jjInvoiceLinesFromOrder(o),discount:same?.discount||0,shipping:same?.shipping||0,taxRate:same?.taxRate||0,notes:summary,createdAt:same?.createdAt||now,updatedAt:now,history:[...(same?.history||[]),{at:now,action:same?'Brouillon ajusté depuis la commande '+o.number:'Brouillon généré depuis la commande '+o.number,status:'draft'}]};
  }
  function openCustomOrderInvoice(id){const o=customOrders().find(x=>x.id===id);if(!o)return;let inv=(extras.invoices||[]).find(i=>i.customOrderId===id);if(!inv){inv=jjInvoiceForOrder(o);if(!persistExtras({...extras,invoices:[...(extras.invoices||[]),inv]})){notify('Impossible de créer la facture.',true);return;}}if(page()!=='factures'){location.hash='factures';render();}window.JJ3DInvoices.openInvoice(inv.id);}
+ // Le tableau utilise uniquement les commandes existantes : aucune copie des donnees.
+ const JJ_BOARD_VIEW_KEY='jj3d-commandes-view-v1';
+ let jjBoardView=(()=>{try{return localStorage.getItem(JJ_BOARD_VIEW_KEY)==='list'?'list':'board';}catch(_){return 'board';}})();
+ const jjBoardColumns=[
+  {id:'new',title:'📥 Reçues',subtitle:'Demandes à évaluer'},
+  {id:'quoted',title:'💬 Soumissions',subtitle:'En attente du client'},
+  {id:'approved',title:'✅ Approuvées',subtitle:'Projet confirmé'},
+  {id:'awaiting_payment',title:'💳 Paiement',subtitle:'À confirmer'},
+  {id:'printing',title:'🖨️ Production',subtitle:'Impression en cours'},
+  {id:'ready',title:'📦 Prêtes',subtitle:'À remettre'},
+  {id:'delivered',title:'🎉 Terminées',subtitle:'Remises / livrées'},
+  {id:'cancelled',title:'🚫 Annulées',subtitle:'Conservées en historique'}
+ ];
+ function jjBoardPage(orders){
+  const ids=new Set(jjBoardColumns.map(x=>x.id));
+  const cols=jjBoardColumns.map(col=>{
+   const items=orders.filter(o=>(ids.has(o.status)?o.status:'new')===col.id);
+   return `<section class="jj-board-column" data-board-column="${col.id}" aria-label="${esc(col.title)}">
+    <header class="jj-board-column-head"><strong>${col.title}</strong><span class="jj-board-count">${items.length}</span><small>${col.subtitle}</small></header>
+    <div class="jj-board-cards">${items.map(o=>{
+      const invoice=(extras.invoices||[]).find(i=>i.customOrderId===o.id);
+      const late=o.dueAt&&o.dueAt<new Date().toLocaleDateString('en-CA')&&!['delivered','cancelled'].includes(o.status);
+      return `<article class="jj-board-card" draggable="true" data-board-order="${esc(o.id)}" data-custom-order-id="${esc(o.id)}" tabindex="0" aria-label="${esc(o.item||'Commande')}, ${esc(o.customer||'Client')}">
+      <div class="jj-board-card-ref">${esc(o.number||'Commande')}</div>
+      <strong class="jj-board-card-title">${esc(o.item||'Projet')} <span>× ${esc(o.quantity||1)}</span></strong>
+      <div class="jj-board-card-meta">👤 ${esc(o.customer||'Client non précisé')}</div>
+      ${o.dueAt?`<div class="jj-board-card-meta ${late?'jj-board-late':''}">📅 ${esc(o.dueAt)}${late?' · En retard':''}</div>`:''}
+      <div class="jj-board-card-footer"><b>${money(jjCustomOrderTotal(o))}</b><small>${invoice?.status==='paid'?'✅ Payée':'💳 '+(invoice?.status==='cancelled'?'Facture annulée':'À vérifier')}</small></div>
+      <label class="jj-board-status-label">Changer d’étape<select data-custom-status="${esc(o.id)}" aria-label="Changer le statut de ${esc(o.item||'commande')}">${Object.entries(customOrderStages).map(([k,v])=>`<option value="${k}" ${o.status===k?'selected':''}>${esc(v)}</option>`).join('')}</select></label>
+      <button type="button" class="secondary-btn jj-board-edit" data-edit-custom-order="${esc(o.id)}">✎ Voir / modifier</button>
+      </article>`;
+    }).join('')||'<p class="jj-board-empty">Dépose une commande ici</p>'}</div></section>`;
+  }).join('');
+  return `<section class="panel jj-board-panel" id="jj-order-board-panel" ${jjBoardView==='list'?'hidden':''}>
+   <div class="panel-head"><div><h2>📋 Tableau de production</h2><p>Glisse une carte entre les colonnes sur ordinateur, ou utilise son menu « Changer d’étape » sur téléphone. Les factures ne sont jamais marquées payées automatiquement.</p></div></div>
+   <div class="jj-board-scroll" tabindex="0" aria-label="Tableau des commandes, défilement horizontal"><div class="jj-board-columns">${cols}</div></div>
+  </section>`;
+ }
  function customOrdersPage(){
   const orders=customOrders().slice().sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
   const active=orders.filter(x=>!['delivered','cancelled'].includes(x.status));
   const now=new Date();const today=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,10);
   return header('SUIVI CLIENTS','Commandes personnalisées','Enregistre ici les demandes reçues par téléphone, en personne ou sur Messenger. Rien ne sera oublié.')+
    `<div class="stats-grid three">${statCard('📋',active.length,'Commandes actives')}${statCard('⏳',orders.filter(x=>x.status==='printing').length,'En production')}${statCard('🎁',orders.filter(x=>x.status==='ready').length,'Prêtes à remettre')}</div>`+
-   `<div class="jj-custom-orders-toolbar"><button type="button" class="primary-btn" id="custom-order-add">＋ Ajouter une commande</button><span class="small-hint">Retrouve et modifie tes commandes ci-dessous. Le formulaire s’ouvre seulement quand tu en as besoin.</span></div>`+
+   `<div class="jj-custom-orders-toolbar"><button type="button" class="primary-btn" id="custom-order-add">＋ Ajouter une commande</button><div class="jj-board-view-controls" role="group" aria-label="Affichage des commandes"><button type="button" class="secondary-btn" data-jj-orders-view="board" aria-pressed="${jjBoardView==='board'}">▦ Tableau</button><button type="button" class="secondary-btn" data-jj-orders-view="list" aria-pressed="${jjBoardView==='list'}">☷ Liste détaillée</button></div><span class="small-hint">Retrouve et modifie tes commandes ci-dessous. Le formulaire s’ouvre seulement quand tu en as besoin.</span></div>`+
    (missingCustomOrderInvoices().length?`<section class="panel" style="border-color:#d9a44a"><h2>🛟 Commandes à récupérer (${missingCustomOrderInvoices().length})</h2><p>Ces factures existent encore, mais leurs commandes personnalisées ne sont plus dans la liste. Récupère uniquement celles que tu reconnais. Les factures et les impressions existantes ne sont pas recréées.</p>${missingCustomOrderInvoices().map(i=>`<div class="item"><strong>${esc(i.clientName||'Client')} — ${esc(i.number||'Facture')}</strong> · ${esc((i.lines||[])[0]?.name||'Projet')} <button type="button" class="primary-btn" data-recover-custom-invoice="${esc(i.id)}">🛟 Récupérer cette commande</button></div>`).join('')}</section>`:'')+
    `<dialog id="custom-order-dialog" class="dialog jj-custom-order-panel jj-custom-order-dialog" aria-labelledby="custom-order-form-title"><div class="jj-custom-order-modal-heading"><div><h2 id="custom-order-form-title">＋ Nouvelle commande personnalisée</h2><p>Complète les détails de ton client, du projet et du filament. Tu pourras modifier la commande plus tard.</p></div><button type="button" class="close" id="custom-order-close" aria-label="Fermer le formulaire" title="Fermer">×</button></div>
    <form id="custom-order-form" novalidate><input type="hidden" name="orderId"><div class="form-grid">
@@ -1440,7 +1478,8 @@
    <p class="small-hint">La photo est stockée séparément et synchronisée avec Firebase si tu es connecté. Cette commande ne retire pas automatiquement de stock. Une facture brouillon privée est automatiquement associée à son enregistrement; elle n’est ni envoyée ni marquée payée.</p>
    <p id="custom-order-edit-hint" class="small-hint" hidden></p>
    <p id="custom-order-error" class="form-error" role="alert" aria-live="assertive"></p><div class="actions"><button class="primary-btn" type="submit" id="custom-order-submit">💾 Enregistrer la commande</button><button class="secondary-btn" type="button" id="custom-order-reset">Annuler</button></div></form></dialog>`+
-   `<section class="panel"><div class="panel-head"><div><h2>Mes commandes (${orders.length})</h2><p>Les commandes terminées restent dans l'historique.</p></div></div>
+   jjBoardPage(orders)+
+   `<section class="panel" id="jj-order-list-panel" ${jjBoardView==='board'?'hidden':''}><div class="panel-head"><div><h2>Mes commandes (${orders.length})</h2><p>Les commandes terminées restent dans l'historique.</p></div></div>
    <div class="jj-custom-orders-grid">${orders.map(o=>`<article class="inventory-card jj-customer-order" data-custom-order-id="${esc(o.id)}"><div class="inventory-card-head"><div><small>${esc(o.number||'Commande')}</small><h3>${esc(o.item||'Projet')} × ${esc(o.quantity||1)}</h3></div><span class="pill ${o.status==='cancelled'?'low':'ok'}">${esc(customOrderStages[o.status]||o.status||'Nouvelle')}</span></div>
    <div class="jj-customer-order-overview"><span>👤 ${esc(o.customer||'Client non précisé')}</span><span>🧵 ${esc(o.filamentType||'Filament à préciser')} · ${esc(o.colors||'Couleur à préciser')}</span><span>💰 ${money(jjCustomOrderTotal(o))}</span><span>🧾 ${esc(({draft:'Paiement en attente',sent:'Paiement en attente',paid:'Payée',cancelled:'Facture annulée'})[(extras.invoices||[]).find(i=>i.customOrderId===o.id)?.status]||'Paiement en attente')}</span></div><details class="jj-customer-order-expand"><summary>Voir les détails de la commande</summary><div class="jj-customer-order-expanded"><div class="jj-order-photo-grid"><div><small>Modèle demandé</small><div class="jj-custom-order-photo" data-custom-order-photo="${esc(o.id)}">${o.hasPhoto?'📸 Chargement…':'Aucune photo'}</div></div><div><small>Couleur demandée</small><div class="jj-custom-order-photo" data-custom-order-color-photo="${esc(o.id)}">${o.hasColorPhoto?'🎨 Chargement…':'Aucune photo'}</div></div></div>
    <div class="jj-order-facts"><div><small>👤 Client</small><strong>${esc(o.customer||'—')}</strong><span>${esc(o.contact||'Aucun contact')}</span></div><div><small>🧵 Filament</small><strong>${esc(o.filamentType||'À déterminer')} · ${esc(o.colors||'À préciser')}</strong><span>${o.filamentPurchased?'Bobine spéciale à acheter':'Stock habituel'}</span></div><div><small>📅 Dates</small><strong>Demande : ${esc(o.orderedAt||'—')}</strong><span>Souhaitée : ${esc(o.dueAt||'—')}</span></div><div><small>📐 Dimensions</small><strong>${o.dimensionShape==='box'?'Rectangulaire':'Rond / vase'}</strong><span>${Object.entries(o.dimensionMm||{}).map(([k,v])=>esc(({height:'H',diameter:'Ø',length:'L',width:'l'})[k]||k)+' '+esc(v)+' mm').join(' · ')||'À préciser'}</span></div></div>
@@ -1655,6 +1694,30 @@
   if(persistExtras({...extras,sales:extras.sales.map(s=>s.id===id?{...s,status:hide?'duplicate':'active',duplicateHiddenAt:hide?new Date().toISOString():''}:s)})){render();notify(hide?'Vente directe masquée, sans suppression.':'Vente rétablie.');}
  });
  document.addEventListener('click',e=>{const edit=e.target.closest('[data-edit-custom-order]'),del=e.target.closest('[data-delete-custom-order]');if(e.target.closest('[data-restore-backup]'))restoreBackup(e.target.closest('[data-restore-backup]').dataset.restoreBackup);else if(e.target.closest('[data-recover-custom-invoice]'))recoverCustomOrderFromInvoice(e.target.closest('[data-recover-custom-invoice]').dataset.recoverCustomInvoice);else if(edit)editCustomOrder(edit.dataset.editCustomOrder);else if(e.target.closest('[data-invoice-custom-order]'))openCustomOrderInvoice(e.target.closest('[data-invoice-custom-order]').dataset.invoiceCustomOrder);else if(e.target.closest('[data-queue-custom-order]')){location.hash='#atelier-queue';notify('🖨️ Impression liée : voir la file À imprimer.');}else if(del)deleteCustomOrder(del.dataset.deleteCustomOrder);else if(e.target.closest('#custom-order-add'))openNewCustomOrder();else if(e.target.closest('#custom-order-reset, #custom-order-close')){editingCustomOrderId=null;document.getElementById('custom-order-dialog')?.close();}else if(e.target.id==='custom-order-dialog'){const dialog=e.target,r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom){editingCustomOrderId=null;dialog.close();}}});
+ document.addEventListener('click',e=>{
+  const button=e.target.closest('[data-jj-orders-view]');if(!button)return;
+  const v=button.dataset.jjOrdersView;if(!['board','list'].includes(v))return;
+  jjBoardView=v;try{localStorage.setItem(JJ_BOARD_VIEW_KEY,v);}catch(_){}
+  document.getElementById('jj-order-board-panel')?.toggleAttribute('hidden',v!=='board');
+  document.getElementById('jj-order-list-panel')?.toggleAttribute('hidden',v!=='list');
+  document.querySelectorAll('[data-jj-orders-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.jjOrdersView===v)));
+ });
+ let jjDraggedOrderId='';
+ document.addEventListener('dragstart',e=>{
+  const card=e.target.closest('[data-board-order]');if(!card)return;
+  jjDraggedOrderId=card.dataset.boardOrder;
+  e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',jjDraggedOrderId);
+  card.classList.add('jj-dragging');
+ });
+ document.addEventListener('dragend',e=>{e.target.closest('[data-board-order]')?.classList.remove('jj-dragging');jjDraggedOrderId='';document.querySelectorAll('.jj-board-column.jj-drop-target').forEach(el=>el.classList.remove('jj-drop-target'));});
+ document.addEventListener('dragover',e=>{const col=e.target.closest('[data-board-column]');if(!col||!jjDraggedOrderId)return;e.preventDefault();e.dataTransfer.dropEffect='move';col.classList.add('jj-drop-target');});
+ document.addEventListener('dragleave',e=>{const col=e.target.closest('[data-board-column]');if(col&&!col.contains(e.relatedTarget))col.classList.remove('jj-drop-target');});
+ document.addEventListener('drop',e=>{
+  const col=e.target.closest('[data-board-column]');if(!col||!jjDraggedOrderId)return;
+  e.preventDefault();col.classList.remove('jj-drop-target');
+  const id=jjDraggedOrderId,status=col.dataset.boardColumn;jjDraggedOrderId='';
+  const row=customOrders().find(x=>x.id===id);if(row&&row.status!==status)updateCustomOrderStatus(id,status);
+ });
  document.addEventListener('change',e=>{if(e.target.matches('[data-custom-status]'))updateCustomOrderStatus(e.target.dataset.customStatus,e.target.value);});
  document.getElementById('print-product').addEventListener('change',()=>{if(!editingPrintId){selectedProductInfo({prefillDuration:true});const p=extras.products.find(x=>String(x.id)===document.getElementById('print-product').value);suggestExcelUsage(p);suggestHardwareFromProduct();if(p?.printer)setChoiceValue(document.getElementById('print-form'),'printer',p.printer);refreshPrintCreation();}else{selectedProductInfo();refreshPrintCreation();}});
  document.getElementById('print-form').addEventListener('input',updatePrintCreationCost);document.getElementById('print-form').addEventListener('change',updatePrintCreationCost);
