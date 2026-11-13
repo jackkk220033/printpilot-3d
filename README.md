@@ -1,19 +1,22 @@
-# JJ3D v4.11.70 — Voir et modifier les factures depuis Clients
+# JJ3D v4.11.71 — Gestion PRO : 7 améliorations
 
-- Chaque facture dans Gestion & finances → Clients → Voir la fiche offre deux boutons indépendants.
-- 🧾 Voir la facture : ouvre le document de facturation imprimable dans un nouvel onglet.
-- ✎ Modifier la facture : ouvre la fenêtre de modification existante, sans quitter Clients.
-- Aucun changement aux données, aux factures, aux stocks ni aux règles Firebase.
-- Les versions affichées (y compris Boutique) sont synchronisées à v4.11.70.
-- Vérifié : syntaxe JavaScript et intégrité ZIP; tester les deux boutons avec les données réelles après publication.
+**Fichier complet** à décompresser et publier sur GitHub Pages. Même numéro de version sur toutes les pages, y compris Boutique. Aucun abonnement requis.
 
+## Nouvelle section Outils & statistiques → Gestion PRO
+1. **Calculateur de prix** : coût filament + électricité + accessoires, marge cible et commission Boutique. Prix conseillé en simulation, paramètres enregistrables.
+2. **Planning** : plages d'impression manuelles par machine avec avertissement de chevauchement et échéances issues des commandes personnalisées.
+3. **Variantes** : regroupement visuel des fiches produits portant le même nom; stocks, prix et IDs individuels préservés.
+4. **Contrôle qualité** : journal des inspections liées aux impressions avec résultat, date, coûts additionnels et notes.
+5. **Liste d'achats** : suggestions pour bobines ≤200 g et hardware sous seuil; progression À acheter → Commandé → Reçu.
+6. **Promotions** : simulation et enregistrement des rabais, dates et prix proposés, sans appliquer automatiquement le rabais aux ventes.
+7. **Journal d'activité** : enregistrer les changements du module et les modifications significatives des tableaux produits, ventes, factures, clients et commandes après mise à jour. Export CSV.
 
-## v4.11.70 — Paiements, clients, boutique, rapports et contrôles
-- Registre de paiements **sur les factures existantes** (montant, date, méthode, note), calcul du solde, statut payé automatique seulement une fois soldé. Les anciennes factures déjà payées restent acquittées sans inventer d'ancien versement. L'enregistrement ne touche pas au stock.
-- Fiches clients : coordonnées de contact modifiables et notes privées. Le profil est persisté avec le workspace Firebase et inclus dans les sauvegardes complètes. Les factures d'origine restent inchangées.
-- Accès rapide à la création d'un bon d'envoi dans Stock Boutique, utilisant **le système de transfert existant**. Le transfert réel est confirmé ensuite dans les bons d'envoi; aucune sortie de stock à la création du brouillon.
-- Rapport PDF financier : soldes et encaissements TTC sur factures, unités Boutique et en transit, séparés du chiffre d'affaires enregistré pour éviter les doubles comptages. Dates des factures filtrées par date d'émission et non par date des versements.
-- Vérification en lecture seule dans Finances : doublons de numéro de facture, paiements supérieurs au total, IDs de vente répétés et stocks négatifs. Ce contrôle n'est **pas** un audit complet de sécurité des règles Firestore.
-- Factures reste à sa place, Kanban identique, Boutique et fichiers du site à la même version.
+## Sécurité des données
+- Les données Gestion PRO sont rangées dans `extras.proTools`, synchronisées via le workspace JJ3D/Firebase existant, et incluses dans les sauvegardes JSON.
+- **Aucune déduction de stock ni changement de facture** sur un simple calcul de prix, une inspection ou un rabais proposé.
+- Les fonctionnalités de planification et de promotions ne déclenchent **pas** automatiquement de travail sur l'imprimante, de vente ou d'affichage public des rabais.
+- Le journal est applicatif et non une preuve d'audit infalsifiable. Les autres modules Firebase, notamment Atelier+ et Boutique, ne sont pas encore entièrement instrumentés.
+- Exporter un JSON avant la publication; vérifier la synchronisation Firebase puis tester d'abord avec des données non critiques.
 
-**Précautions :** sauvegarde JSON avant la mise à jour, teste avec une facture brouillon et un bon d'envoi de test. Ne crée pas de doubles écritures pour les paiements passés. Les paiements partiels sur les factures Boutique confirmées séparément doivent être rapprochés manuellement.
+## Vérifications
+Tests syntaxiques JavaScript et intégrité du ZIP. Pas de tests live sur le compte Firebase ni sur smartphone.

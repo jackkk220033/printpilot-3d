@@ -534,10 +534,10 @@ select[data-choice]{width:100%;min-width:0}
 @media(max-width:1080px){.jj-finance-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.jj-finance-insights{grid-template-columns:1fr}}
 @media(max-width:600px){.jj-finance-kpis{gap:9px}.jj-finance-kpi{padding:12px}.jj-finance-kpi strong{font-size:21px}.jj-finance-bar-row{grid-template-columns:69px minmax(0,1fr) 72px;gap:7px;font-size:11px}.jj-finance-bar-row>strong{font-size:11px}.jj-finance-controls .panel-head{align-items:stretch;flex-direction:column}.jj-finance-filters label{min-width:100%}.jj-finance-top-row>div:last-child{max-width:110px}}
 
-/* v4.11.70 — Corbeille et sauvegardes */
+/* v4.11.71 — Corbeille et sauvegardes */
 .jj3d-trash-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.jj3d-trash-row .actions{display:flex;gap:8px;flex-wrap:wrap}.jj3d-trash-row .small-hint{color:var(--muted,#8c91a4);font-size:.85rem;margin-top:4px}@media(max-width:620px){.jj3d-trash-row{align-items:stretch;flex-direction:column}.jj3d-trash-row .actions button{flex:1}}
 
-/* v4.11.70 — Fiches clients, en colonnes adaptatives */
+/* v4.11.71 — Fiches clients, en colonnes adaptatives */
 .jj-crm-panel{min-width:0}
 .jj-crm-search-label{display:block;max-width:480px;margin:12px 0 18px;font-weight:650}
 .jj-crm-search-label input{display:block;width:100%;margin-top:6px}
@@ -559,20 +559,38 @@ select[data-choice]{width:100%;min-width:0}
 .jj-crm-history-row strong{overflow-wrap:anywhere}
 @media(max-width:600px){.jj-crm-history-row{align-items:flex-start;flex-direction:column}}
 
-/* v4.11.70 — Compteurs clients clairs et sans débordement */
+/* v4.11.71 — Compteurs clients clairs et sans débordement */
 .jj-crm-numbers{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;justify-content:space-between}
 .jj-crm-numbers span{flex:1 1 140px;font-size:.85rem}
 .jj-crm-detail .stats-grid{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
 
-/* v4.11.70 — Ouvrir une facture directement depuis sa fiche client. */
+/* v4.11.71 — Ouvrir une facture directement depuis sa fiche client. */
 .jj-crm-invoice-quick{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:10px;text-align:right}
 .jj-crm-invoice-quick .secondary-btn{white-space:nowrap}
 @media(max-width:640px){.jj-crm-history-row{flex-wrap:wrap;gap:12px}.jj-crm-invoice-quick{width:100%;justify-content:space-between;text-align:left}}
 
-/* v4.11.70 — Two independent actions on client invoices */
+/* v4.11.71 — Two independent actions on client invoices */
 .jj-crm-invoice-quick{gap:8px;}
 .jj-crm-invoice-quick button{flex:0 0 auto;}
 @media(max-width:700px){.jj-crm-invoice-quick button{flex:1 1 145px;}}
 
-/* JJ3D v4.11.70 — Paiements, fiches clients */
+/* JJ3D v4.11.71 — Paiements, fiches clients */
 .jj-payment-ledger{display:grid;gap:8px;padding:10px 0}.jj-payment-ledger p{margin:0}.jj-payment-ledger button{justify-self:start}.jj-payment-ledger details{max-width:100%;overflow-wrap:anywhere}.jj-crm-editor{max-width:min(700px,96vw)}.jj-crm-invoice-quick{flex-wrap:wrap;gap:8px}.jj-crm-invoice-quick small{color:var(--muted,#aab4d0)}
+
+/* v4.11.71 — Outils Gestion PRO, sans débordement horizontal */
+.pro-tabs {display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:8px;margin:0 0 20px;}
+.pro-tabs button {padding:11px 9px;border:1px solid var(--border,#d8d7e0);border-radius:11px;background:var(--card,#25233e);color:inherit;cursor:pointer;font:inherit;text-align:center;}
+.pro-tabs button.selected {border-color:#a97aff;box-shadow:inset 0 0 0 1px #a97aff;background:rgba(169,122,255,.12);font-weight:750;}
+.pro-form {display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:14px;margin:18px 0 22px;align-items:end;}
+.pro-form label {display:flex;flex-direction:column;gap:6px;min-width:0;font-weight:600;}
+.pro-form input,.pro-form select {max-width:100%;min-width:0;width:100%;box-sizing:border-box;}
+.pro-form label:has(input[type=checkbox]) {flex-direction:row;align-items:center;}
+.pro-form input[type=checkbox] {width:auto;}
+.pro-form button {align-self:end;}
+.pro-result {border:1px solid #7658bd;border-radius:12px;padding:16px;background:rgba(142,96,240,.08);line-height:1.9;}
+.pro-list {display:grid;gap:9px;margin:14px 0 20px;}
+.pro-list-row {display:flex;justify-content:space-between;gap:14px;align-items:center;border:1px solid var(--border,#d8d7e0);padding:12px;border-radius:12px;min-width:0;flex-wrap:wrap;}
+.pro-list-row span {min-width:0;flex:1;overflow-wrap:anywhere;}
+.pro-list-row small {display:block;opacity:.78;font-size:.83em;margin-top:4px;line-height:1.5;}
+.pro-list-row .actions {margin:0;}
+@media(max-width:600px){.pro-tabs{grid-template-columns:repeat(2,minmax(0,1fr));}.pro-form{grid-template-columns:1fr;}.pro-list-row button{width:100%;}}
