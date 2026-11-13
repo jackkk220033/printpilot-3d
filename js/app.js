@@ -568,7 +568,7 @@
  function activeSales(){return extras.sales.filter(s=>!['cancelled','duplicate'].includes(s.status));}
  function salePrice(s){return safeNum(s.unitPrice);}
  function saleSummary(s){return {gross:activeSales().reduce((a,v)=>a+safeNum(v.gross),0),profit:activeSales().reduce((a,v)=>a+safeNum(v.profit),0)};}
- // v4.11.65 — CRM à lecture seule. Une fiche est une vue recalculée depuis les commandes
+ // v4.11.66 — CRM à lecture seule. Une fiche est une vue recalculée depuis les commandes
  // et les factures, non une seconde copie de données personnelles à synchroniser.
  let jjClientSearch='';
  let jjClientFocus='';
@@ -1082,13 +1082,58 @@
   return filters+kpis+charts+caution;
  }
  function exportFinanceSales(){const sales=financeSelectedSales();const rows=[['Date','Produit','Canal','Quantité','Vente hors taxes','Coût enregistré','Commission','Profit estimé','Source','ID'],...sales.map(s=>[s.date||s.createdAt||'',s.product||'',s.channel||'Direct',safeNum(s.quantity).toFixed(2),safeNum(s.gross).toFixed(2),safeNum(s.cost).toFixed(2),safeNum(s.commission).toFixed(2),safeNum(s.profit).toFixed(2),s.source||'',s.id||''])];const csv='\uFEFF'+rows.map(r=>r.map(x=>'"'+String(x??'').replaceAll('"','""')+'"').join(';')).join('\r\n');downloadText('jj3d-finances-ventes-'+new Date().toISOString().slice(0,10)+'.csv',csv,'text/csv;charset=utf-8');notify('✓ Ventes filtrées exportées en CSV.');}
+ // v4.11.66 — PDFs générés localement, sans écriture en base de données.
+ function jjPdf(){const cls=window.jspdf?.jsPDF;if(!cls){notify('Générateur PDF indisponible. Vérifie ta connexion Internet.',true);return null;}return new cls({unit:'mm',format:'a4'});}
+ function jjPdfHead(pdf,heading,sub){pdf.setFillColor(33,22,62);pdf.rect(0,0,210,37,'F');pdf.setTextColor(255,255,255);pdf.setFont('helvetica','bold');pdf.setFontSize(22);pdf.text('JJ3D',15,16);pdf.setFontSize(14);pdf.text(heading,15,26);pdf.setFont('helvetica','normal');pdf.setFontSize(9);pdf.text(sub,195,26,{align:'right'});pdf.setTextColor(34,32,45);return 47;}
+ function jjPdfLine(pdf,left,right,y){pdf.setFont('helvetica','normal');pdf.setFontSize(10);const label=pdf.splitTextToSize(String(left||''),118);pdf.text(label,15,y);pdf.setFont('helvetica','bold');pdf.text(String(right||''),195,y,{align:'right'});return y+Math.max(8,4.8*label.length);}
+ function jjPdfNext(pdf,y){if(y>269){pdf.addPage();return 20;}return y;}
+ function jjQuotePdf(id){
+  const o=customOrders().find(x=>String(x.id)===String(id));if(!o)return notify('Commande introuvable.',true);
+  const pdf=jjPdf();if(!pdf)return;
+  const inv=(extras.invoices||[]).find(i=>i.customOrderId===o.id);
+  const total=jjCustomOrderTotal(o);
+  let y=jjPdfHead(pdf,'SOUMISSION',String(o.number||o.id||'').slice(0,35));
+  pdf.setFontSize(10);pdf.setFont('helvetica','normal');pdf.text('Date : '+new Date().toLocaleDateString('fr-CA'),15,y);y+=11;
+  y=jjPdfLine(pdf,'Client : '+String(o.customer||'Client').slice(0,70),'',y);
+  if(o.contact)y=jjPdfLine(pdf,'Contact : '+String(o.contact).slice(0,70),'',y);
+  y+=4;pdf.setDrawColor(210,204,225);pdf.line(15,y,195,y);y+=9;
+  const lines=Array.isArray(inv?.lines)&&inv.lines.length?inv.lines:[{name:o.item||'Projet personnalisé',qty:o.quantity||1,price:total/Math.max(1,Number(o.quantity)||1)}];
+  for(const line of lines){y=jjPdfNext(pdf,y);y=jjPdfLine(pdf,(String(line.name||'Article')+' × '+(Number(line.qty)||1)).slice(0,125),money((Number(line.qty)||1)*(Number(line.price)||0)),y);}
+  y+=5;pdf.setDrawColor(210,204,225);pdf.line(15,y,195,y);y+=10;
+  pdf.setFontSize(14);pdf.setFont('helvetica','bold');pdf.text('Total estimé (hors taxes)',15,y);pdf.text(money(total),195,y,{align:'right'});y+=12;
+  pdf.setFontSize(10);pdf.setFont('helvetica','normal');
+  if(o.colors){y=jjPdfNext(pdf,y);pdf.text(pdf.splitTextToSize('Couleur(s) : '+String(o.colors),175),15,y);y+=12;}
+  if(o.dueAt){pdf.text('Date demandée : '+o.dueAt,15,y);y+=9;}
+  y+=7;pdf.setFont('helvetica','italic');pdf.setFontSize(9);
+  pdf.text(pdf.splitTextToSize('Soumission indicative, soumise à approbation. Ceci n’est ni une facture ni une preuve de paiement. Le prix final et les taxes applicables sont confirmés avant fabrication.',175),15,Math.min(y,270));
+  pdf.save('JJ3D-Soumission-'+String(o.number||o.id||'commande').replace(/[^\w-]/g,'_').slice(0,40)+'.pdf');
+  notify('✓ Soumission PDF téléchargée. Aucune facture ni statut modifié.');
+ }
+ function jjMonthlyPdf(){
+  const sales=financeSelectedSales();const pdf=jjPdf();if(!pdf)return;
+  const period=financeView.month==='all'?'Toutes périodes':financeMonthLabel(financeView.month);
+  let y=jjPdfHead(pdf,'RAPPORT DES VENTES',period);
+  const totals=financeTotals(sales);
+  y=jjPdfLine(pdf,'Ventes retenues',String(sales.length),y);
+  y=jjPdfLine(pdf,'Chiffre d’affaires déclaré',money(totals.gross),y);
+  y=jjPdfLine(pdf,'Commissions',money(totals.commission),y);
+  y=jjPdfLine(pdf,'Profit estimé',money(totals.profit),y);
+  y=jjPdfLine(pdf,'Canal',financeView.channel==='all'?'Tous les canaux':financeView.channel,y);
+  y+=5;pdf.line(15,y,195,y);y+=10;
+  pdf.setFontSize(12);pdf.setFont('helvetica','bold');pdf.text('Ventes détaillées',15,y);y+=8;
+  const sorted=sales.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+  for(const sale of sorted){y=jjPdfNext(pdf,y);y=jjPdfLine(pdf,(String(sale.date||'Sans date')+' · '+String(sale.product||'Article')+' × '+String(sale.quantity||1)).slice(0,140),money(sale.gross),y);}
+  y=jjPdfNext(pdf,y+6);pdf.setFontSize(8);pdf.setFont('helvetica','italic');pdf.text(pdf.splitTextToSize('Rapport interne. Coûts et profits estimés à partir des ventes enregistrées; les factures non payées ne sont pas comptées comme recettes. Ne comprend pas nécessairement toutes les dépenses d’entreprise.',175),15,y);
+  pdf.save('JJ3D-Rapport-ventes-'+(financeView.month==='all'?'historique':financeView.month)+'-'+(financeView.channel==='all'?'tous-canaux':'selection')+'.pdf');
+  notify('✓ Rapport des ventes PDF téléchargé.');
+ }
  function financePage(){
   const products=commercialProducts(),sales=financeSelectedSales(),active=prints.filter(p=>p.status==='active');
   const gross=sales.reduce((a,x)=>a+safeNum(x.gross),0),commissions=sales.reduce((a,x)=>a+safeNum(x.commission),0),profits=sales.reduce((a,x)=>a+safeNum(x.profit),0);
   const stockRevenue=products.reduce((a,p)=>a+safeNum(p.stock)*safeNum(p.price),0);
   const stockCost=products.reduce((a,p)=>a+safeNum(p.stock)*safeNum(p.unitCost),0);
   const materials=active.reduce((a,p)=>a+printMaterialCost(p),0);
-  return header('GESTION','Finances','Tous les prix, les coûts et les profits de ton Excel, produit par produit.',`<button type="button" class="secondary-btn" id="export-finance">↧ Exporter les prix CSV</button>`)
+  return header('GESTION','Finances','Tous les prix, les coûts et les profits de ton Excel, produit par produit.',`<button type="button" class="secondary-btn" id="export-finance">↧ Exporter les prix CSV</button><button type="button" class="secondary-btn" id="jj-monthly-pdf">📄 Rapport PDF</button>`)
    +warning()+(!products.length?excelNotice():'')+financeDashboard(sales)
    +`<div class="notice">ⓘ &nbsp; Prix et coûts importés de ton Excel. Les profits par produit sont des <b>estimations</b> d’après prix − commission − coût unitaire; les montants réels des ventes sont affichés séparément. Les coûts d’impression ne sont pas additionnés aux coûts des produits pour éviter de compter deux fois.</div>`
    +`<div class="stats-grid">${statCard('$',money(stockRevenue),'Valeur du stock au prix de vente')}${statCard('▣',money(stockCost),'Coût total estimé du stock')}${statCard('↗',money(profits),'Profit des ventes')}${statCard('◉',money(gross),'Ventes brutes')}</div>`
@@ -1558,7 +1603,7 @@
       ${o.dueAt?`<div class="jj-board-card-meta ${late?'jj-board-late':''}">📅 ${esc(o.dueAt)}${late?' · En retard':''}</div>`:''}
       <div class="jj-board-card-footer"><b>${money(jjCustomOrderTotal(o))}</b><small>${invoice?.status==='paid'?'✅ Payée':'💳 '+(invoice?.status==='cancelled'?'Facture annulée':'À vérifier')}</small></div>
       <label class="jj-board-status-label">Changer d’étape<select data-custom-status="${esc(o.id)}" aria-label="Changer le statut de ${esc(o.item||'commande')}">${Object.entries(customOrderStages).map(([k,v])=>`<option value="${k}" ${o.status===k?'selected':''}>${esc(v)}</option>`).join('')}</select></label>
-      <button type="button" class="secondary-btn jj-board-edit" data-edit-custom-order="${esc(o.id)}">✎ Voir / modifier</button>
+      <button type="button" class="secondary-btn jj-board-edit" data-edit-custom-order="${esc(o.id)}">✎ Voir / modifier</button><button type="button" class="secondary-btn" data-jj-quote-pdf="${esc(o.id)}">📄 Soumission PDF</button>
       </article>`;
     }).join('')||'<p class="jj-board-empty">Dépose une commande ici</p>'}</div></section>`;
   }).join('');
@@ -1645,7 +1690,7 @@
    <div class="jj-order-facts"><div><small>👤 Client</small><strong>${esc(o.customer||'—')}</strong><span>${esc(o.contact||'Aucun contact')}</span></div><div><small>🧵 Filament</small><strong>${esc(o.filamentType||'À déterminer')} · ${esc(o.colors||'À préciser')}</strong><span>${o.filamentPurchased?'Bobine spéciale à acheter':'Stock habituel'}</span></div><div><small>📅 Dates</small><strong>Demande : ${esc(o.orderedAt||'—')}</strong><span>Souhaitée : ${esc(o.dueAt||'—')}</span></div><div><small>📐 Dimensions</small><strong>${o.dimensionShape==='box'?'Rectangulaire':'Rond / vase'}</strong><span>${Object.entries(o.dimensionMm||{}).map(([k,v])=>esc(({height:'H',diameter:'Ø',length:'L',width:'l'})[k]||k)+' '+esc(v)+' mm').join(' · ')||'À préciser'}</span></div></div>
    <div class="jj-order-financial"><h4>🧾 Résumé de la facture</h4><div class="jj-order-money-line"><span>Fabrication : ${esc(o.item||'Projet')}</span><strong>${money(o.filamentChargeMode==='included'?Math.max(0,safeNum(o.price)-jjCustomOrderFee(o)):safeNum(o.price))}</strong></div>${o.filamentPurchased?`<div class="jj-order-money-line"><span>Filament spécial (${safeNum(o.filamentChargePercent)} % de ${money(jjFilamentFullCost(o))})</span><strong>${money(jjCustomOrderFee(o))}</strong></div>`:''}<div class="jj-order-money-line jj-order-money-total"><span>Total convenu hors taxes</span><strong>${money(jjCustomOrderTotal(o))}</strong></div><div class="jj-order-money-line"><span>Acompte déclaré</span><strong>${money(o.deposit||0)}</strong></div><div class="jj-order-money-line"><span>Solde indicatif</span><strong>${money(Math.max(0,jjCustomOrderTotal(o)-safeNum(o.deposit)))}</strong></div><div class="jj-order-money-line"><span>Facture liée</span><strong>${esc((extras.invoices||[]).find(i=>i.customOrderId===o.id)?.number||'À créer')} · ${esc((extras.invoices||[]).find(i=>i.customOrderId===o.id)?.status||'brouillon')}</strong></div></div>
    <div class="jj-order-facts"><div><small>✓ Validation client</small><strong>${esc(({approved:'Modèle et prix approuvés',changes:'Corrections demandées',pending:'En attente'})[o.clientApproval]||'En attente')}</strong>${o.previewUrl?`<a href="${esc(o.previewUrl)}" target="_blank" rel="noopener noreferrer">Voir l’aperçu envoyé</a>`:''}</div><div><small>💳 Paiement</small><strong>${o.paymentCollector==='boutique'?'Encaissé par la Boutique':'Direct JJ3D'}</strong><span>Commission Boutique : ${safeNum(o.boutiqueCommissionPercent||0)} %</span>${o.paymentCollector==='boutique'?`<span>${o.boutiqueSettlementReceived?'✓ Règlement reçu de la Boutique'+(o.boutiqueSettlementDate?' le '+esc(o.boutiqueSettlementDate):''):'⏳ Règlement Boutique à recevoir'}</span><strong>Part JJ3D estimée : ${money(jjCustomOrderTotal(o)*(1-safeNum(o.boutiqueCommissionPercent||0)/100))}</strong>`:''}</div></div>
-   <div class="jj-order-notes"><strong>📝 Notes de production</strong><p>${esc(o.notes||'Aucune note')}</p></div></div></details><div class="actions jj-order-card-actions"><button type="button" class="secondary-btn" data-edit-custom-order="${esc(o.id)}">✎ Modifier la commande</button><button type="button" class="secondary-btn" data-invoice-custom-order="${esc(o.id)}">🧾 Ouvrir la facture</button><button type="button" class="secondary-btn" data-queue-custom-order="${esc(o.id)}">🖨️ À imprimer</button><button type="button" class="secondary-btn danger" data-delete-custom-order="${esc(o.id)}">Supprimer</button><select class="jj-order-status-select" aria-label="Statut de la commande" data-custom-status="${esc(o.id)}">${Object.entries(customOrderStages).map(([k,v])=>`<option value="${k}" ${o.status===k?'selected':''}>${esc(v)}</option>`).join('')}</select></div></article>`).join('')||'<p class="empty">Aucune commande pour le moment. Clique sur « + Ajouter une commande » pour commencer!</p>'}</div></section>`;
+   <div class="jj-order-notes"><strong>📝 Notes de production</strong><p>${esc(o.notes||'Aucune note')}</p></div></div></details><div class="actions jj-order-card-actions"><button type="button" class="secondary-btn" data-edit-custom-order="${esc(o.id)}">✎ Modifier la commande</button><button type="button" class="secondary-btn" data-jj-quote-pdf="${esc(o.id)}">📄 Soumission PDF</button><button type="button" class="secondary-btn" data-invoice-custom-order="${esc(o.id)}">🧾 Ouvrir la facture</button><button type="button" class="secondary-btn" data-queue-custom-order="${esc(o.id)}">🖨️ À imprimer</button><button type="button" class="secondary-btn danger" data-delete-custom-order="${esc(o.id)}">Supprimer</button><select class="jj-order-status-select" aria-label="Statut de la commande" data-custom-status="${esc(o.id)}">${Object.entries(customOrderStages).map(([k,v])=>`<option value="${k}" ${o.status===k?'selected':''}>${esc(v)}</option>`).join('')}</select></div></article>`).join('')||'<p class="empty">Aucune commande pour le moment. Clique sur « + Ajouter une commande » pour commencer!</p>'}</div></section>`;
  }
  async function jjQueuePhotoFromOrder(src){
   const img=new Image();img.src=src;await img.decode();
@@ -1856,6 +1901,7 @@
  document.addEventListener('input',e=>{if(e.target.id==='jj-crm-search'){jjClientSearch=e.target.value;const area=document.getElementById('jj-crm-results');if(area)area.innerHTML=jjClientList();}});
  document.addEventListener('click',e=>{if(e.target.closest('#jj-crm-export'))jjClientCsv();else if(e.target.closest('[data-jj-client-open]')){jjClientFocus=e.target.closest('[data-jj-client-open]').dataset.jjClientOpen;const area=document.getElementById('jj-crm-results');if(area)area.innerHTML=jjClientList();document.getElementById('jj-crm-focus')?.scrollIntoView({behavior:'smooth',block:'nearest'});}else if(e.target.closest('[data-jj-client-close]')){jjClientFocus='';const area=document.getElementById('jj-crm-results');if(area)area.innerHTML=jjClientList();}});
  document.addEventListener('click',e=>{const rec=e.target.closest('[data-recover-trash]'),del=e.target.closest('[data-forget-trash]');if(rec)recoverTrash(rec.dataset.recoverTrash);else if(del)forgetTrash(del.dataset.forgetTrash);else if(e.target.closest('#clear-trash'))clearTrash();else if(e.target.closest('#export-trash'))downloadTrash();});
+ document.addEventListener('click',e=>{const pdf=e.target.closest('[data-jj-quote-pdf]');if(pdf){jjQuotePdf(pdf.dataset.jjQuotePdf);return;}if(e.target.closest('#jj-monthly-pdf')){jjMonthlyPdf();return;}});
  document.addEventListener('click',e=>{const edit=e.target.closest('[data-edit-custom-order]'),del=e.target.closest('[data-delete-custom-order]');if(e.target.closest('[data-restore-backup]'))restoreBackup(e.target.closest('[data-restore-backup]').dataset.restoreBackup);else if(e.target.closest('[data-recover-custom-invoice]'))recoverCustomOrderFromInvoice(e.target.closest('[data-recover-custom-invoice]').dataset.recoverCustomInvoice);else if(edit)editCustomOrder(edit.dataset.editCustomOrder);else if(e.target.closest('[data-invoice-custom-order]'))openCustomOrderInvoice(e.target.closest('[data-invoice-custom-order]').dataset.invoiceCustomOrder);else if(e.target.closest('[data-queue-custom-order]')){location.hash='#atelier-queue';notify('🖨️ Impression liée : voir la file À imprimer.');}else if(del)deleteCustomOrder(del.dataset.deleteCustomOrder);else if(e.target.closest('#custom-order-add'))openNewCustomOrder();else if(e.target.closest('#custom-order-reset, #custom-order-close')){editingCustomOrderId=null;document.getElementById('custom-order-dialog')?.close();}else if(e.target.id==='custom-order-dialog'){const dialog=e.target,r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom){editingCustomOrderId=null;dialog.close();}}});
  document.addEventListener('click',e=>{
   const button=e.target.closest('[data-jj-orders-view]');if(!button)return;

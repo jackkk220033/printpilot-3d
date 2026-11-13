@@ -205,3 +205,12 @@ textarea{background:#0f192b;color:#f3f5ff;border:1px solid #456087;border-radius
 .jj-shop-photo-preview img{width:112px;height:112px;object-fit:contain;border:1px solid #585070;border-radius:10px;background:#080e21}
 .jj-shop-photo-remove{background:#30364c;color:#fff;border:1px solid #59617d;border-radius:9px;padding:10px 12px;cursor:pointer}
 @media(max-width:500px){.jj-shop-photo-buttons{flex-direction:column}.jj-shop-photo-btn{width:100%}}
+
+/* v4.11.66 — Vente rapide depuis la fiche produit QR */
+.jj-quick-sale{margin:16px 0;padding:17px;border-radius:14px;background:rgba(110,92,217,.12);border:1px solid rgba(140,110,225,.36)}
+.jj-quick-sale h3{margin:0 0 7px}.jj-quick-sale p{margin:0 0 12px}
+.jj-quick-fields{display:grid;grid-template-columns:minmax(95px,120px) minmax(0,1fr);gap:10px;margin:12px 0}
+.jj-quick-fields label{display:grid;gap:5px}.jj-quick-fields input{max-width:100%;min-width:0}
+#jj-quick-sold{width:100%;background:#237952;color:#fff;padding:12px 16px;border:0;border-radius:10px;font-weight:700;cursor:pointer}
+#jj-quick-sold:disabled{opacity:.55;cursor:wait}
+@media(max-width:420px){.jj-quick-fields{grid-template-columns:1fr}}

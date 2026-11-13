@@ -58,7 +58,7 @@ function openProduct(id){
  $('detail-colors').textContent=p.colors||'—';
  const wrap=$('detail-photo');wrap.replaceChildren();
  if(images.has(id)){const im=document.createElement('img');im.src=images.get(id);im.alt='Photo de '+p.name;wrap.append(im);}else wrap.textContent='Aucune photo disponible';
- const f=$('product-note-form');f.reset();f.querySelector('.send-status').textContent='';$('product-dialog').showModal();
+ const quick=$('jj-quick-qty');if(quick)quick.value='1';if($('jj-quick-note'))$('jj-quick-note').value='';if($('jj-quick-status'))$('jj-quick-status').textContent='';const f=$('product-note-form');f.reset();f.querySelector('.send-status').textContent='';$('product-dialog').showModal();
 }
 
 function setBoutiqueTab(next){boutiqueTab=next;['catalogue','orders','planning','special','deliveries'].forEach(t=>{const el=$(t+'-panel');el.hidden=t!==next;});document.querySelectorAll('[data-btab]').forEach(b=>b.classList.toggle('selected',b.dataset.btab===next));if(next==='orders')renderCart();if(next==='planning'||next==='special')renderPlanning();if(next==='deliveries')renderDeliveries();}
@@ -228,6 +228,22 @@ async function sendNote(form,product){
  }catch(err){status.classList.add('error');status.textContent='Envoi impossible : '+(err.code||err.message)+'. Ton texte n’a pas été supprimé.';console.error('Message Boutique:',err);}
  finally{button.disabled=false;}
 }
+// v4.11.66 — Le QR ouvre déjà la bonne fiche : déclaration de vente en un geste.
+// Uniquement une demande Firestore; aucune modification directe du stock, aucun doublon dans le grand livre.
+$('jj-quick-sold')?.addEventListener('click',async()=>{
+ const b=$('jj-quick-sold'),el=$('jj-quick-status'),p=products.find(x=>x.id===selectedProductId);
+ const qty=Number($('jj-quick-qty').value);
+ if(!current||!owner||!p){el.textContent='Connecte-toi à la Boutique.';return;}
+ if(!Number.isInteger(qty)||qty<1||qty>300){el.textContent='Quantité invalide (1 à 300).';return;}
+ if(!confirm(`Déclarer ${qty} × ${p.name} vendu(s) ? L’atelier devra approuver.`))return;
+ b.disabled=true;el.textContent='Envoi en cours…';
+ try{
+  await api.addDoc(api.collection(db,'boutiques',owner,'requests'),{kind:'sale',productId:p.id,productName:p.name,shopId:String(p.shopId||''),quantity:qty,unitPrice:Number(p.price)||0,note:String($('jj-quick-note').value||'').trim().slice(0,250),senderUid:current.uid,senderEmail:String(current.email||''),status:'pending',origin:'qr-quick-sale',createdAt:api.serverTimestamp()});
+  el.textContent='✓ Vente déclarée! En attente d’approbation de l’atelier.';
+  $('jj-quick-note').value='';
+ }catch(err){el.textContent='Échec : '+(err.code||err.message)+' — aucune vente enregistrée.';}
+ finally{b.disabled=false;}
+});
 $('boutique-operation-form')?.addEventListener('submit',async e=>{e.preventDefault();const f=e.currentTarget;const status=$('operation-status');const button=f.querySelector('button[type=submit]');const p=products.find(x=>x.id===f.elements.productId.value);const kind=f.elements.kind.value;const quantity=Number(f.elements.quantity.value);if(!current||!owner||!p||!['sale','restock'].includes(kind)||!Number.isInteger(quantity)||quantity<1||quantity>300){status.textContent='Vérifie la connexion, le produit et la quantité.';return;}button.disabled=true;status.textContent='Envoi en cours…';try{await api.addDoc(api.collection(db,'boutiques',owner,'requests'),{kind,productId:p.id,productName:p.name,shopId:String(p.shopId||''),quantity,unitPrice:Number(p.price)||0,note:String(f.elements.note.value||'').trim().slice(0,400),senderUid:current.uid,senderEmail:String(current.email||''),status:'pending',createdAt:api.serverTimestamp()});f.reset();status.textContent='✓ Demande envoyée automatiquement!';}catch(err){status.textContent='Échec : '+(err.code||err.message)+'. La demande n’a pas été effacée.';}finally{button.disabled=false;}});
 $('general-note-form').addEventListener('submit',e=>{e.preventDefault();sendNote(e.currentTarget,null);});
 $('product-note-form').addEventListener('submit',e=>{e.preventDefault();sendNote(e.currentTarget,products.find(p=>p.id===selectedProductId));});
