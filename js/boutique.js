@@ -228,7 +228,7 @@ async function sendNote(form,product){
  }catch(err){status.classList.add('error');status.textContent='Envoi impossible : '+(err.code||err.message)+'. Ton texte n’a pas été supprimé.';console.error('Message Boutique:',err);}
  finally{button.disabled=false;}
 }
-// v4.11.66 — Le QR ouvre déjà la bonne fiche : déclaration de vente en un geste.
+// v4.11.67 — Le QR ouvre déjà la bonne fiche : déclaration de vente en un geste.
 // Uniquement une demande Firestore; aucune modification directe du stock, aucun doublon dans le grand livre.
 $('jj-quick-sold')?.addEventListener('click',async()=>{
  const b=$('jj-quick-sold'),el=$('jj-quick-status'),p=products.find(x=>x.id===selectedProductId);

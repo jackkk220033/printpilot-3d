@@ -568,7 +568,7 @@
  function activeSales(){return extras.sales.filter(s=>!['cancelled','duplicate'].includes(s.status));}
  function salePrice(s){return safeNum(s.unitPrice);}
  function saleSummary(s){return {gross:activeSales().reduce((a,v)=>a+safeNum(v.gross),0),profit:activeSales().reduce((a,v)=>a+safeNum(v.profit),0)};}
- // v4.11.66 — CRM à lecture seule. Une fiche est une vue recalculée depuis les commandes
+ // v4.11.67 — CRM à lecture seule. Une fiche est une vue recalculée depuis les commandes
  // et les factures, non une seconde copie de données personnelles à synchroniser.
  let jjClientSearch='';
  let jjClientFocus='';
@@ -614,7 +614,7 @@
   return Array.from(map.values()).sort((a,b)=>b.latest.localeCompare(a.latest)||a.name.localeCompare(b.name,'fr'));
  }
  function jjClientCsv(){
-  const rows=[['Client','Courriel','Téléphone','Commandes personnalisées','Factures','Factures payées (CAD, taxes incluses)','Factures non payées (CAD, taxes incluses)','Dernière activité'],...jjClientRecords().map(c=>[c.name,c.email,c.phone,c.orders.length,c.invoices.length,c.paid.toFixed(2),c.due.toFixed(2),c.latest.slice(0,10)])];
+  const rows=[['Client','Courriel','Téléphone','Commandes personnalisées','Achats facturés payés','Factures','Factures payées (CAD, taxes incluses)','Factures non payées (CAD, taxes incluses)','Dernière activité'],...jjClientRecords().map(c=>[c.name,c.email,c.phone,c.orders.length,c.invoices.filter(i=>i.status==='paid').length,c.invoices.length,c.paid.toFixed(2),c.due.toFixed(2),c.latest.slice(0,10)])];
   const csv='\uFEFF'+rows.map(r=>r.map(value=>'"'+String(value??'').replaceAll('"','""')+'"').join(';')).join('\r\n');
   downloadText('JJ3D-clients-'+new Date().toISOString().slice(0,10)+'.csv',csv,'text/csv;charset=utf-8');
   notify('✓ Fiches clients exportées en CSV.');
@@ -625,11 +625,11 @@
   const orders=c.orders.slice().sort((a,b)=>String(b.orderedAt||b.createdAt||'').localeCompare(String(a.orderedAt||a.createdAt||'')));
   const date=raw=>esc(String(raw||'').slice(0,10)||'Date inconnue');
   return `<section class="panel jj-crm-detail"><div class="panel-head"><div><p class="eyebrow">FICHE CLIENT</p><h2>${esc(c.name)}</h2><p>${esc(c.email||'Courriel non enregistré')}${c.phone?' · '+esc(c.phone):''}</p></div><button type="button" class="secondary-btn" data-jj-client-close>Fermer</button></div>
-   <div class="stats-grid three">${statCard('✓',money(c.paid),'Factures payées TTC')}${statCard('◷',money(c.due),'Factures non payées TTC')}${statCard('▣',String(c.orders.length),'Commandes personnalisées')}</div>
+   <div class="stats-grid three">${statCard('✓',money(c.paid),'Factures payées TTC')}${statCard('◷',money(c.due),'Factures non payées TTC')}${statCard('▣',String(c.orders.length),'Commandes personnalisées')}${statCard('◈',String(c.invoices.filter(i=>i.status==='paid').length),'Achats facturés payés')}</div>
    <h3>🧾 Factures (${invoices.length})</h3>
    <div class="jj-crm-history">${invoices.map(i=>`<article class="jj-crm-history-row"><div><strong>${esc(i.number||'Facture')}</strong><small>${date(i.date)} · ${esc(({paid:'Payée',draft:'Brouillon',sent:'Envoyée',cancelled:'Annulée'})[i.status]||i.status||'Statut inconnu')}</small></div><strong>${money(i.jjAmount)}</strong></article>`).join('')||'<p class="empty">Aucune facture enregistrée.</p>'}</div>
-   <h3>📦 Commandes (${orders.length})</h3>
-   <div class="jj-crm-history">${orders.map(o=>`<article class="jj-crm-history-row"><div><strong>${esc(o.number||o.item||'Commande')}</strong><small>${date(o.orderedAt||o.createdAt)} · ${esc(o.item||'Produit non précisé')} · ${esc(o.status||'À traiter')}</small></div><span>Qté ${number(o.quantity||1)}</span></article>`).join('')||'<p class="empty">Aucune commande personnalisée enregistrée.</p>'}</div>
+   <h3>📦 Commandes personnalisées (${orders.length})</h3>
+   <div class="jj-crm-history">${orders.map(o=>`<article class="jj-crm-history-row"><div><strong>${esc(o.number||o.item||'Commande')}</strong><small>${date(o.orderedAt||o.createdAt)} · ${esc(o.item||'Produit non précisé')} · ${esc(o.status||'À traiter')}</small></div><span>Qté ${number(o.quantity||1)}</span></article>`).join('')||'<p class="empty">Aucune commande personnalisée enregistrée (les achats ordinaires figurent dans les factures).</p>'}</div>
    <div class="actions"><button type="button" class="secondary-btn" data-go="factures">Voir les factures</button><button type="button" class="secondary-btn" data-go="commandes-perso">Voir les commandes</button></div>
   </section>`;
  }
@@ -638,7 +638,7 @@
   const q=jjClientKey(jjClientSearch);
   const filtered=all.filter(c=>!q||[c.name,c.email,c.phone,...c.orders.map(o=>o.item||'')].some(x=>jjClientKey(x).includes(q)));
   const selected=all.find(c=>c.key===jjClientFocus);
-  return `<div class="jj-crm-grid">${filtered.map(c=>`<article class="jj-crm-card"><div><strong>${esc(c.name)}</strong><small>${esc(c.email||'Aucun courriel')}${c.phone?' · '+esc(c.phone):''}</small></div><div class="jj-crm-numbers"><span>${c.orders.length} commande(s)</span><span>${c.invoices.length} facture(s)</span></div><div class="jj-crm-amounts"><span>Payées <strong>${money(c.paid)}</strong></span><span>Non payées <strong>${money(c.due)}</strong></span></div><button type="button" class="secondary-btn" data-jj-client-open="${esc(c.key)}">Voir la fiche →</button></article>`).join('')||'<p class="empty">Aucun client trouvé. Les fiches apparaissent depuis les factures et les commandes personnalisées.</p>'}</div>
+  return `<div class="jj-crm-grid">${filtered.map(c=>`<article class="jj-crm-card"><div><strong>${esc(c.name)}</strong><small>${esc(c.email||'Aucun courriel')}${c.phone?' · '+esc(c.phone):''}</small></div><div class="jj-crm-numbers"><span>${c.orders.length} commande(s) perso</span><span>${c.invoices.filter(i=>i.status==='paid').length} achat(s) facturé(s) payé(s)</span><span>${c.invoices.length} facture(s)</span></div><div class="jj-crm-amounts"><span>Payées <strong>${money(c.paid)}</strong></span><span>Non payées <strong>${money(c.due)}</strong></span></div><button type="button" class="secondary-btn" data-jj-client-open="${esc(c.key)}">Voir la fiche →</button></article>`).join('')||'<p class="empty">Aucun client trouvé. Les fiches apparaissent depuis les factures et les commandes personnalisées.</p>'}</div>
    <div id="jj-crm-focus">${jjClientDetails(selected)}</div>`;
  }
  function jjClientsPage(){
@@ -647,9 +647,9 @@
   const paid=invoices.filter(i=>i.status==='paid').reduce((sum,i)=>sum+jjInvoiceTotal(i),0);
   const outstanding=invoices.filter(i=>i.status!=='paid').reduce((sum,i)=>sum+jjInvoiceTotal(i),0);
   return header('RELATIONS CLIENTS','Clients et suivi','Historique créé automatiquement depuis tes commandes et factures.',`<button type="button" id="jj-crm-export" class="secondary-btn">↧ Export CSV clients</button>`)
-  +`<div class="notice">🔒 Espace administrateur seulement. Ces fiches sont calculées depuis tes données JJ3D existantes : aucun nouveau client n’est créé dans Firebase. Deux personnes portant exactement le même nom peuvent être regroupées; vérifie leurs coordonnées. Les ventes directes sans client ne sont pas attribuées automatiquement. Les montants affichés ici sont ceux des <b>factures, taxes incluses</b>, pas le chiffre d’affaires hors taxes du tableau Finances.</div>`
+  +`<div class="notice">🔒 Espace administrateur seulement. Ces fiches sont calculées depuis tes données JJ3D existantes : aucun nouveau client n’est créé dans Firebase. Deux personnes portant exactement le même nom peuvent être regroupées; vérifie leurs coordonnées. Les ventes directes sans client identifié ne sont pas attribuées automatiquement. Un achat facturé payé est compté depuis sa facture payée : ce n’est pas une vente ajoutée au stock ou aux finances. Les montants affichés ici sont ceux des <b>factures, taxes incluses</b>, pas le chiffre d’affaires hors taxes du tableau Finances.</div>`
   +`<div class="stats-grid three">${statCard('♙',number(all.length),'Clients identifiés')}${statCard('✓',money(paid),'Factures payées TTC')}${statCard('◷',money(outstanding),'Factures non payées TTC')}</div>`
-  +`<section class="panel jj-crm-panel"><div class="panel-head"><div><h2>👥 Répertoire des clients</h2><p>Un contact, toutes ses commandes personnalisées et factures.</p></div></div><label class="jj-crm-search-label">Rechercher un client <input id="jj-crm-search" class="table-filter" type="search" value="${esc(jjClientSearch)}" placeholder="Nom, courriel, téléphone ou produit…" autocomplete="off"></label><div id="jj-crm-results">${jjClientList()}</div></section>`
+  +`<section class="panel jj-crm-panel"><div class="panel-head"><div><h2>👥 Répertoire des clients</h2><p>Un contact, ses commandes personnalisées, ses achats facturés et ses factures.</p></div></div><label class="jj-crm-search-label">Rechercher un client <input id="jj-crm-search" class="table-filter" type="search" value="${esc(jjClientSearch)}" placeholder="Nom, courriel, téléphone ou produit…" autocomplete="off"></label><div id="jj-crm-results">${jjClientList()}</div></section>`
   +`<section class="panel"><h2>💬 Soumissions</h2><p>Pour éviter les doublons, les soumissions et les approbations de prix restent dans la section <b>Commandes personnalisées</b>. Après approbation, tu peux préparer la facture dans <b>Factures</b>.</p><div class="actions"><button type="button" class="secondary-btn" data-go="commandes-perso">Voir les soumissions</button><button type="button" class="secondary-btn" data-go="factures">Gérer les factures</button></div></section>`;
  }
  function salesPage(){
@@ -1082,7 +1082,7 @@
   return filters+kpis+charts+caution;
  }
  function exportFinanceSales(){const sales=financeSelectedSales();const rows=[['Date','Produit','Canal','Quantité','Vente hors taxes','Coût enregistré','Commission','Profit estimé','Source','ID'],...sales.map(s=>[s.date||s.createdAt||'',s.product||'',s.channel||'Direct',safeNum(s.quantity).toFixed(2),safeNum(s.gross).toFixed(2),safeNum(s.cost).toFixed(2),safeNum(s.commission).toFixed(2),safeNum(s.profit).toFixed(2),s.source||'',s.id||''])];const csv='\uFEFF'+rows.map(r=>r.map(x=>'"'+String(x??'').replaceAll('"','""')+'"').join(';')).join('\r\n');downloadText('jj3d-finances-ventes-'+new Date().toISOString().slice(0,10)+'.csv',csv,'text/csv;charset=utf-8');notify('✓ Ventes filtrées exportées en CSV.');}
- // v4.11.66 — PDFs générés localement, sans écriture en base de données.
+ // v4.11.67 — PDFs générés localement, sans écriture en base de données.
  function jjPdf(){const cls=window.jspdf?.jsPDF;if(!cls){notify('Générateur PDF indisponible. Vérifie ta connexion Internet.',true);return null;}return new cls({unit:'mm',format:'a4'});}
  function jjPdfHead(pdf,heading,sub){pdf.setFillColor(33,22,62);pdf.rect(0,0,210,37,'F');pdf.setTextColor(255,255,255);pdf.setFont('helvetica','bold');pdf.setFontSize(22);pdf.text('JJ3D',15,16);pdf.setFontSize(14);pdf.text(heading,15,26);pdf.setFont('helvetica','normal');pdf.setFontSize(9);pdf.text(sub,195,26,{align:'right'});pdf.setTextColor(34,32,45);return 47;}
  function jjPdfLine(pdf,left,right,y){pdf.setFont('helvetica','normal');pdf.setFontSize(10);const label=pdf.splitTextToSize(String(left||''),118);pdf.text(label,15,y);pdf.setFont('helvetica','bold');pdf.text(String(right||''),195,y,{align:'right'});return y+Math.max(8,4.8*label.length);}
