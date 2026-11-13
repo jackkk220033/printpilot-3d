@@ -1,4 +1,4 @@
-/* JJ3D v4.11.54 — Inscription aux notifications FCM (VAPID à configurer). */
+/* JJ3D v4.11.55 — Inscription aux notifications FCM (VAPID à configurer). */
 (()=>{'use strict';let auth=null,db=null,user=null,sdk=null,unsubscribeToken=null;
 const cfg=window.PRINTPILOT_FIREBASE_CONFIG;
 const status=t=>{document.querySelectorAll('[data-jj3d-push-status]').forEach(e=>{e.textContent=t})};

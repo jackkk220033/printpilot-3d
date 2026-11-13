@@ -1,4 +1,4 @@
-# JJ3D v4.11.54 — Notifications téléphone et suppression
+# JJ3D v4.11.55 — Notifications téléphone et suppression
 
 ## Ce qui marche après publication des fichiers du site
 - 🗑 Supprimer une notification, ou toutes les supprimer, sans supprimer aucune commande/facture.
@@ -10,7 +10,7 @@
 Les fichiers HTML seuls ne peuvent pas envoyer des notifications push en arrière-plan. Il faut :
 
 1. Dans Firebase Console, projet `printpilot-3d`, activer **Cloud Messaging** puis **Web Push certificates**. Générer une paire de clés, copier uniquement la **clé publique VAPID**.
-2. Dans `js/firebase-config.js`, insérer la clé publique VAPID dans `window.JJ3D_WEB_PUSH_VAPID_PUBLIC_KEY`. **Ne jamais partager de clé privée ni de compte de service**.
+2. ✅ Clé publique VAPID déjà insérée dans `js/firebase-config.js`. **Ne jamais partager de clé privée ni de compte de service**.
 3. Activer la facturation **Blaze** Firebase si demandé (Cloud Functions v2 nécessite le plan éligible). Vérifier les coûts/quotas.
 4. Sur un ordinateur où Node.js + Firebase CLI sont disponibles : installer Firebase CLI et faire :
 
