@@ -206,7 +206,7 @@ textarea{background:#0f192b;color:#f3f5ff;border:1px solid #456087;border-radius
 .jj-shop-photo-remove{background:#30364c;color:#fff;border:1px solid #59617d;border-radius:9px;padding:10px 12px;cursor:pointer}
 @media(max-width:500px){.jj-shop-photo-buttons{flex-direction:column}.jj-shop-photo-btn{width:100%}}
 
-/* v4.11.67 — Vente rapide depuis la fiche produit QR */
+/* v4.11.68 — Vente rapide depuis la fiche produit QR */
 .jj-quick-sale{margin:16px 0;padding:17px;border-radius:14px;background:rgba(110,92,217,.12);border:1px solid rgba(140,110,225,.36)}
 .jj-quick-sale h3{margin:0 0 7px}.jj-quick-sale p{margin:0 0 12px}
 .jj-quick-fields{display:grid;grid-template-columns:minmax(95px,120px) minmax(0,1fr);gap:10px;margin:12px 0}

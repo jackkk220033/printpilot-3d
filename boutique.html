@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#100c1f"><title>JJ3D v4.11.67 — Boutique</title>
-<link rel="stylesheet" href="css/boutique.css?v=4.11.67"><script defer src="js/firebase-config.js?v=4.11.67"></script><script type="module" src="js/boutique.js?v=4.11.67"></script><script defer src="js/dialog-dismiss.js?v=4.11.67"></script><link rel="manifest" href="manifest.webmanifest">
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#100c1f"><title>JJ3D v4.11.68 — Boutique</title>
+<link rel="stylesheet" href="css/boutique.css?v=4.11.68"><script defer src="js/firebase-config.js?v=4.11.68"></script><script type="module" src="js/boutique.js?v=4.11.68"></script><script defer src="js/dialog-dismiss.js?v=4.11.68"></script><link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="JJ3D">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<script defer src="js/pwa-install.js?v=4.11.67"></script>
+<script defer src="js/pwa-install.js?v=4.11.68"></script>
 <style id="jj3d-brand-styles">
 /* Identité JJ3D — texte et page de démarrage (sans modifier les modules métier). */
 #jj3d-splash {position:fixed;z-index:2147483647;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:radial-gradient(circle at 50% 38%,#312052,#110d20 65%,#090b17);color:#f8f5ff;font-family:system-ui,-apple-system,Segoe UI,sans-serif;opacity:1;transition:opacity .4s ease;pointer-events:auto}
@@ -29,7 +29,7 @@
 if(document.readyState==='complete')setTimeout(removeSplash,650);else window.addEventListener('load',function(){setTimeout(removeSplash,650)},{once:true});
 setTimeout(removeSplash,4200)})();</script>
 <header class="header"><div class="brand"><img class="jj3d-header-logo" src="icons/splash-logo.png" alt="Logo JJ3D">JJ3D <span>BOUTIQUE</span></div><div class="account" id="who"></div></header>
-<main class="wrap"><section class="hero"><div><p class="eyebrow">ACCÈS BOUTIQUE · LECTURE SEULE</p><h1>Catalogue des produits</h1><p>Photos, prix, variantes et quantités disponibles.</p><p class="sub" style="font-size:.78rem;opacity:.8;margin-top:6px">JJ3D Boutique · v4.11.67</p></div><button type="button" id="logout" hidden>Se déconnecter</button></section>
+<main class="wrap"><section class="hero"><div><p class="eyebrow">ACCÈS BOUTIQUE · LECTURE SEULE</p><h1>Catalogue des produits</h1><p>Photos, prix, variantes et quantités disponibles.</p><p class="sub" style="font-size:.78rem;opacity:.8;margin-top:6px">JJ3D Boutique · v4.11.68</p></div><button type="button" id="logout" hidden>Se déconnecter</button></section>
 <div id="message" role="status" aria-live="polite"></div><div id="jj-boutique-alerts" class="jj-boutique-alerts" hidden aria-live="polite"></div>
 <nav id="boutique-tabs" class="boutique-tabs" hidden aria-label="Sections Boutique"><button type="button" data-btab="catalogue" class="selected">🛍 Catalogue</button><button type="button" data-btab="orders">🛒 Commander</button><button type="button" data-btab="planning">🖨 À venir · Boutique</button><button type="button" data-btab="special">✨ Commandes spéciales</button><button type="button" data-btab="deliveries">📦 Livraisons</button></nav>
 <section id="login-panel" class="panel"><h2>Connexion à la boutique</h2><p>Utilise le compte que l'administrateur a autorisé.</p><form id="login-form"><label>Courriel de la boutique<input required name="email" type="email" autocomplete="username"></label><label>Mot de passe<input required name="password" type="password" autocomplete="current-password"></label><button type="submit">Se connecter</button></form></section>

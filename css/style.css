@@ -534,10 +534,10 @@ select[data-choice]{width:100%;min-width:0}
 @media(max-width:1080px){.jj-finance-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.jj-finance-insights{grid-template-columns:1fr}}
 @media(max-width:600px){.jj-finance-kpis{gap:9px}.jj-finance-kpi{padding:12px}.jj-finance-kpi strong{font-size:21px}.jj-finance-bar-row{grid-template-columns:69px minmax(0,1fr) 72px;gap:7px;font-size:11px}.jj-finance-bar-row>strong{font-size:11px}.jj-finance-controls .panel-head{align-items:stretch;flex-direction:column}.jj-finance-filters label{min-width:100%}.jj-finance-top-row>div:last-child{max-width:110px}}
 
-/* v4.11.67 — Corbeille et sauvegardes */
+/* v4.11.68 — Corbeille et sauvegardes */
 .jj3d-trash-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.jj3d-trash-row .actions{display:flex;gap:8px;flex-wrap:wrap}.jj3d-trash-row .small-hint{color:var(--muted,#8c91a4);font-size:.85rem;margin-top:4px}@media(max-width:620px){.jj3d-trash-row{align-items:stretch;flex-direction:column}.jj3d-trash-row .actions button{flex:1}}
 
-/* v4.11.67 — Fiches clients, en colonnes adaptatives */
+/* v4.11.68 — Fiches clients, en colonnes adaptatives */
 .jj-crm-panel{min-width:0}
 .jj-crm-search-label{display:block;max-width:480px;margin:12px 0 18px;font-weight:650}
 .jj-crm-search-label input{display:block;width:100%;margin-top:6px}
@@ -559,7 +559,12 @@ select[data-choice]{width:100%;min-width:0}
 .jj-crm-history-row strong{overflow-wrap:anywhere}
 @media(max-width:600px){.jj-crm-history-row{align-items:flex-start;flex-direction:column}}
 
-/* v4.11.67 — Compteurs clients clairs et sans débordement */
+/* v4.11.68 — Compteurs clients clairs et sans débordement */
 .jj-crm-numbers{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;justify-content:space-between}
 .jj-crm-numbers span{flex:1 1 140px;font-size:.85rem}
 .jj-crm-detail .stats-grid{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+
+/* v4.11.68 — Ouvrir une facture directement depuis sa fiche client. */
+.jj-crm-invoice-quick{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:10px;text-align:right}
+.jj-crm-invoice-quick .secondary-btn{white-space:nowrap}
+@media(max-width:640px){.jj-crm-history-row{flex-wrap:wrap;gap:12px}.jj-crm-invoice-quick{width:100%;justify-content:space-between;text-align:left}}
