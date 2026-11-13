@@ -1,14 +1,17 @@
-# JJ3D v4.11.51 — Photo directe dans les demandes Boutique
+# JJ3D v4.11.52 — Centre de notifications
 
-## Nouveauté
-- Dans Boutique → Commandes spéciales → Nouvelle demande personnalisée, **Prendre une photo** ouvre la caméra du téléphone compatible (caméra arrière privilégiée); **Choisir une photo** ouvre les images existantes.
-- Aperçu instantané et option Retirer; une seule photo par demande. La photo est compressée puis envoyée dans le champ `photo` **existant** de `boutiques/{owner}/customRequests`. JJ3D lira donc la photo comme avant.
-- La caméra dépend du navigateur et du système du téléphone; certains navigateurs peuvent afficher un choix caméra/galerie à la place. Sur ordinateur, elle peut ouvrir le sélecteur de fichiers.
-- Le formulaire ne crée aucune commande ni facture en cas d'échec de l'envoi photo.
+- Cloche globale dans JJ3D (bureau et téléphone) ouvrant un panneau avec historique, date, liens et compteur de notifications non lues.
+- Alerte de nouvelle demande personnalisée, changement de statut de demande, message Boutique non lu, nouvelle commande et demande Boutique, via les écouteurs Firestore existants.
+- Les premiers résultats Firestore servent de référence et ne déclenchent pas de notifications rétroactives.
+- Boutons « Tout marquer comme lu » et « Activer les alertes du navigateur ».
+- Notifications système lorsque l'onglet est ouvert en arrière-plan et que l'autorisation est accordée (Service Worker quand disponible).
+- Historique local au navigateur, isolé par UID administrateur et limité à 100 éléments. Ne change aucune commande, facture, stock ni règle Firestore.
+
+## Limite importante
+Les notifications push **lorsque le site est complètement fermé** ne sont pas encore activées. Elles nécessitent un backend événementiel Firebase Cloud Functions/FCM, l'enregistrement des appareils et des clés Web Push, plus un déploiement serveur. Ne pas confondre ce centre de notifications avec le push permanent.
 
 ## Installation
-1. Sauvegarder/exporter les données JSON avant toute mise à jour.
-2. Publier le dossier complet sur Firebase Hosting; rafraîchir Boutique sur le téléphone.
-3. Tester avec une **nouvelle demande test**, vérifier la photo côté Boutique et JJ3D, puis supprimer ce test seulement une fois confirmé.
-
-Aucun changement aux règles Firestore n'est nécessaire pour cette fonctionnalité. Le parcours complet Firebase doit être validé sur vos comptes réels.
+1. Exporter une sauvegarde JSON de JJ3D.
+2. Publier le dossier complet sur Firebase Hosting.
+3. Ouvrir JJ3D connecté comme admin, cliquer sur la cloche, autoriser les notifications via le bouton.
+4. Faire un essai depuis le compte Boutique pendant que JJ3D est ouvert (sur un autre appareil ou onglet).

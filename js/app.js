@@ -1109,7 +1109,7 @@
   }
   notify('✓ Demande Boutique importée. Ouvre Commandes personnalisées pour préparer la soumission et l’aperçu.');return true;
  }
- // v4.11.51 — Réconciliation unique des tickets Boutique et du registre privé.
+ // v4.11.52 — Réconciliation unique des tickets Boutique et du registre privé.
  // Ne supprime jamais les commandes existantes. N'écrase pas une facture modifiée manuellement.
  let jjReconcileBusy=false;
  window.JJ3DAutoReconcileBoutique=async function(requests){
@@ -1262,7 +1262,7 @@
  const customOrderStages={new:'Nouvelle demande',quoted:'Soumission envoyée',approved:'Confirmée',awaiting_payment:'Paiement à confirmer',printing:'En production',ready:'Prête',delivered:'Remise / livrée',cancelled:'Annulée'};
  const customOrders=()=>Array.isArray(extras.customOrders)?extras.customOrders:[];
 
- // v4.11.51 — Recuperation prudente depuis les factures existantes.
+ // v4.11.52 — Recuperation prudente depuis les factures existantes.
  // Ne modifie PAS la facture, la file d'impression ni les photos et ne fait aucune restauration automatique.
  function missingCustomOrderInvoices(){
   const orders=customOrders(), linked=new Set(orders.map(o=>String(o.id)));
@@ -1291,7 +1291,7 @@
   const message=`Récupérer ${number} pour ${customer} depuis la facture ${invoice.number||''} ?\n\nLa facture originale et la tâche À imprimer NE seront PAS modifiées. Les autres commandes seront conservées. Vérifie les détails après récupération.`;
   if(!confirm(message))return;
   // Sauvegarde locale explicite avant toute tentative (sans remplacer l'inventaire).
-  try{const dump=JSON.stringify({at:new Date().toISOString(),invoice,customOrders:customOrders()});localStorage.setItem('jj3d-recovery-last-before-v4.11.51',dump);}catch(e){notify('Sauvegarde de précaution indisponible : exporte ton JSON avant de continuer.',true);return;}
+  try{const dump=JSON.stringify({at:new Date().toISOString(),invoice,customOrders:customOrders()});localStorage.setItem('jj3d-recovery-last-before-v4.11.52',dump);}catch(e){notify('Sauvegarde de précaution indisponible : exporte ton JSON avant de continuer.',true);return;}
   const now=new Date().toISOString();
   const row={id,number,customer,contact:String(invoice.clientEmail||''),item:label,quantity,
    colors:color?color[1].trim():'',filamentType:material?material[1]:'',orderedAt:String(invoice.date||now.slice(0,10)),dueAt:String(invoice.due||''),
@@ -1612,7 +1612,7 @@
   const row=customOrders().find(x=>x.id===id);if(!row)return;
   const typed=prompt('SUPPRESSION : '+row.number+' — '+row.customer+'\nPour supprimer uniquement CETTE commande, écris SUPPRIMER.\nLes factures et autres commandes restent intactes.');
   if(typed!=='SUPPRIMER')return;
-  try{localStorage.setItem('jj3d-last-deleted-custom-order-v4.11.51',JSON.stringify({savedAt:new Date().toISOString(),row}));}catch(e){notify('Sauvegarde locale de la commande impossible : suppression annulée.',true);return;}
+  try{localStorage.setItem('jj3d-last-deleted-custom-order-v4.11.52',JSON.stringify({savedAt:new Date().toISOString(),row}));}catch(e){notify('Sauvegarde locale de la commande impossible : suppression annulée.',true);return;}
   const next=customOrders().filter(x=>x.id!==id);
   if(next.length!==customOrders().length-1){notify('Anomalie détectée : suppression annulée.',true);return;}
   if(persistExtras({...extras,customOrders:next})){render();try{await window.JJ3DSyncOrderQueue?.({...row,status:'cancelled',deleted:true});notify('Commande '+row.number+' supprimée uniquement; factures conservées.');}catch(err){notify('Commande supprimée, mais tâche À imprimer à vérifier : '+(err.message||err),true);}}

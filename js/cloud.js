@@ -17,7 +17,7 @@ let photoUnsub=null,photoReady=false;
 let boutiqueAutoRequested=false, boutiqueAutoTimer=null, boutiqueAutoRunning=false, boutiqueAutoRetry=false;
 let cataloguePublishedKnown=false, lastPhotoPublication=new Map();
 let boutiqueLastSignature=null, boutiqueForcePublication=false;
-let unreadUnsub=null,requestsUnsub=null,ordersUnsub=null,invoiceOrdersUnsub=null,deliveryReceiptsUnsub=null,specialRequestsUnsub=null;let jj3dNotificationSeen=null;
+let unreadUnsub=null,requestsUnsub=null,ordersUnsub=null,invoiceOrdersUnsub=null,deliveryReceiptsUnsub=null,specialRequestsUnsub=null;let jj3dNotificationSeen=null;const jj3dWatchPrevious=new Map();
 window.JJ3DClientOrders={ready:false,records:[]};
 function setInvoiceOrders(records,ready){window.JJ3DClientOrders={ready,records};window.dispatchEvent(new Event("jj3d:orders-updated"));}
 let ppRequestCount=0,ppOrderCount=0,ppUnreadCount=0;
@@ -28,6 +28,15 @@ function showNotificationLocations(){
  if(ppUnreadCount)parts.push(`<a href="messages.html">✉ Messages Boutique : ${ppUnreadCount} non lu(s)</a>`);
  area.hidden=!parts.length;area.innerHTML=parts.join('');
 }
+function jj3dTrackCollection(name,snapshot,options={}){
+ const rows=snapshot.docs.map(d=>({id:d.id,...d.data()}));
+ const current=new Map(rows.map(r=>[r.id,r]));const previous=jj3dWatchPrevious.get(name);
+ // Premier chargement = établir l'état de référence. Pas de spam pour les anciens événements.
+ if(previous){for(const [id,r] of current){const old=previous.get(id);const state=String(r.status||'');const oldState=String(old?.status||'');
+   if(!old){window.JJ3DNotifications?.notify({id:name+':'+id+':created',title:options.title||'JJ3D — Boutique',message:(options.newMessage||'Nouvel élément Boutique')+(r.item||r.productName||r.name?' · '+String(r.item||r.productName||r.name).slice(0,90):''),link:options.link||'#atelier-demandes'});}
+   else if(options.trackStatus&&oldState!==state){window.JJ3DNotifications?.notify({id:name+':'+id+':'+state,title:options.title||'JJ3D — Boutique',message:(options.changeMessage||'Mise à jour Boutique')+' · '+String(r.item||r.productName||r.name||id).slice(0,70)+' ('+state+')',link:options.link||'#atelier-demandes'});}
+  }}jj3dWatchPrevious.set(name,current);
+}
 function setRequestBadge(count){ppRequestCount=count;updateRequestBadges();}
 function setOrderBadge(count){ppOrderCount=count;updateRequestBadges();}
 function updateRequestBadges(){const count=ppRequestCount+ppOrderCount;showNotificationLocations();document.querySelectorAll("[data-boutique-requests]").forEach(el=>{el.hidden=!count;el.textContent=count>99?"99+":String(count);el.setAttribute("aria-label",count+" demande(s) et commande(s) en attente");});}
@@ -37,7 +46,7 @@ function setUnreadBadge(count){ppUnreadCount=count;showNotificationLocations();
   el.setAttribute('aria-label', count+' message(s) non lu(s)');
  });
 }
-function stopUnreadBadge(){if(specialRequestsUnsub){specialRequestsUnsub();specialRequestsUnsub=null;}jj3dNotificationSeen=null;if(deliveryReceiptsUnsub){deliveryReceiptsUnsub();deliveryReceiptsUnsub=null;}window.JJ3DDeliveryReceipts=[];if(invoiceOrdersUnsub){invoiceOrdersUnsub();invoiceOrdersUnsub=null;}setInvoiceOrders([],false);if(unreadUnsub){unreadUnsub();unreadUnsub=null;}if(requestsUnsub){requestsUnsub();requestsUnsub=null;}if(ordersUnsub){ordersUnsub();ordersUnsub=null;}setUnreadBadge(0);setRequestBadge(0);setOrderBadge(0);}
+function stopUnreadBadge(){jj3dWatchPrevious.clear();window.JJ3DNotifications?.connect('');if(specialRequestsUnsub){specialRequestsUnsub();specialRequestsUnsub=null;}jj3dNotificationSeen=null;if(deliveryReceiptsUnsub){deliveryReceiptsUnsub();deliveryReceiptsUnsub=null;}window.JJ3DDeliveryReceipts=[];if(invoiceOrdersUnsub){invoiceOrdersUnsub();invoiceOrdersUnsub=null;}setInvoiceOrders([],false);if(unreadUnsub){unreadUnsub();unreadUnsub=null;}if(requestsUnsub){requestsUnsub();requestsUnsub=null;}if(ordersUnsub){ordersUnsub();ordersUnsub=null;}setUnreadBadge(0);setRequestBadge(0);setOrderBadge(0);}
 
 let photoCache=new Map();
 const photoId=key=>Array.from(new TextEncoder().encode(key),b=>b.toString(16).padStart(2,'0')).join('');
@@ -494,6 +503,7 @@ if(!configOK){
    resetCloud();currentUser=user;errorEl.textContent='';
    authArea.hidden=Boolean(user);accountArea.hidden=!user;
    if(!user){setStatus('☁ Déconnecté. Connecte-toi pour synchroniser.');return;}
+   window.JJ3DNotifications?.connect(user.uid);
    bLink.value=boutiqueLink();
    accountLabel.textContent=`Compte privé : ${user.email || user.uid}`;
    setStatus('☁ Connecté : choisis une copie locale ou cloud.');
@@ -504,11 +514,12 @@ if(!configOK){
    // Badge live : lit uniquement les messages non lus de l'atelier du propriétaire.
    try {
     unreadUnsub=onSnapshot(query(collection(db,'boutiques',user.uid,'messages'),where('read','==',false)),snapshot=>{
-      setUnreadBadge(snapshot.size);
+      setUnreadBadge(snapshot.size);jj3dTrackCollection('messages',snapshot,{title:'✉ Nouveau message Boutique',newMessage:'Un nouveau message a été reçu',link:'messages.html'});
     },err=>{console.warn('Badge Messages Boutique:',err);setUnreadBadge(0);});
-    try{requestsUnsub=onSnapshot(query(collection(db,'boutiques',user.uid,'requests'),where('status','==','pending')),snap=>setRequestBadge(snap.size),err=>{console.warn('Badge demandes:',err);setRequestBadge(0);});}catch(err){console.warn('Badge demandes:',err);setRequestBadge(0);}
-    try{ordersUnsub=onSnapshot(query(collection(db,'boutiques',user.uid,'orders'),where('status','==','pending')),snap=>setOrderBadge(snap.size),err=>{console.warn('Badge commandes:',err);setOrderBadge(0);});}catch(err){console.warn('Badge commandes:',err);setOrderBadge(0);}
+    try{requestsUnsub=onSnapshot(query(collection(db,'boutiques',user.uid,'requests'),where('status','==','pending')),snap=>{setRequestBadge(snap.size);jj3dTrackCollection('requests',snap,{title:'📨 Nouvelle demande Boutique',newMessage:'Une demande est arrivée'});},err=>{console.warn('Badge demandes:',err);setRequestBadge(0);});}catch(err){console.warn('Badge demandes:',err);setRequestBadge(0);}
+    try{ordersUnsub=onSnapshot(query(collection(db,'boutiques',user.uid,'orders'),where('status','==','pending')),snap=>{setOrderBadge(snap.size);jj3dTrackCollection('orders',snap,{title:'🛒 Nouvelle commande Boutique',newMessage:'Une commande est arrivée'});},err=>{console.warn('Badge commandes:',err);setOrderBadge(0);});}catch(err){console.warn('Badge commandes:',err);setOrderBadge(0);}
     try{specialRequestsUnsub=onSnapshot(collection(db,'boutiques',user.uid,'customRequests'),snapshot=>{
+      jj3dTrackCollection('customRequests',snapshot,{title:'✨ Commande personnalisée',newMessage:'Nouvelle demande personnalisée',changeMessage:'Demande personnalisée mise à jour',trackStatus:true});
       const list=snapshot.docs.map(d=>({id:d.id,...d.data()}));
       const seen=new Map(list.map(r=>[r.id,String(r.status||'')]));
       const count=list.filter(r=>['pending','payment_reported'].includes(r.status)).length;
@@ -518,7 +529,7 @@ if(!configOK){
       if(jj3dNotificationSeen){const fresh=list.filter(r=>!jj3dNotificationSeen.has(r.id));const changed=list.filter(r=>jj3dNotificationSeen.has(r.id)&&jj3dNotificationSeen.get(r.id)!==r.status);
         if(fresh.length||changed.length){const msg=fresh.length?`🔔 ${fresh.length} nouvelle(s) demande(s) spéciale(s) reçue(s)`:`🔔 Mise à jour Boutique : ${changed[0].item||'Projet'} (${changed[0].status})`;
           const a=document.getElementById('pp-notification-where');if(a){a.hidden=false;a.innerHTML=`<a href="#atelier-demandes">${msg.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</a>`;}
-          if(document.hidden&&window.Notification?.permission==='granted')try{new Notification('JJ3D',{body:msg,icon:'icons/icon-192.png'});}catch(_){}
+          // Notifications système centralisées dans notifications.js.
         }
       }
       jj3dNotificationSeen=seen;
